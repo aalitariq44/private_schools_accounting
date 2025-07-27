@@ -21,7 +21,7 @@ def setup_printing_system():
     # المسارات المطلوبة
     project_root = Path(__file__).parent
     printing_dir = project_root / "core" / "printing"
-    templates_dir = project_root / "resources" / "print_templates"
+    templates_dir = project_root / "app" / "resources" / "print_templates"
     
     try:
         # 1. التحقق من وجود المجلدات المطلوبة

@@ -10,7 +10,7 @@ UPLOADS_DIR = DATA_DIR / "uploads"
 BACKUPS_DIR = DATA_DIR / "backups"
 EXPORTS_DIR = DATA_DIR / "exports"
 LOGS_DIR = BASE_DIR / "logs"
-RESOURCES_DIR = BASE_DIR / "resources"
+RESOURCES_DIR = BASE_DIR / "app" / "resources"
 
 # إعدادات قاعدة البيانات
 DATABASE_NAME = "schools.db"

@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>التقرير المالي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .summary-box {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 18px;
+            border-top: 2px solid #333;
+            padding-top: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>التقرير المالي</h2>
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+        {% if date_range %}
+        <p>الفترة: {{ date_range }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="summary-box">
+        <h3>ملخص مالي</h3>
+        <div class="summary-item">
+            <span>إجمالي الإيرادات:</span>
+            <span>{{ financial_data.total_income | currency }}</span>
+        </div>
+        <div class="summary-item">
+            <span>إجمالي المصروفات:</span>
+            <span>{{ financial_data.total_expenses | currency }}</span>
+        </div>
+        <div class="summary-item total">
+            <span>صافي الربح:</span>
+            <span>{{ (financial_data.total_income - financial_data.total_expenses) | currency }}</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>{{ company_name }} - {{ system_version }}</p>
+    </div>
+</body>
+</html>

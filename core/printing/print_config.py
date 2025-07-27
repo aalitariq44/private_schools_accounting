@@ -8,6 +8,8 @@ import os
 from enum import Enum
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
+from pathlib import Path
+import config
 
 
 class PaperSize(Enum):
@@ -111,17 +113,9 @@ class PrintConfig:
     
     def __init__(self):
         self.settings = PrintSettings()
-        # Use a centralized templates directory under resources/print_templates
-        # This path is relative to the project root
-        base_dir = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        )
-        self.templates_path = os.path.join(
-            base_dir,
-            'resources',
-            'print_templates'
-        )
-        
+        # Use the configured resources directory for templates
+        resources_dir = Path(config.RESOURCES_DIR)
+        self.templates_path = str(resources_dir / 'print_templates')
         # إنشاء مجلد القوالب إذا لم يكن موجوداً
         os.makedirs(self.templates_path, exist_ok=True)
     

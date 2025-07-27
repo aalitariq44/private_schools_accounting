@@ -165,7 +165,7 @@ def test_file_structure():
             all_exist = False
     
     # اختبار مجلد القوالب
-    templates_dir = os.path.join(base_dir, 'resources', 'print_templates')
+    templates_dir = os.path.join(base_dir, 'app', 'resources', 'print_templates')
     if os.path.exists(templates_dir):
         template_files = os.listdir(templates_dir)
         print(f"✅ مجلد القوالب موجود ({len(template_files)} ملف)")

@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقرير الطالب</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .student-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>تقرير الطالب</h2>
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+    </div>
+    
+    <div class="student-info">
+        <h3>بيانات الطالب</h3>
+        <div class="info-row">
+            <strong>الاسم:</strong> {{ student.name }}
+        </div>
+        <div class="info-row">
+            <strong>المدرسة:</strong> {{ student.school_name }}
+        </div>
+        <div class="info-row">
+            <strong>الصف:</strong> {{ student.grade }}
+        </div>
+        <div class="info-row">
+            <strong>الشعبة:</strong> {{ student.section }}
+        </div>
+        <div class="info-row">
+            <strong>الجنس:</strong> {{ student.gender }}
+        </div>
+        <div class="info-row">
+            <strong>الهاتف:</strong> {{ student.phone }}
+        </div>
+        <div class="info-row">
+            <strong>الحالة:</strong> {{ student.status }}
+        </div>
+        <div class="info-row">
+            <strong>الرسوم الدراسية:</strong> {{ student.total_fee | currency }}
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>{{ company_name }} - {{ system_version }}</p>
+    </div>
+</body>
+</html>
