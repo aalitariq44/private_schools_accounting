@@ -143,6 +143,32 @@
     <div class="footer">
         <p>{{ company_name }} - {{ system_version }}</p>
     </div>
+    <div class="financial-summary">
+        <h3>الملخص المالي</h3>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <strong>عدد الأقساط:</strong> {{ financial_summary.installments_count }}
+            </div>
+            <div class="summary-item">
+                <strong>مجموع الأقساط:</strong> {{ financial_summary.installments_total | currency }}
+            </div>
+            <div class="summary-item">
+                <strong>المتبقي من الرسوم:</strong> {{ financial_summary.school_fee_remaining | currency }}
+            </div>
+            <div class="summary-item">
+                <strong>عدد الرسوم الإضافية:</strong> {{ financial_summary.additional_fees_count }}
+            </div>
+            <div class="summary-item">
+                <strong>مجموع الرسوم الإضافية:</strong> {{ financial_summary.additional_fees_total | currency }}
+            </div>
+            <div class="summary-item">
+                <strong>المدفوع من الرسوم الإضافية:</strong> {{ financial_summary.additional_fees_paid_total | currency }}
+            </div>
+            <div class="summary-item">
+                <strong>غير المدفوع من الرسوم الإضافية:</strong> {{ financial_summary.additional_fees_unpaid_total | currency }}
+            </div>
+        </div>
+    </div>
 </body>
 </html>
         

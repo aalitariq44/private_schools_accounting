@@ -683,12 +683,31 @@ class StudentDetailsPage(QWidget):
                     'payment_date': fee[4],
                     'notes': fee[6]
                 })
+            # حساب الملخص المالي
+            installments_total = sum(inst['amount'] for inst in installments)
+            school_fee_remaining = student['total_fee'] - installments_total
+            
+            additional_fees_total = sum(fee['amount'] for fee in additional_fees)
+            additional_fees_paid_total = sum(fee['amount'] for fee in additional_fees if fee.get('payment_date'))
+            additional_fees_unpaid_total = additional_fees_total - additional_fees_paid_total
+
+            financial_summary = {
+                'installments_count': len(installments),
+                'installments_total': installments_total,
+                'school_fee_remaining': school_fee_remaining,
+                'additional_fees_count': len(additional_fees),
+                'additional_fees_total': additional_fees_total,
+                'additional_fees_paid_total': additional_fees_paid_total,
+                'additional_fees_unpaid_total': additional_fees_unpaid_total
+            }
+
             # معاينة الطباعة
             pm = PrintManager(self)
             pm.preview_document(TemplateType.STUDENT_REPORT, {
                 'student': student,
                 'installments': installments,
-                'additional_fees': additional_fees
+                'additional_fees': additional_fees,
+                'financial_summary': financial_summary
             })
         except Exception as e:
             logging.error(f"خطأ في طباعة تفاصيل الطالب: {e}")
