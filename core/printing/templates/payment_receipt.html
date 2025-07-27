@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إيصال دفع</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+            font-size: 14px;
+        }
+        .receipt {
+            border: 2px solid #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .receipt-info {
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+        }
+        .amount-box {
+            background-color: #f0f0f0;
+            padding: 15px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt">
+        <div class="header">
+            <h2>{{ company_name }}</h2>
+            <h3>إيصال دفع</h3>
+            <p>رقم الإيصال: {{ receipt.id }}</p>
+        </div>
+        
+        <div class="receipt-info">
+            <div class="info-row">
+                <strong>اسم الطالب:</strong>
+                <span>{{ receipt.student_name }}</span>
+            </div>
+            <div class="info-row">
+                <strong>المدرسة:</strong>
+                <span>{{ receipt.school_name }}</span>
+            </div>
+            <div class="info-row">
+                <strong>تاريخ الدفع:</strong>
+                <span>{{ receipt.payment_date | date_ar }}</span>
+            </div>
+            <div class="info-row">
+                <strong>طريقة الدفع:</strong>
+                <span>{{ receipt.payment_method }}</span>
+            </div>
+            <div class="info-row">
+                <strong>الوصف:</strong>
+                <span>{{ receipt.description }}</span>
+            </div>
+        </div>
+        
+        <div class="amount-box">
+            المبلغ المدفوع: {{ receipt.amount | currency }}
+        </div>
+        
+        <div class="footer">
+            <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+            <p>{{ company_name }} - نشكركم لثقتكم</p>
+        </div>
+    </div>
+</body>
+</html>
+        

@@ -1,0 +1,16 @@
+{
+  "paper_size": "A4",
+  "orientation": "Portrait",
+  "quality": "Normal",
+  "margins": {
+    "top": 20,
+    "bottom": 20,
+    "left": 20,
+    "right": 20
+  },
+  "font_family": "Arial",
+  "font_size": 12,
+  "header_enabled": true,
+  "footer_enabled": true,
+  "page_numbers": true
+}

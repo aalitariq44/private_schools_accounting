@@ -1,0 +1,29 @@
+✅ SUCCESS - SIDEBAR INTEGRATION COMPLETE
+
+The new sections have been successfully connected to the sidebar:
+
+1. External Income (الواردات الخارجية) ✅
+   - Page created: ui/pages/external_income/external_income_page.py
+   - Dialogs created: add_income_dialog.py, edit_income_dialog.py
+   - Database table: external_income
+   - Sidebar button: ACTIVE ✅
+   - Loading function: load_external_income_page() ✅
+
+2. Expenses (المصروفات) ✅
+   - Page created: ui/pages/expenses/expenses_page.py
+   - Dialogs created: add_expense_dialog.py, edit_expense_dialog.py
+   - Database table: expenses
+   - Sidebar button: ACTIVE ✅
+   - Loading function: load_expenses_page() ✅
+
+INTEGRATION STATUS:
+- main_window.py: Updated ✅
+- __init__.py files: Updated ✅
+- Menu items: Activated ✅
+- Database tables: Created ✅
+- All imports: Working ✅
+
+TO RUN THE APPLICATION:
+python main.py
+
+The sidebar should now show both new sections and they should work properly.

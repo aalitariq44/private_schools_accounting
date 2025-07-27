@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قسيمة راتب</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .employee-info, .salary-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .total-row {
+            border-top: 2px solid #333;
+            padding-top: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>قسيمة راتب</h2>
+        <p>الشهر: {{ salary.month_year }}</p>
+    </div>
+    
+    <div class="employee-info">
+        <h3>بيانات الموظف</h3>
+        <div class="info-row">
+            <strong>الاسم:</strong> {{ salary.employee_name }}
+        </div>
+        <div class="info-row">
+            <strong>الوظيفة:</strong> {{ salary.position }}
+        </div>
+        <div class="info-row">
+            <strong>القسم:</strong> {{ salary.department }}
+        </div>
+    </div>
+    
+    <div class="salary-details">
+        <h3>تفاصيل الراتب</h3>
+        <div class="info-row">
+            <span>الراتب الأساسي:</span>
+            <span>{{ salary.basic_salary | currency }}</span>
+        </div>
+        <div class="info-row">
+            <span>البدلات:</span>
+            <span>{{ salary.allowances | currency }}</span>
+        </div>
+        <div class="info-row">
+            <span>الخصومات:</span>
+            <span>{{ salary.deductions | currency }}</span>
+        </div>
+        <div class="info-row total-row">
+            <span>صافي الراتب:</span>
+            <span>{{ salary.net_salary | currency }}</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+        <p>{{ company_name }}</p>
+    </div>
+</body>
+</html>
+        
