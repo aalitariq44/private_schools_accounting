@@ -46,6 +46,7 @@ try:
         'amount': 100000,
         'payment_date': '2025-01-15',
         'installment_number': 1,
+        'installment_id': 12345, # Added for testing
         'school_name': 'مدرسة النور',
         'receipt_number': 'R20250115001'
     }

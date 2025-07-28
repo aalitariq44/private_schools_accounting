@@ -657,6 +657,7 @@ class StudentDetailsPage(QWidget):
 
             receipt = {
                 'id': inst[0],
+                'installment_id': inst[0], # Add installment_id here
                 'student_name': self.name_label.text(),
                 'school_name': self.school_label.text(),
                 'grade': self.grade_label.text(),

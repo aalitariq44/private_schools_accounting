@@ -151,6 +151,7 @@ class ReportLabPrintManager:
         installment_number = receipt_data.get('installment_number', 1)
         school_name = receipt_data.get('school_name', 'المدرسة')
         receipt_number = receipt_data.get('receipt_number', f'R{datetime.now().strftime("%Y%m%d%H%M%S")}')
+        installment_id = receipt_data.get('installment_id', '') # Get installment_id from data
 
         self.arabic_font = 'Amiri'
         self.arabic_bold_font = 'Amiri-Bold'
@@ -179,7 +180,7 @@ class ReportLabPrintManager:
             [self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")],
             [self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")],
             [self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")],
-            [self.reshape_arabic_text(f"القسط رقم {installment_number}"), self.reshape_arabic_text("بيان الدفع")],
+            [self.reshape_arabic_text(str(installment_id)), self.reshape_arabic_text("رقم الوصل")],
             [self.reshape_arabic_text(f"{amount:,.0f} د.ع"), self.reshape_arabic_text("المبلغ المدفوع")],
             [self.reshape_arabic_text(payment_date), self.reshape_arabic_text("تاريخ الدفع")],
             [self.reshape_arabic_text(f"{receipt_data.get('total_fee', 0):,.0f} د.ع"), self.reshape_arabic_text("إجمالي الرسوم")],
