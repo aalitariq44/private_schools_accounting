@@ -114,14 +114,26 @@ class ReportLabPrintManager:
         if not output_path:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             output_path = os.path.join(
-                config.DATA_DIR, 'exports', 'prints', 
+                config.DATA_DIR, 'exports', 'prints',
                 f'installment_receipt_{timestamp}.pdf'
             )
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        
-        # إنشاء canvas للرسم المباشر
+
         c = canvas.Canvas(output_path, pagesize=A4)
-        
+
+        # تحديد منطقة الإيصال (أعلى 40% من الصفحة)
+        receipt_height = self.page_height * 0.40
+        top_y = self.page_height
+        bottom_y = self.page_height - receipt_height
+
+        # رسم إطار الإيصال باللون الأزرق
+        c.setStrokeColor(blue)
+        c.setLineWidth(1.5)
+        c.rect(self.margin, bottom_y, self.content_width, receipt_height - self.margin)
+
+        # استعادة لون الخط الافتراضي
+        c.setStrokeColor(black)
+
         # معلومات الإيصال
         receipt_data = data.get('receipt', data)
         student_name = receipt_data.get('student_name', 'غير محدد')
@@ -130,131 +142,85 @@ class ReportLabPrintManager:
         installment_number = receipt_data.get('installment_number', 1)
         school_name = receipt_data.get('school_name', 'المدرسة')
         receipt_number = receipt_data.get('receipt_number', f'R{datetime.now().strftime("%Y%m%d%H%M%S")}')
-        
-        # Override to use Amiri font for receipts if متوفر
+
         self.arabic_font = 'Amiri'
         self.arabic_bold_font = 'Amiri-Bold'
+
+        # --- بدء الرسم داخل الإطار ---
+        y_pos = top_y - self.margin - 20
         
-        # رسم الإيصال
-        self._draw_receipt_header(c, school_name, receipt_number)
-        self._draw_receipt_body(c, student_name, amount, payment_date, installment_number)
-        self._draw_receipt_footer(c)
+        # 1. رأس الإيصال
+        title = self.reshape_arabic_text("إيصال دفع قسط")
+        self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
+        y_pos -= 25
+        
+        school_text = self.reshape_arabic_text(school_name)
+        self.draw_centered_text(c, school_text, self.page_width / 2, y_pos, self.arabic_bold_font, 13)
+        y_pos -= 30
+        
+        c.setFont(self.arabic_font, 11)
+        receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
+        
+        # خط فاصل
+        y_pos -= 15
+        c.setLineWidth(0.5)
+        c.line(self.margin + 10, y_pos, self.page_width - self.margin - 10, y_pos)
+        
+        # 2. محتوى الإيصال
+        y_pos -= 25
+        line_height = 22
+        
+        student_label = self.reshape_arabic_text("اسم الطالب:")
+        student_value = self.reshape_arabic_text(student_name)
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, student_label)
+        c.drawRightString(self.page_width - self.margin - 120, y_pos, student_value)
+        y_pos -= line_height
+        
+        installment_label = self.reshape_arabic_text("رقم القسط:")
+        installment_value = str(installment_number)
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, installment_label)
+        c.drawRightString(self.page_width - self.margin - 120, y_pos, installment_value)
+        y_pos -= line_height
+        
+        amount_label = self.reshape_arabic_text("المبلغ المدفوع:")
+        amount_value = f"{amount:,.0f} دينار"
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, amount_label)
+        c.drawRightString(self.page_width - self.margin - 120, y_pos, amount_value)
+        y_pos -= line_height
+
+        date_label = self.reshape_arabic_text("تاريخ الدفع:")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, date_label)
+        c.drawRightString(self.page_width - self.margin - 120, y_pos, payment_date)
+
+        # صندوق المبلغ
+        y_pos -= 30
+        box_height = 65
+        c.setLineWidth(1)
+        c.rect(self.margin + 20, y_pos - box_height, self.content_width - 40, box_height)
+        
+        y_pos -= 20
+        amount_digits = f"{amount:,.0f}"
+        self.draw_centered_text(c, amount_digits, self.page_width / 2, y_pos, self.arabic_bold_font, 14)
+        
+        y_pos -= 22
+        amount_words = self.reshape_arabic_text(self._number_to_arabic_words(amount))
+        self.draw_centered_text(c, amount_words, self.page_width / 2, y_pos, self.arabic_font, 11)
+        
+        y_pos -= 18
+        currency_text = self.reshape_arabic_text("دينار عراقي لا غير")
+        self.draw_centered_text(c, currency_text, self.page_width / 2, y_pos, self.arabic_font, 10)
+        
+        # 3. الملاحظة السفلية
+        note_y_pos = bottom_y + 15
+        note_text = self.reshape_arabic_text("هذا الإيصال محاسبي")
+        self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
         
         c.save()
         logging.info(f"تم إنشاء إيصال الدفع: {output_path}")
         return output_path
+
     
-    def _draw_receipt_header(self, canvas, school_name: str, receipt_number: str):
-        """رسم رأس الإيصال"""
-        y_position = self.page_height - self.margin - 30
-        
-        # إطار الإيصال
-        canvas.setStrokeColor(black)
-        canvas.setLineWidth(2)
-        canvas.rect(self.margin, self.margin, self.content_width, self.page_height - (2 * self.margin))
-        
-        # عنوان الإيصال
-        title = self.reshape_arabic_text("إيصال دفع قسط")
-        self.draw_centered_text(canvas, title, self.page_width / 2, y_position, self.arabic_bold_font, 18)
-        
-        y_position -= 30
-        
-        # اسم المدرسة
-        school_text = self.reshape_arabic_text(school_name)
-        self.draw_centered_text(canvas, school_text, self.page_width / 2, y_position, self.arabic_bold_font, 14)
-        
-        y_position -= 40
-        
-        # رقم الإيصال
-        canvas.setFont(self.arabic_font, 12)
-        receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, receipt_text)
-        
-        # خط فاصل
-        y_position -= 20
-        canvas.setLineWidth(1)
-        canvas.line(self.margin + 10, y_position, self.page_width - self.margin - 10, y_position)
-    
-    def _draw_receipt_body(self, canvas, student_name: str, amount: float, payment_date: str, installment_number: int):
-        """رسم محتوى الإيصال"""
-        y_position = self.page_height - self.margin - 160
-        
-        canvas.setFont(self.arabic_font, 12)
-        line_height = 25
-        
-        # بيانات الطالب
-        student_label = self.reshape_arabic_text("اسم الطالب:")
-        student_value = self.reshape_arabic_text(student_name)
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, student_label)
-        canvas.drawRightString(self.page_width - self.margin - 100, y_position, student_value)
-        
-        y_position -= line_height
-        
-        # رقم القسط
-        installment_label = self.reshape_arabic_text("رقم القسط:")
-        installment_value = str(installment_number)
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, installment_label)
-        canvas.drawRightString(self.page_width - self.margin - 100, y_position, installment_value)
-        
-        y_position -= line_height
-        
-        # المبلغ
-        amount_label = self.reshape_arabic_text("المبلغ المدفوع:")
-        amount_value = f"{amount:,.0f} دينار"
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, amount_label)
-        canvas.drawRightString(self.page_width - self.margin - 100, y_position, amount_value)
-        
-        y_position -= line_height
-        
-        # تاريخ الدفع
-        date_label = self.reshape_arabic_text("تاريخ الدفع:")
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, date_label)
-        canvas.drawRightString(self.page_width - self.margin - 100, y_position, payment_date)
-        
-        # صندوق بيانات القسط
-        y_position -= 50
-        box_height = 80
-        canvas.setStrokeColor(black)
-        canvas.setLineWidth(1)
-        canvas.rect(self.margin + 20, y_position - box_height, self.content_width - 40, box_height)
-        
-        # المبلغ بالأرقام والحروف
-        y_position -= 20
-        amount_digits = f"{amount:,.0f}"
-        self.draw_centered_text(canvas, amount_digits, self.page_width / 2, y_position, self.arabic_bold_font, 14)
-        
-        y_position -= 25
-        amount_words = self.reshape_arabic_text(self._number_to_arabic_words(amount))
-        self.draw_centered_text(canvas, amount_words, self.page_width / 2, y_position, self.arabic_font, 11)
-        
-        y_position -= 20
-        currency_text = self.reshape_arabic_text("دينار عراقي لا غير")
-        self.draw_centered_text(canvas, currency_text, self.page_width / 2, y_position, self.arabic_font, 10)
-    
-    def _draw_receipt_footer(self, canvas):
-        """رسم ذيل الإيصال"""
-        y_position = self.margin + 80
-        
-        # توقيع المحاسب
-        canvas.setFont(self.arabic_font, 11)
-        signature_label = self.reshape_arabic_text("توقيع المحاسب:")
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, signature_label)
-        
-        # خط التوقيع
-        signature_line_start = self.page_width - self.margin - 150
-        signature_line_end = self.page_width - self.margin - 250
-        canvas.line(signature_line_end, y_position - 5, signature_line_start, y_position - 5)
-        
-        # التاريخ والوقت
-        y_position -= 30
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
-        timestamp_text = self.reshape_arabic_text(f"تاريخ الطباعة: {timestamp}")
-        canvas.drawRightString(self.page_width - self.margin - 10, y_position, timestamp_text)
-        
-        # ملاحظة
-        y_position -= 30
-        note_text = self.reshape_arabic_text("هذا الإيصال محاسبي معتمد ولا يقبل التراجع عنه")
-        self.draw_centered_text(canvas, note_text, self.page_width / 2, y_position, self.arabic_font, 9)
     
     def _number_to_arabic_words(self, number: float) -> str:
         """تحويل الرقم إلى كلمات عربية"""
