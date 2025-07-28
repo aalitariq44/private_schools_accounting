@@ -90,6 +90,10 @@ class PrintManager:
                 # يمكن استخدام نفس الدالة لإيصالات الدفع العامة
                 pdf_path = self.reportlab_manager.preview_installment_receipt(data)
                 self._open_pdf_preview(pdf_path)
+            elif template_type == TemplateType.STUDENT_REPORT:
+                # معاينة تقرير الطالب عبر ReportLab
+                pdf_path = self.reportlab_manager.preview_student_report(data)
+                self._open_pdf_preview(pdf_path)
             else:
                 logging.warning(f"نوع القالب {template_type.value} غير مدعوم في ReportLab، سيتم التبديل إلى HTML")
                 return self._preview_html_document(template_type, data, settings)

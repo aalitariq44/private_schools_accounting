@@ -56,7 +56,7 @@ class TemplateType(Enum):
 # تحديد طريقة الطباعة المفضلة لكل نوع قالب
 TEMPLATE_PRINT_METHODS = {
     # التقارير البسيطة - HTML
-    TemplateType.STUDENT_REPORT: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.STUDENT_REPORT: PrintMethod.REPORTLAB_CANVAS,
     TemplateType.STUDENT_LIST: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.STUDENTS_LIST: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.FINANCIAL_REPORT: PrintMethod.HTML_WEB_ENGINE,

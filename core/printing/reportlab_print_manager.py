@@ -225,7 +225,21 @@ class ReportLabPrintManager:
         currency_text = self.reshape_arabic_text("دينار عراقي لا غير")
         self.draw_centered_text(c, currency_text, self.page_width / 2, y_pos, self.arabic_font, 10)
         
-        # 3. الملاحظة السفلية
+        # 3. الملخص المالي على الإيصال
+        y_pos -= line_height
+        total_paid = receipt_data.get('total_paid', 0)
+        paid_text = self.reshape_arabic_text(f"إجمالي المدفوع: {total_paid:,.0f} د.ع")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, paid_text)
+        y_pos -= line_height
+        total_fee_val = receipt_data.get('total_fee', 0)
+        fee_text = self.reshape_arabic_text(f"إجمالي القسط: {total_fee_val:,.0f} د.ع")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, fee_text)
+        y_pos -= line_height
+        remaining = receipt_data.get('remaining', 0)
+        rem_text = self.reshape_arabic_text(f"المتبقي: {remaining:,.0f} د.ع")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, rem_text)
+        
+        # 4. الملاحظة السفلية
         note_y_pos = bottom_y + 15
         note_text = self.reshape_arabic_text("هذا الإيصال محاسبي")
         self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
@@ -283,6 +297,144 @@ class ReportLabPrintManager:
             f'preview_installment_receipt_{timestamp}.pdf'
         )
         return self.create_installment_receipt(data, temp_path)
+    
+    def create_student_report(self, data: Dict[str, Any], output_path: str = None) -> str:
+        """إنشاء تقرير طالب مفصل PDF"""
+        if not output_path:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_path = os.path.join(
+                config.DATA_DIR, 'exports', 'prints',
+                f'student_report_{timestamp}.pdf'
+            )
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+        doc = SimpleDocTemplate(
+            output_path,
+            pagesize=A4,
+            rightMargin=self.margin,
+            leftMargin=self.margin,
+            topMargin=self.margin,
+            bottomMargin=self.margin
+        )
+        styles = getSampleStyleSheet()
+        story = []
+
+        # عنوان التقرير
+        title = self.reshape_arabic_text("تقرير الطالب")
+        story.append(Paragraph(title, ParagraphStyle(
+            'Title', fontName=self.arabic_bold_font,
+            fontSize=16, alignment=TA_CENTER, spaceAfter=12)))
+
+        # بيانات الطالب
+        student = data.get('student', {})
+        info_data = [
+            [self.reshape_arabic_text(k), self.reshape_arabic_text(str(v))]
+            for k, v in [
+                ("الاسم", student.get('name', '')),
+                ("المدرسة", student.get('school_name', '')),
+                ("الصف", student.get('grade', '')),
+                ("الشعبة", student.get('section', '')),
+                ("الجنس", student.get('gender', '')),
+                ("الهاتف", student.get('phone', '')),
+                ("الحالة", student.get('status', '')),
+                ("الرسوم الدراسية", f"{student.get('total_fee', 0):,.0f}")
+            ]
+        ]
+        info_table = Table(info_data, hAlign='RIGHT', colWidths=[100, 200])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), None),
+            ('TEXTCOLOR', (0, 0), (-1, -1), black),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), self.arabic_font),
+            ('BOTTOMPADDING', (0,0), (-1,-1), 6),
+        ]))
+        story.append(info_table)
+        story.append(Spacer(1, 12))
+
+        # الأقساط
+        installments = data.get('installments', [])
+        if installments:
+            story.append(Paragraph(self.reshape_arabic_text("الأقساط المدفوعة"), styles['Heading3']))
+            inst_header = [self.reshape_arabic_text(h) for h in ["المبلغ","تاريخ الدفع","وقت الدفع","ملاحظات"]]
+            table_data = [inst_header]
+            for inst in installments:
+                row = [
+                    f"{inst.get('amount',0):,.0f}",
+                    self.reshape_arabic_text(str(inst.get('payment_date',''))),
+                    self.reshape_arabic_text(str(inst.get('payment_time',''))),
+                    self.reshape_arabic_text(inst.get('notes',''))
+                ]
+                table_data.append(row)
+            inst_table = Table(table_data, hAlign='RIGHT')
+            inst_table.setStyle(TableStyle([
+                ('GRID', (0,0), (-1,-1), 0.5, black),
+                ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER')
+            ]))
+            story.append(inst_table)
+            story.append(Spacer(1, 12))
+
+        # الرسوم الإضافية
+        fees = data.get('additional_fees', [])
+        if fees:
+            story.append(Paragraph(self.reshape_arabic_text("الرسوم الإضافية"), styles['Heading3']))
+            fee_header = [self.reshape_arabic_text(h) for h in ["النوع","المبلغ","تاريخ الإضافة","تاريخ الدفع","ملاحظات"]]
+            fee_data = [fee_header]
+            for fee in fees:
+                row = [
+                    self.reshape_arabic_text(str(fee.get('fee_type',''))),
+                    f"{fee.get('amount',0):,.0f}",
+                    self.reshape_arabic_text(str(fee.get('added_at',''))),
+                    self.reshape_arabic_text(str(fee.get('payment_date',''))),
+                    self.reshape_arabic_text(fee.get('notes',''))
+                ]
+                fee_data.append(row)
+            fee_table = Table(fee_data, hAlign='RIGHT')
+            fee_table.setStyle(TableStyle([
+                ('GRID', (0,0), (-1,-1), 0.5, black),
+                ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
+                ('ALIGN', (0,0), (-1,-1), 'CENTER')
+            ]))
+            story.append(fee_table)
+            story.append(Spacer(1, 12))
+
+        # الملخص المالي
+        summary = data.get('financial_summary', {})
+        if summary:
+            story.append(Paragraph(self.reshape_arabic_text("الملخص المالي"), styles['Heading3']))
+            sum_data = [
+                [self.reshape_arabic_text(k), f"{v:,.0f}"]
+                for k, v in [
+                    ("عدد الأقساط", summary.get('installments_count', 0)),
+                    ("مجموع الأقساط", summary.get('installments_total', 0)),
+                    ("المتبقي من الرسوم", summary.get('school_fee_remaining', 0)),
+                    ("عدد الرسوم الإضافية", summary.get('additional_fees_count', 0)),
+                    ("مجموع الرسوم الإضافية", summary.get('additional_fees_total', 0)),
+                    ("المدفوع من الرسوم الإضافية", summary.get('additional_fees_paid_total', 0)),
+                    ("غير المدفوع من الرسوم الإضافية", summary.get('additional_fees_unpaid_total', 0))
+                ]
+            ]
+            sum_table = Table(sum_data, hAlign='RIGHT', colWidths=[150,150])
+            sum_table.setStyle(TableStyle([
+                ('GRID', (0,0), (-1,-1), 0.5, black),
+                ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
+                ('ALIGN', (0,0), (-1,-1), 'RIGHT')
+            ]))
+            story.append(sum_table)
+
+        # بناء المستند
+        doc.build(story)
+        logging.info(f"تم إنشاء تقرير الطالب: {output_path}")
+        return output_path
+
+    def preview_student_report(self, data: Dict[str, Any]) -> str:
+        """معاينة تقرير طالب"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        temp_path = os.path.join(
+            config.DATA_DIR, 'uploads', 'temp',
+            f'preview_student_report_{timestamp}.pdf'
+        )
+        return self.create_student_report(data, temp_path)
 
 
 # Convenience function for installment receipts
