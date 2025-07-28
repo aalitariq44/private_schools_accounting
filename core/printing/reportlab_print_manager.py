@@ -121,10 +121,22 @@ class ReportLabPrintManager:
 
         c = canvas.Canvas(output_path, pagesize=A4)
 
+        # Draw the first receipt
+        self._draw_receipt(c, data, self.page_height)
+
+        # Draw the second receipt
+        second_receipt_y = self.page_height * 0.5
+        self._draw_receipt(c, data, second_receipt_y)
+        
+        c.save()
+        logging.info(f"تم إنشاء إيصال الدفع: {output_path}")
+        return output_path
+
+    def _draw_receipt(self, c, data, top_y):
+        """Helper function to draw a single receipt."""
         # تحديد منطقة الإيصال (أعلى 40% من الصفحة)
         receipt_height = self.page_height * 0.40
-        top_y = self.page_height
-        bottom_y = self.page_height - receipt_height
+        bottom_y = top_y - receipt_height
 
         # رسم إطار الإيصال باللون الأزرق
         c.setStrokeColor(blue)
@@ -215,10 +227,6 @@ class ReportLabPrintManager:
         note_y_pos = bottom_y + 15
         note_text = self.reshape_arabic_text("هذا الإيصال محاسبي")
         self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
-        
-        c.save()
-        logging.info(f"تم إنشاء إيصال الدفع: {output_path}")
-        return output_path
 
     
     
