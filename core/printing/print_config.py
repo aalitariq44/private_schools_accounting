@@ -33,6 +33,12 @@ class PrintQuality(Enum):
     HIGH = "High"  # عالي
 
 
+class PrintMethod(Enum):
+    """طرق الطباعة المتاحة"""
+    HTML_WEB_ENGINE = "html_web"  # للتقارير البسيطة عبر QWebEngineView
+    REPORTLAB_CANVAS = "reportlab"  # للوصولات والفواتير الدقيقة
+
+
 class TemplateType(Enum):
     """أنواع قوالب الطباعة"""
     STUDENT_REPORT = "student_report"
@@ -43,7 +49,28 @@ class TemplateType(Enum):
     SALARY_SLIP = "salary_slip"
     STAFF_REPORT = "staff_report"
     SCHOOL_REPORT = "school_report"
+    INSTALLMENT_RECEIPT = "installment_receipt"  # إيصال قسط جديد
     CUSTOM = "custom"
+
+
+# تحديد طريقة الطباعة المفضلة لكل نوع قالب
+TEMPLATE_PRINT_METHODS = {
+    # التقارير البسيطة - HTML
+    TemplateType.STUDENT_REPORT: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.STUDENT_LIST: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.STUDENTS_LIST: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.FINANCIAL_REPORT: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.STAFF_REPORT: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.SCHOOL_REPORT: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.SALARY_SLIP: PrintMethod.HTML_WEB_ENGINE,
+    
+    # الوصولات والفواتير - ReportLab
+    TemplateType.PAYMENT_RECEIPT: PrintMethod.REPORTLAB_CANVAS,
+    TemplateType.INSTALLMENT_RECEIPT: PrintMethod.REPORTLAB_CANVAS,
+    
+    # مخصص
+    TemplateType.CUSTOM: PrintMethod.HTML_WEB_ENGINE,
+}
 
 
 @dataclass
