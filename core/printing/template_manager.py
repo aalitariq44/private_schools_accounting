@@ -38,10 +38,15 @@ class TemplateManager:
         self.create_default_templates()
     
     def format_currency(self, value: float) -> str:
-        """تنسيق العملة"""
+        """تنسيق العملة بدون أصفار زائدة"""
+        # إذا كانت القيمة None، عرض صفر بدون كسور
         if value is None:
-            return "0.00"
-        return f"{value:,.2f} دينار"
+            return "0 دينار"
+        # تنسيق الرقم بدقة منزلتين عشريتين ثم إزالة الأصفار الزائدة
+        s = f"{value:,.2f}"
+        if '.' in s:
+            s = s.rstrip('0').rstrip('.')
+        return f"{s} دينار"
     
     def format_date_arabic(self, date_obj) -> str:
         """تنسيق التاريخ باللغة العربية"""
