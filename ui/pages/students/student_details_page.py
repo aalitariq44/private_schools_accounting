@@ -193,26 +193,28 @@ class StudentDetailsPage(QWidget):
             self.start_date_label = QLabel("--")
             self.start_date_label.setObjectName("infoValue")
             
-            # إضافة المعلومات للشبكة
+            # إضافة المعلومات للشبكة بتخطيط 3 أعمدة
+            # الصف الأول: الاسم، المدرسة، الجنس
             grid_layout.addWidget(QLabel("الاسم:"), 0, 0)
             grid_layout.addWidget(self.name_label, 0, 1)
             grid_layout.addWidget(QLabel("المدرسة:"), 0, 2)
             grid_layout.addWidget(self.school_label, 0, 3)
-            
+            grid_layout.addWidget(QLabel("الجنس:"), 0, 4)
+            grid_layout.addWidget(self.gender_label, 0, 5)
+
+            # الصف الثاني: الصف، الشعبة، الهاتف
             grid_layout.addWidget(QLabel("الصف:"), 1, 0)
             grid_layout.addWidget(self.grade_label, 1, 1)
             grid_layout.addWidget(QLabel("الشعبة:"), 1, 2)
             grid_layout.addWidget(self.section_label, 1, 3)
-            
-            grid_layout.addWidget(QLabel("الجنس:"), 2, 0)
-            grid_layout.addWidget(self.gender_label, 2, 1)
-            grid_layout.addWidget(QLabel("الهاتف:"), 2, 2)
-            grid_layout.addWidget(self.phone_label, 2, 3)
-            
-            grid_layout.addWidget(QLabel("الحالة:"), 3, 0)
-            grid_layout.addWidget(self.status_label, 3, 1)
-            grid_layout.addWidget(QLabel("تاريخ المباشرة:"), 3, 2)
-            grid_layout.addWidget(self.start_date_label, 3, 3)
+            grid_layout.addWidget(QLabel("الهاتف:"), 1, 4)
+            grid_layout.addWidget(self.phone_label, 1, 5)
+
+            # الصف الثالث: الحالة، تاريخ المباشرة
+            grid_layout.addWidget(QLabel("الحالة:"), 2, 0)
+            grid_layout.addWidget(self.status_label, 2, 1)
+            grid_layout.addWidget(QLabel("تاريخ المباشرة:"), 2, 2)
+            grid_layout.addWidget(self.start_date_label, 2, 3)
             
             info_layout.addLayout(grid_layout)
             
