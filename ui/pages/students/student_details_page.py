@@ -326,7 +326,7 @@ class StudentDetailsPage(QWidget):
             self.fees_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
             
             # إعداد أعمدة الجدول
-            columns = ["النوع", "المبلغ", "تاريخ الإضافة", "تاريخ الدفع", "إجراءات"]
+            columns = ["النوع", "المبلغ", "تاريخ الإضافة", "تاريخ الدفع", "الملاحظات", "إجراءات"]
             self.fees_table.setColumnCount(len(columns))
             self.fees_table.setHorizontalHeaderLabels(columns)
             
@@ -341,7 +341,8 @@ class StudentDetailsPage(QWidget):
             header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # المبلغ
             header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # تاريخ الإضافة
             header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # تاريخ الدفع
-            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # الإجراءات
+            header.setSectionResizeMode(4, QHeaderView.Stretch)          # الملاحظات
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الإجراءات
             
             fees_layout.addWidget(self.fees_table)
             
@@ -768,6 +769,10 @@ class StudentDetailsPage(QWidget):
                 payment_date_item = QTableWidgetItem(str(fee[4] or "--"))
                 self.fees_table.setItem(row, 3, payment_date_item)
                 
+                # الملاحظات
+                notes_item = QTableWidgetItem(str(fee[6] or ""))
+                self.fees_table.setItem(row, 4, notes_item)
+
                 # أزرار الإجراءات
                 actions_layout = QHBoxLayout()
                 actions_widget = QWidget()
@@ -786,7 +791,7 @@ class StudentDetailsPage(QWidget):
                 actions_layout.addWidget(delete_btn)
                 
                 actions_widget.setLayout(actions_layout)
-                self.fees_table.setCellWidget(row, 4, actions_widget)
+                self.fees_table.setCellWidget(row, 5, actions_widget)
             
         except Exception as e:
             logging.error(f"خطأ في تحديث جدول الرسوم الإضافية: {e}")
