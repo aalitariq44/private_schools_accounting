@@ -124,9 +124,9 @@ class ReportLabPrintManager:
         # Draw the first receipt
         self._draw_receipt(c, data, self.page_height)
 
-        # Draw the second receipt just below the first with a smaller gap
-        receipt_height = self.page_height * 0.35
-        gap_between = 10 * mm  # 10mm gap between receipts
+        # Draw the second receipt just below the first with a larger height and small gap
+        receipt_height = self.page_height * 0.48
+        gap_between = 0 * mm  # 10mm gap between receipts
         second_receipt_y = self.page_height - receipt_height - gap_between
         self._draw_receipt(c, data, second_receipt_y)
         
@@ -136,8 +136,8 @@ class ReportLabPrintManager:
 
     def _draw_receipt(self, c, data, top_y):
         """Helper function to draw a single receipt."""
-        # تحديد منطقة الإيصال (أعلى 40% من الصفحة)
-        receipt_height = self.page_height * 0.40
+        # تحديد منطقة الإيصال (أعلى 45% من الصفحة)
+        receipt_height = self.page_height * 0.48
         bottom_y = top_y - receipt_height
 
         # رسم إطار الإيصال باللون الأزرق
