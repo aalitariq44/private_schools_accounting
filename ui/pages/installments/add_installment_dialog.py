@@ -12,6 +12,7 @@ import logging
 
 class AddInstallmentDialog(QDialog):
     installment_added = pyqtSignal()
+    installment_saved = pyqtSignal(int) # New signal to emit installment_id
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -487,6 +488,7 @@ class AddInstallmentDialog(QDialog):
                     payment_time,
                     installment_description
                 ))
+                last_installment_id = cursor.lastrowid # Get the ID of the last inserted installment
                 
                 current_date += timedelta(days=interval_days)
             
@@ -495,6 +497,8 @@ class AddInstallmentDialog(QDialog):
             
             QMessageBox.information(self, "نجح", f"تم إضافة {installments_count} قسط بنجاح!")
             self.installment_added.emit()
+            if installments_count == 1: # Only emit if a single installment was added
+                self.installment_saved.emit(last_installment_id)
             self.accept()
             
         except Exception as e:

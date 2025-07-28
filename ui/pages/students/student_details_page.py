@@ -602,10 +602,18 @@ class StudentDetailsPage(QWidget):
                 QMessageBox.information(self, "تنبيه", "تم دفع القسط بالكامل")
                 return
             
+            # فتح نافذة إضافة قسط وحفظ المعرف
+            last_installment = {'id': None}
             dialog = AddInstallmentDialog(self.student_id, remaining, self)
+            # التقاط المعرف عند الإضافة
+            dialog.installment_saved.connect(lambda inst_id: last_installment.update({'id': inst_id}))
             if dialog.exec_() == QDialog.Accepted:
+                # تحديث البيانات
                 self.refresh_data()
                 self.student_updated.emit()
+                # عرض معاينة وطباعة الإيصال للقسط الجديد
+                if last_installment['id']:
+                    self.print_installment(last_installment['id'])
                 
         except Exception as e:
             logging.error(f"خطأ في إضافة قسط: {e}")

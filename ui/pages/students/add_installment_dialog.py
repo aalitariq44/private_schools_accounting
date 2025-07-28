@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QDateEdit, QTextEdit, QMessageBox, 
     QDoubleSpinBox, QGroupBox, QScrollArea, QWidget
 )
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt, QDate, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from core.database.connection import db_manager
@@ -20,6 +20,7 @@ from core.utils.logger import log_user_action, log_database_operation
 
 class AddInstallmentDialog(QDialog):
     """نافذة إضافة قسط جديد"""
+    installment_saved = pyqtSignal(int)
     
     def __init__(self, student_id, max_amount, parent=None):
         super().__init__(parent)
@@ -212,9 +213,10 @@ class AddInstallmentDialog(QDialog):
                 notes if notes else None
             )
             
-            result = db_manager.execute_query(query, params)
+            # use execute_insert to get the new installment ID
+            last_installment_id = db_manager.execute_insert(query, params)
             
-            if result is not None:
+            if last_installment_id:
                 log_database_operation(
                     "إضافة",
                     "installments",
@@ -223,6 +225,8 @@ class AddInstallmentDialog(QDialog):
                 log_user_action(f"إضافة قسط بمبلغ {amount:,.0f} د.ع للطالب: {self.student_id}")
                 
                 QMessageBox.information(self, "نجح", "تم حفظ القسط بنجاح")
+                # emit signal with the new installment ID
+                self.installment_saved.emit(last_installment_id)
                 self.accept()
             else:
                 QMessageBox.critical(self, "خطأ", "فشل في حفظ القسط")
