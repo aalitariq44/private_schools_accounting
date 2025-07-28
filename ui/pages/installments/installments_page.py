@@ -206,7 +206,7 @@ class InstallmentsPage(QWidget):
             
             # إعداد الأعمدة بناءً على المخطط الجديد
             columns = [
-                "المعرف", "الطالب", "المدرسة", "المبلغ",
+                "رقم الوصل", "الطالب", "المدرسة", "المبلغ",
                 "تاريخ الدفع", "وقت الدفع", "ملاحظات"
             ]
             
@@ -224,7 +224,7 @@ class InstallmentsPage(QWidget):
             header = self.installments_table.horizontalHeader()
             header.setStretchLastSection(True)
             header.setDefaultSectionSize(120)
-            header.resizeSection(0, 80)   # المعرف
+            header.resizeSection(0, 80)   # رقم الوصل
             header.resizeSection(1, 160)  # الطالب
             header.resizeSection(2, 130)  # المدرسة
             header.resizeSection(3, 120)  # المبلغ
@@ -232,8 +232,8 @@ class InstallmentsPage(QWidget):
             header.resizeSection(5, 110)  # وقت الدفع
             header.resizeSection(6, 200)  # ملاحظات
             
-            # إخفاء العمود الأول (المعرف) 
-            self.installments_table.setColumnHidden(0, True)
+            # إخفاء العمود الأول (المعرف) - تم تغيير المعرف إلى رقم الوصل، لذا لا داعي لإخفائه
+            # self.installments_table.setColumnHidden(0, True)
             
             # ربط الأحداث
             
@@ -426,7 +426,7 @@ class InstallmentsPage(QWidget):
             self.installments_table.setRowCount(len(self.current_installments))
             
             for row, installment in enumerate(self.current_installments):
-                # المعرف (مخفي)
+                # رقم الوصل (id)
                 self.installments_table.setItem(row, 0, QTableWidgetItem(str(installment[0])))
                 # الطالب
                 self.installments_table.setItem(row, 1, QTableWidgetItem(installment[1] or ""))
