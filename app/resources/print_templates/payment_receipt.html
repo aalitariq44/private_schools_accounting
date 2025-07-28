@@ -2,18 +2,27 @@
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إيصال دفع</title>
+    <!-- قالب محسن للعمل مع المحرك الحديث QWebEngineView -->
     <style>
         /* Page setup for printing: A4 with 20mm margins */
         @page {
             size: A4;
             margin: 20mm;
+            /* دعم أفضل للطباعة بمحرك حديث */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Cairo', Arial, sans-serif;
             margin: 20px;
             direction: rtl;
             font-size: 12pt; /* converted from 24px to 12pt for base text */
+            line-height: 1.4;
+            /* تحسينات للمحرك الحديث */
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
         .receipt {
             border: 2px solid #333;
@@ -28,14 +37,36 @@
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        .receipt-info {
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 20px;
+            background: #f8fbff;
+            /* تحسينات للمحرك الحديث */
+            table-layout: fixed;
         }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding: 5px 0;
+        .info-table td, .info-table th {
+            border: 1px solid #b5c6d6;
+            padding: 8px 10px;
+            font-size: 12pt;
+            /* ضمان ظهور الحدود في المحرك الحديث */
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            box-sizing: border-box;
+        }
+        .info-table th {
+            background: #eaf1fa;
+            font-weight: bold;
+            text-align: right;
+            width: 22%;
+        }
+        .info-table td {
+            background: #fff;
+            text-align: right;
+            width: 28%;
+        }
+        .info-table tr {
+            height: 38px;
         }
         .amount-box {
             background-color: #f0f0f0;
@@ -60,6 +91,12 @@
         }
         /* اجبار فصل الصفحة عند طباعة كل إيصال */
         @media print {
+            /* تحسينات خاصة بالمحرك الحديث */
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
             /* enforce header sizes when printing */
             .header h2 {
                 font-size: 28pt !important;
@@ -70,13 +107,32 @@
             .receipt {
                 page-break-after: always;
                 page-break-inside: avoid;
+                /* تحسينات للمحرك الحديث */
+                break-after: page;
+                break-inside: avoid;
             }
             .receipt:last-child {
                 page-break-after: auto;
+                break-after: auto;
             }
             /* hide dashed separator when printing */
             hr {
                 display: none;
+            }
+            
+            /* تحسينات الجداول للطباعة */
+            .info-table, .info-table td, .info-table th {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border-color: #333 !important;
+            }
+        }
+        
+        /* تحسينات للعرض على الشاشة في المحرك الحديث */
+        @media screen {
+            .receipt {
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                background: white;
             }
         }
     </style>
@@ -87,48 +143,42 @@
         <div class="header">
             <h2>{{ company_name }}</h2>
             <h3>إيصال دفع</h3>
+
             <p>رقم الإيصال: {{ receipt.id }}</p>
         </div>
         
-        <div class="receipt-info">
-            <div class="info-row">
-                <strong>اسم الطالب:</strong>
-                <span>{{ receipt.student_name }}</span>
-            </div>
-        <div class="info-row">
-            <strong>المدرسة:</strong>
-            <span>{{ receipt.school_name }}</span>
-        </div>
-        <div class="info-row">
-            <strong>الصف:</strong>
-            <span>{{ receipt.grade }}</span>
-        </div>
-        <div class="info-row">
-            <strong>الشعبة:</strong>
-            <span>{{ receipt.section }}</span>
-        </div>
-        <div class="info-row">
-            <strong>تاريخ التسديد:</strong>
-            <span>{{ receipt.payment_date | date_ar }}</span>
-        </div>
-           
-        <div class="info-row">
-            <strong>الملاحظات:</strong>
-            <span>{{ receipt.description }}</span>
-        </div>
-        <div class="info-row">
-            <strong>مجموع التسديد:</strong>
-            <span>{{ receipt.total_paid | currency }}</span>
-        </div>
-        <div class="info-row">
-            <strong>القسط الكلي:</strong>
-            <span>{{ receipt.total_fee | currency }}</span>
-        </div>
-        <div class="info-row">
-            <strong>المتبقي:</strong>
-            <span>{{ receipt.remaining | currency }}</span>
-        </div>
-        </div>
+        <table class="info-table">
+            <tr>
+                <th>اسم الطالب:</th>
+                <td>{{ receipt.student_name }}</td>
+                <th>رقم الوصل:</th>
+                <td>{{ receipt.id }}</td>
+            </tr>
+            <tr>
+                <th>الصف:</th>
+                <td>{{ receipt.grade }}</td>
+                <th>الشعبة:</th>
+                <td>{{ receipt.section }}</td>
+            </tr>
+            <tr>
+                <th>مبلغ التسديد:</th>
+                <td>{{ receipt.amount | currency }}</td>
+                <th>تاريخ التسديد:</th>
+                <td>{{ receipt.payment_date | date_ar }}</td>
+            </tr>
+            <tr>
+                <th>مجموع التسديد:</th>
+                <td>{{ receipt.total_paid | currency }}</td>
+                <th>القسط الكلي:</th>
+                <td>{{ receipt.total_fee | currency }}</td>
+            </tr>
+            <tr>
+                <th>المتبقي:</th>
+                <td>{{ receipt.remaining | currency }}</td>
+                <th></th>
+                <td></td>
+            </tr>
+        </table>
         
         <div class="amount-box">
             المبلغ المدفوع: {{ receipt.amount | currency }}
