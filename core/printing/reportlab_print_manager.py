@@ -61,8 +61,23 @@ class ReportLabPrintManager:
                 pdfmetrics.registerFont(TTFont('Cairo-Medium', str(cairo_medium_path)))
                 logging.info("تم تسجيل خط Cairo-Medium بنجاح")
                 
-            self.arabic_font = 'Cairo-Medium'
-            self.arabic_bold_font = 'Cairo-Bold'
+            # تسجيل خط Amiri إن وجد
+            amiri_path = fonts_dir / 'Amiri.ttf'
+            amiri_bold_path = fonts_dir / 'Amiri-Bold.ttf'
+            if amiri_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri', str(amiri_path)))
+                logging.info("تم تسجيل خط Amiri بنجاح")
+            if amiri_bold_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', str(amiri_bold_path)))
+                logging.info("تم تسجيل خط Amiri-Bold بنجاح")
+
+            # تعيين الخطوط الافتراضية
+            if amiri_path.exists() and amiri_bold_path.exists():
+                self.arabic_font = 'Amiri'
+                self.arabic_bold_font = 'Amiri-Bold'
+            else:
+                self.arabic_font = 'Cairo-Medium'
+                self.arabic_bold_font = 'Cairo-Bold'
             
         except Exception as e:
             logging.error(f"خطأ في تسجيل الخطوط العربية: {e}")
@@ -115,6 +130,10 @@ class ReportLabPrintManager:
         installment_number = receipt_data.get('installment_number', 1)
         school_name = receipt_data.get('school_name', 'المدرسة')
         receipt_number = receipt_data.get('receipt_number', f'R{datetime.now().strftime("%Y%m%d%H%M%S")}')
+        
+        # Override to use Amiri font for receipts if متوفر
+        self.arabic_font = 'Amiri'
+        self.arabic_bold_font = 'Amiri-Bold'
         
         # رسم الإيصال
         self._draw_receipt_header(c, school_name, receipt_number)
