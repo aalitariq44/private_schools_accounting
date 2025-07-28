@@ -158,15 +158,19 @@ cursor.execute("""
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS salaries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        employee_id INTEGER NOT NULL,
-        school_id INTEGER NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
+        staff_type TEXT NOT NULL,
+        staff_id INTEGER NOT NULL,
+        staff_name TEXT NOT NULL,
+        base_salary DECIMAL(10,2) NOT NULL,
+        paid_amount DECIMAL(10,2) NOT NULL,
+        from_date DATE,
+        to_date DATE,
+        days_count INTEGER,
         payment_date DATE NOT NULL,
+        payment_time TIME NOT NULL,
         notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
-        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 """)
 
