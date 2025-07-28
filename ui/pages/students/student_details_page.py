@@ -1025,7 +1025,7 @@ class StudentDetailsPage(QWidget):
                 QWidget {{
                     background-color: #F8F9FA;
                     font-family: {cairo_font};
-                    font-size: 18px;
+                    font-size: 16px;
                 }}
                 
                 /* شريط الرجوع */
@@ -1045,7 +1045,7 @@ class StudentDetailsPage(QWidget):
                     padding: 10px 18px;
                     border-radius: 8px;
                     font-weight: bold;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-family: {cairo_font};
                 }}
                 
@@ -1068,7 +1068,7 @@ class StudentDetailsPage(QWidget):
                     padding: 10px 18px;
                     border-radius: 8px;
                     font-weight: bold;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-family: {cairo_font};
                 }}
                 
@@ -1104,7 +1104,7 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #infoValue {{
-                    font-size: 18px;
+                    font-size: 16px;
                     color: #34495E;
                     background-color: #F8F9FA;
                     padding: 6px 10px;
@@ -1124,7 +1124,7 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #totalFee {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     background-color: rgba(52, 152, 219, 0.15);
@@ -1135,7 +1135,7 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #paidAmount {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #27AE60;
                     background-color: rgba(39, 174, 96, 0.15);
@@ -1146,7 +1146,7 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #remainingAmount {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     background-color: rgba(231, 76, 60, 0.15);
                     padding: 8px 15px;
@@ -1156,7 +1156,7 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #installmentsCount {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #8E44AD;
                     background-color: rgba(142, 68, 173, 0.15);
@@ -1168,41 +1168,40 @@ class StudentDetailsPage(QWidget):
                 
                 /* ملخص الرسوم الإضافية */
                 #additionalFeesSummary {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
-                        stop:0 #FDF2E9, stop:1 #F8C471);
-                    border: 2px solid #E67E22;
+                    background-color: #F8F9FA; /* خلفية محايدة */
+                    border: 2px solid #BDC3C7; /* حدود رمادية */
                     border-radius: 10px;
                     margin: 15px 0px;
                     padding: 5px;
                 }}
                 
                 #feesCount {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
-                    color: #8E44AD;
-                    background-color: rgba(142, 68, 173, 0.15);
+                    color: #2C3E50; /* لون نص محايد */
+                    background-color: rgba(44, 62, 80, 0.05); /* خلفية فاتحة */
                     padding: 8px 15px;
                     border-radius: 8px;
-                    border: 2px solid rgba(142, 68, 173, 0.3);
+                    border: 2px solid #E0E0E0; /* حدود رمادية فاتحة */
                     font-family: {cairo_font};
                 }}
                 
                 #feesTotal {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
-                    color: #E67E22;
-                    background-color: rgba(230, 126, 34, 0.15);
+                    color: #2C3E50;
+                    background-color: rgba(44, 62, 80, 0.05);
                     padding: 8px 15px;
                     border-radius: 8px;
-                    border: 2px solid rgba(230, 126, 34, 0.3);
+                    border: 2px solid #E0E0E0;
                     font-family: {cairo_font};
                 }}
                 
                 #feesPaid {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #27AE60;
-                    background-color: rgba(39, 174, 96, 0.15);
+                    background-color: rgba(39, 174, 96, 0.1);
                     padding: 8px 15px;
                     border-radius: 8px;
                     border: 2px solid rgba(39, 174, 96, 0.3);
@@ -1210,9 +1209,10 @@ class StudentDetailsPage(QWidget):
                 }}
                 
                 #feesUnpaid {{
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
-                    background-color: rgba(231, 76, 60, 0.15);
+                    color: #E74C3C;
+                    background-color: rgba(231, 76, 60, 0.1);
                     padding: 8px 15px;
                     border-radius: 8px;
                     border: 2px solid rgba(231, 76, 60, 0.3);
@@ -1225,7 +1225,7 @@ class StudentDetailsPage(QWidget):
                     border: 2px solid #E0E0E0;
                     border-radius: 12px;
                     gridline-color: #F0F0F0;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-family: {cairo_font};
                     margin: 10px 0px;
                 }}
@@ -1248,7 +1248,7 @@ class StudentDetailsPage(QWidget):
                     padding: 12px;
                     font-weight: bold;
                     color: white;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-family: {cairo_font};
                 }}
                 
@@ -1261,7 +1261,7 @@ class StudentDetailsPage(QWidget):
                     padding: 10px 18px;
                     border-radius: 8px;
                     font-weight: bold;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-family: {cairo_font};
                 }}
                 
