@@ -271,7 +271,7 @@ class StudentDetailsPage(QWidget):
             self.installments_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
             
             # إعداد أعمدة الجدول
-            columns = ["المبلغ", "التاريخ", "وقت الدفع", "الملاحظات", "إجراءات"]
+            columns = ["رقم الوصل", "المبلغ", "التاريخ", "وقت الدفع", "الملاحظات", "إجراءات"]
             self.installments_table.setColumnCount(len(columns))
             self.installments_table.setHorizontalHeaderLabels(columns)
             
@@ -282,11 +282,12 @@ class StudentDetailsPage(QWidget):
             
             # إعداد حجم الأعمدة
             header = self.installments_table.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # المبلغ
-            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # التاريخ
-            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # وقت الدفع
-            header.setSectionResizeMode(3, QHeaderView.Stretch)          # الملاحظات
-            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # الإجراءات
+            header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # رقم الوصل
+            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # المبلغ
+            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # التاريخ
+            header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # وقت الدفع
+            header.setSectionResizeMode(4, QHeaderView.Stretch)          # الملاحظات
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الإجراءات
             
             installments_layout.addWidget(self.installments_table)
             
@@ -480,22 +481,26 @@ class StudentDetailsPage(QWidget):
             self.installments_table.setRowCount(len(self.installments_data))
             
             for row, installment in enumerate(self.installments_data):
+                # رقم الوصل (id القسط)
+                receipt_id_item = QTableWidgetItem(str(installment[0]))
+                self.installments_table.setItem(row, 0, receipt_id_item)
+
                 # المبلغ
                 amount_value = float(installment[1]) if installment and len(installment) > 1 else 0
                 amount_item = QTableWidgetItem(f"{amount_value:,.0f} د.ع")
-                self.installments_table.setItem(row, 0, amount_item)
+                self.installments_table.setItem(row, 1, amount_item)
                 
                 # التاريخ
                 date_item = QTableWidgetItem(str(installment[2] or ""))
-                self.installments_table.setItem(row, 1, date_item)
+                self.installments_table.setItem(row, 2, date_item)
                 
                 # وقت الدفع
                 time_item = QTableWidgetItem(str(installment[3] or "--"))
-                self.installments_table.setItem(row, 2, time_item)
+                self.installments_table.setItem(row, 3, time_item)
                 
                 # الملاحظات
                 notes_item = QTableWidgetItem(str(installment[4] or ""))
-                self.installments_table.setItem(row, 3, notes_item)
+                self.installments_table.setItem(row, 4, notes_item)
                 
                 # أزرار الإجراءات
                 actions_layout = QHBoxLayout()
@@ -512,7 +517,7 @@ class StudentDetailsPage(QWidget):
                 actions_layout.addWidget(print_btn)
                 
                 actions_widget.setLayout(actions_layout)
-                self.installments_table.setCellWidget(row, 4, actions_widget)
+                self.installments_table.setCellWidget(row, 5, actions_widget)
             
         except Exception as e:
             logging.error(f"خطأ في تحديث جدول الأقساط: {e}")
