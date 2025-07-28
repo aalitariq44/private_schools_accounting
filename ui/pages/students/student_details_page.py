@@ -629,10 +629,10 @@ class StudentDetailsPage(QWidget):
         """تحميل الرسوم الإضافية"""
         try:
             query = """
-                SELECT id, fee_type, amount, paid, payment_date, added_at, notes
+                SELECT id, fee_type, amount, paid, payment_date, created_at, notes
                 FROM additional_fees
                 WHERE student_id = ?
-                ORDER BY added_at DESC
+                ORDER BY created_at DESC
             """
             self.additional_fees_data = db_manager.execute_query(query, (self.student_id,))
             self.update_additional_fees_table()
