@@ -182,6 +182,10 @@ class InstallmentsPage(QWidget):
             self.refresh_button.setObjectName("refreshButton")
             actions_layout.addWidget(self.refresh_button)
             
+            self.clear_filters_button = QPushButton("مسح الفلاتر")
+            self.clear_filters_button.setObjectName("secondaryButton") # Using secondaryButton style for now
+            actions_layout.addWidget(self.clear_filters_button)
+            
             toolbar_layout.addLayout(actions_layout)
             
             layout.addWidget(toolbar_frame)
@@ -295,6 +299,7 @@ class InstallmentsPage(QWidget):
             # ربط أزرار العمليات
             self.generate_report_button.clicked.connect(self.generate_report)
             self.refresh_button.clicked.connect(self.refresh)
+            self.clear_filters_button.clicked.connect(self.clear_filters)
             
             # ربط الفلاتر
             # ربط فلتر المدرسة والطالب باستخدام currentIndexChanged لالتقاط التغيير بشكل موثوق
@@ -476,6 +481,18 @@ class InstallmentsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث صفحة الأقساط: {e}")
+    
+    def clear_filters(self):
+        """مسح جميع الفلاتر وإعادة تعيينها إلى الوضع الافتراضي"""
+        try:
+            self.school_combo.setCurrentIndex(0) # "جميع المدارس"
+            self.student_combo.setCurrentIndex(0) # "جميع الطلاب"
+            self.due_date_from.setDate(QDate.currentDate().addDays(-30))
+            self.due_date_to.setDate(QDate.currentDate().addDays(30))
+            self.apply_filters()
+            log_user_action("مسح فلاتر صفحة الأقساط")
+        except Exception as e:
+            logging.error(f"خطأ في مسح الفلاتر: {e}")
     
     def show_context_menu(self, position):
         """عرض قائمة السياق للجدول"""

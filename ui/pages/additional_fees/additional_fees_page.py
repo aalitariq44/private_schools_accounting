@@ -200,6 +200,10 @@ class AdditionalFeesPage(QWidget):
             self.refresh_button.setObjectName("refreshButton")
             actions_layout.addWidget(self.refresh_button)
             
+            self.clear_filters_button = QPushButton("مسح الفلاتر")
+            self.clear_filters_button.setObjectName("secondaryButton") # Using secondaryButton style for consistency
+            actions_layout.addWidget(self.clear_filters_button)
+            
             toolbar_layout.addLayout(actions_layout)
             
             layout.addWidget(toolbar_frame)
@@ -377,6 +381,7 @@ class AdditionalFeesPage(QWidget):
             # ربط أزرار العمليات
             self.export_fees_button.clicked.connect(self.export_fees)
             self.refresh_button.clicked.connect(self.refresh)
+            self.clear_filters_button.clicked.connect(self.clear_filters)
             
             # ربط الفلاتر
             self.school_combo.currentTextChanged.connect(self.on_school_changed)
@@ -673,6 +678,19 @@ class AdditionalFeesPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث صفحة الرسوم الإضافية: {e}")
+    
+    def clear_filters(self):
+        """مسح جميع الفلاتر وإعادة تعيينها إلى الوضع الافتراضي"""
+        try:
+            self.school_combo.setCurrentIndex(0) # "جميع المدارس"
+            self.student_combo.setCurrentIndex(0) # "جميع الطلاب"
+            self.fee_type_combo.setCurrentIndex(0) # "جميع الأنواع"
+            self.status_combo.setCurrentIndex(0) # "الكل"
+            self.search_input.clear()
+            self.apply_filters()
+            log_user_action("مسح فلاتر صفحة الرسوم الإضافية")
+        except Exception as e:
+            logging.error(f"خطأ في مسح الفلاتر: {e}")
     
     def show_context_menu(self, position):
         """عرض قائمة السياق للجدول - تم تعطيلها"""
