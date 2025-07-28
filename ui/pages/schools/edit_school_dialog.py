@@ -355,11 +355,11 @@ class EditSchoolDialog(QDialog):
             self.address_input.setPlainText(self.school_data.get('address', ''))
             
             # أنواع المدرسة
-            school_types_str = self.school_data.get('school_types', '[]')
-            try:
-                school_types = json.loads(school_types_str) if school_types_str else []
-            except json.JSONDecodeError:
-                school_types = []
+            school_types_str = self.school_data.get('school_types', '')
+            school_types = []
+            if school_types_str:
+                # Split by comma to handle multiple types stored as a single string
+                school_types = [t.strip() for t in school_types_str.split(',') if t.strip()]
             
             self.primary_checkbox.setChecked("ابتدائية" in school_types)
             self.middle_checkbox.setChecked("متوسطة" in school_types)
@@ -607,7 +607,7 @@ class EditSchoolDialog(QDialog):
                 'principal_name': self.principal_input.text().strip(),
                 'phone': self.phone_input.text().strip() or None,
                 'address': self.address_input.toPlainText().strip() or None,
-                'school_types': json.dumps(school_types, ensure_ascii=False),
+                'school_types': ",".join(school_types) if school_types else None, # Store as comma-separated string
                 'logo_path': final_logo_path
             }
             
@@ -823,4 +823,3 @@ class EditSchoolDialog(QDialog):
             self.setStyleSheet(style)
         except Exception as e:
             logging.error(f"خطأ في إعداد التنسيقات: {e}")
-            
