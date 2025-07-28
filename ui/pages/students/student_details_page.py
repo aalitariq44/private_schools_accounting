@@ -14,7 +14,9 @@ from PyQt5.QtWidgets import (
     QTabWidget, QSplitter
 )
 from PyQt5.QtCore import Qt, QDate, QTime, pyqtSignal
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
+
+import config
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
@@ -39,12 +41,35 @@ class StudentDetailsPage(QWidget):
         self.installments_data = []
         self.additional_fees_data = []
         
+        # تحميل وتطبيق خط Cairo
+        self.setup_cairo_font()
+        
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
         self.load_student_data()
         
         log_user_action(f"فتح صفحة تفاصيل الطالب: {student_id}")
+    
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            font_db = QFontDatabase()
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            # تحميل خطوط Cairo
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            # الحصول على اسم عائلة الخط
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -72,20 +97,13 @@ class StudentDetailsPage(QWidget):
             # معلومات الطالب الأساسية
             self.create_student_info_section(content_layout)
             
-            # التقسيم الأفقي للأقساط والرسوم
-            splitter = QSplitter(Qt.Horizontal)
-            
-            # قسم الأقساط
+            # قسم الأقساط (عرض كامل)
             installments_widget = self.create_installments_section()
-            splitter.addWidget(installments_widget)
+            content_layout.addWidget(installments_widget)
             
-            # قسم الرسوم الإضافية
+            # قسم الرسوم الإضافية (عرض كامل)
             fees_widget = self.create_additional_fees_section()
-            splitter.addWidget(fees_widget)
-            
-            # تعيين النسب
-            splitter.setSizes([400, 300])
-            content_layout.addWidget(splitter)
+            content_layout.addWidget(fees_widget)
             
             scroll_area.setWidget(content_widget)
             main_layout.addWidget(scroll_area)
@@ -288,7 +306,13 @@ class StudentDetailsPage(QWidget):
             header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # وقت الدفع
             header.setSectionResizeMode(4, QHeaderView.Stretch)          # الملاحظات
             header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الإجراءات
-            
+
+            # ضبط ارتفاع الجدول لعرض 4 صفوف على الأقل
+            row_height = self.installments_table.verticalHeader().defaultSectionSize()
+            header_height = self.installments_table.horizontalHeader().height()
+            min_height = header_height + row_height * 4 + 2 * self.installments_table.frameWidth()
+            self.installments_table.setMinimumHeight(min_height)
+
             installments_layout.addWidget(self.installments_table)
             
             return installments_widget
@@ -320,6 +344,9 @@ class StudentDetailsPage(QWidget):
             
             fees_layout.addLayout(header_layout)
             
+            # ملخص الرسوم الإضافية
+            self.create_additional_fees_summary(fees_layout)
+            
             # جدول الرسوم الإضافية
             self.fees_table = QTableWidget()
             self.fees_table.setObjectName("dataTable")
@@ -343,13 +370,54 @@ class StudentDetailsPage(QWidget):
             header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # تاريخ الدفع
             header.setSectionResizeMode(4, QHeaderView.Stretch)          # الملاحظات
             header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الإجراءات
-            
+
+            # ضبط ارتفاع الجدول لعرض 4 صفوف على الأقل
+            row_height = self.fees_table.verticalHeader().defaultSectionSize()
+            header_height = self.fees_table.horizontalHeader().height()
+            min_height = header_height + row_height * 4 + 2 * self.fees_table.frameWidth()
+            self.fees_table.setMinimumHeight(min_height)
+
             fees_layout.addWidget(self.fees_table)
             
             return fees_widget
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم الرسوم الإضافية: {e}")
+            raise
+    
+    def create_additional_fees_summary(self, layout):
+        """إنشاء ملخص الرسوم الإضافية"""
+        try:
+            summary_frame = QFrame()
+            summary_frame.setObjectName("additionalFeesSummary")
+            
+            summary_layout = QHBoxLayout(summary_frame)
+            summary_layout.setContentsMargins(15, 10, 15, 10)
+            
+            # عدد الرسوم الإضافية
+            self.fees_count_label = QLabel("عدد الرسوم: 0")
+            self.fees_count_label.setObjectName("feesCount")
+            summary_layout.addWidget(self.fees_count_label)
+            
+            # مجموع الرسوم الإضافية
+            self.fees_total_label = QLabel("المجموع: 0 د.ع")
+            self.fees_total_label.setObjectName("feesTotal")
+            summary_layout.addWidget(self.fees_total_label)
+            
+            # المدفوع من الرسوم
+            self.fees_paid_label = QLabel("المدفوع: 0 د.ع")
+            self.fees_paid_label.setObjectName("feesPaid")
+            summary_layout.addWidget(self.fees_paid_label)
+            
+            # غير المدفوع من الرسوم
+            self.fees_unpaid_label = QLabel("غير المدفوع: 0 د.ع")
+            self.fees_unpaid_label.setObjectName("feesUnpaid")
+            summary_layout.addWidget(self.fees_unpaid_label)
+            
+            layout.addWidget(summary_frame)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء ملخص الرسوم الإضافية: {e}")
             raise
     
     def setup_connections(self):
@@ -636,9 +704,53 @@ class StudentDetailsPage(QWidget):
             """
             self.additional_fees_data = db_manager.execute_query(query, (self.student_id,))
             self.update_additional_fees_table()
+            self.update_additional_fees_summary()
             
         except Exception as e:
             logging.error(f"خطأ في تحميل الرسوم الإضافية: {e}")
+    
+    def update_additional_fees_summary(self):
+        """تحديث ملخص الرسوم الإضافية"""
+        try:
+            total_fees = 0
+            paid_fees = 0
+            fees_count = len(self.additional_fees_data)
+            
+            for fee in self.additional_fees_data:
+                try:
+                    amount = float(fee[2]) if fee[2] else 0
+                    total_fees += amount
+                    
+                    # التحقق من حالة الدفع
+                    is_paid = fee[3] if isinstance(fee[3], bool) else (fee[3] == 1 if fee[3] is not None else False)
+                    if is_paid:
+                        paid_fees += amount
+                        
+                except (ValueError, TypeError, IndexError):
+                    logging.warning(f"تجاهل رسم غير صحيح: {fee}")
+                    continue
+            
+            unpaid_fees = total_fees - paid_fees
+            
+            # تحديث التسميات
+            self.fees_count_label.setText(f"عدد الرسوم: {fees_count}")
+            self.fees_total_label.setText(f"المجموع: {total_fees:,.0f} د.ع")
+            self.fees_paid_label.setText(f"المدفوع: {paid_fees:,.0f} د.ع")
+            self.fees_unpaid_label.setText(f"غير المدفوع: {unpaid_fees:,.0f} د.ع")
+            
+            # تلوين غير المدفوع
+            if unpaid_fees > 0:
+                self.fees_unpaid_label.setStyleSheet("color: #E74C3C; font-weight: bold;")
+            else:
+                self.fees_unpaid_label.setStyleSheet("color: #27AE60; font-weight: bold;")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحديث ملخص الرسوم الإضافية: {e}")
+            # قيم افتراضية في حالة الخطأ
+            self.fees_count_label.setText("عدد الرسوم: 0")
+            self.fees_total_label.setText("المجموع: 0 د.ع")
+            self.fees_paid_label.setText("المدفوع: 0 د.ع")
+            self.fees_unpaid_label.setText("غير المدفوع: 0 د.ع")
     def print_installment(self, installment_id):
         """طباعة إيصال قسط منفصل"""
         try:
@@ -905,216 +1017,309 @@ class StudentDetailsPage(QWidget):
     def setup_styles(self):
         """إعداد التنسيقات"""
         try:
-            style = """
+            # استخدام خط Cairo المحمل مع حجم 18 بكسل
+            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            
+            style = f"""
                 /* الإطار الرئيسي */
-                QWidget {
+                QWidget {{
                     background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
+                    font-family: {cairo_font};
                     font-size: 18px;
-                }
+                }}
                 
                 /* شريط الرجوع */
-                #backToolbar {
+                #backToolbar {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2=1, 
                         stop:0 #3498DB, stop:1 #2980B9);
-                    border-radius: 10px;
+                    border-radius: 12px;
                     color: white;
-                    margin-bottom: 10px;
-                }
+                    margin-bottom: 15px;
+                    padding: 5px;
+                }}
                 
-                #backButton {
-                    background-color: #2980B9; /* لون أزرق داكن */
-                    border: 2px solid #2471A3; /* حدود أغمق قليلاً */
+                #backButton {{
+                    background-color: #2980B9;
+                    border: 2px solid #2471A3;
                     color: white;
-                    padding: 8px 16px;
-                    border-radius: 6px;
+                    padding: 10px 18px;
+                    border-radius: 8px;
                     font-weight: bold;
                     font-size: 18px;
-                }
+                    font-family: {cairo_font};
+                }}
                 
-                #backButton:hover {
-                    background-color: #2471A3; /* لون أغمق عند التحويم */
-                    border-color: #1F618D; /* حدود أغمق عند التحويم */
-                }
+                #backButton:hover {{
+                    background-color: #2471A3;
+                    border-color: #1F618D;
+                }}
                 
-                #pageTitle {
-                    font-size: 18px;
+                #pageTitle {{
+                    font-size: 20px;
                     font-weight: bold;
                     color: white;
-                }
+                    font-family: {cairo_font};
+                }}
                 
-                #refreshButton {
-                    background-color: #2980B9; /* لون أزرق داكن */
-                    border: 2px solid #2471A3; /* حدود أغمق قليلاً */
+                #refreshButton, #primaryButton {{
+                    background-color: #2980B9;
+                    border: 2px solid #2471A3;
                     color: white;
-                    padding: 8px 16px;
-                    border-radius: 6px;
+                    padding: 10px 18px;
+                    border-radius: 8px;
                     font-weight: bold;
                     font-size: 18px;
-                }
+                    font-family: {cairo_font};
+                }}
                 
-                #refreshButton:hover {
-                    background-color: #2471A3; /* لون أغمق عند التحويم */
-                    border-color: #1F618D; /* حدود أغمق عند التحويم */
-                }
+                #refreshButton:hover, #primaryButton:hover {{
+                    background-color: #2471A3;
+                    border-color: #1F618D;
+                }}
                 
                 /* قسم معلومات الطالب */
-                #studentInfoFrame {
+                #studentInfoFrame {{
                     background-color: white;
-                    border: 1px solid #E0E0E0;
-                    border-radius: 12px;
-                    margin: 5px;
-                }
+                    border: 2px solid #E0E0E0;
+                    border-radius: 15px;
+                    margin: 8px 5px;
+                    padding: 5px;
+                }}
                 
-                #sectionTitle {
-                    font-size: 16px;
+                #sectionTitle {{
+                    font-size: 20px;
                     font-weight: bold;
                     color: #2C3E50;
-                    margin-bottom: 10px;
-                    padding-bottom: 8px;
-                    border-bottom: 2px solid #3498DB;
-                }
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 3px solid #3498DB;
+                    font-family: {cairo_font};
+                }}
                 
-                #studentName {
-                    font-size: 16px;
+                #studentName {{
+                    font-size: 20px;
                     font-weight: bold;
                     color: #2C3E50;
-                }
+                    font-family: {cairo_font};
+                }}
                 
-                #infoValue {
+                #infoValue {{
                     font-size: 18px;
                     color: #34495E;
                     background-color: #F8F9FA;
-                    padding: 4px 8px;
-                    border-radius: 4px;
+                    padding: 6px 10px;
+                    border-radius: 6px;
                     border: 1px solid #E0E0E0;
-                }
+                    font-family: {cairo_font};
+                }}
                 
                 /* الملخص المالي */
-                #financialSummary {
+                #financialSummary {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
                         stop:0 #ECF0F1, stop:1 #D5DBDB);
-                    border: 1px solid #BDC3C7;
-                    border-radius: 8px;
-                    margin-top: 15px;
-                }
+                    border: 2px solid #BDC3C7;
+                    border-radius: 10px;
+                    margin-top: 20px;
+                    padding: 5px;
+                }}
                 
-                #totalFee {
+                #totalFee {{
                     font-size: 18px;
                     font-weight: bold;
                     color: #2C3E50;
-                    background-color: rgba(52, 152, 219, 0.1);
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid rgba(52, 152, 219, 0.3);
-                }
+                    background-color: rgba(52, 152, 219, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(52, 152, 219, 0.3);
+                    font-family: {cairo_font};
+                }}
                 
-                #paidAmount {
+                #paidAmount {{
                     font-size: 18px;
                     font-weight: bold;
                     color: #27AE60;
-                    background-color: rgba(39, 174, 96, 0.1);
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid rgba(39, 174, 96, 0.3);
-                }
+                    background-color: rgba(39, 174, 96, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(39, 174, 96, 0.3);
+                    font-family: {cairo_font};
+                }}
                 
-                #remainingAmount {
+                #remainingAmount {{
                     font-size: 18px;
                     font-weight: bold;
-                    background-color: rgba(231, 76, 60, 0.1);
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid rgba(231, 76, 60, 0.3);
-                }
+                    background-color: rgba(231, 76, 60, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(231, 76, 60, 0.3);
+                    font-family: {cairo_font};
+                }}
                 
-                #installmentsCount {
+                #installmentsCount {{
                     font-size: 18px;
                     font-weight: bold;
                     color: #8E44AD;
-                    background-color: rgba(142, 68, 173, 0.1);
-                    padding: 6px 12px;
-                    border-radius: 6px;
-                    border: 1px solid rgba(142, 68, 173, 0.3);
-                }
+                    background-color: rgba(142, 68, 173, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(142, 68, 173, 0.3);
+                    font-family: {cairo_font};
+                }}
+                
+                /* ملخص الرسوم الإضافية */
+                #additionalFeesSummary {{
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, 
+                        stop:0 #FDF2E9, stop:1 #F8C471);
+                    border: 2px solid #E67E22;
+                    border-radius: 10px;
+                    margin: 15px 0px;
+                    padding: 5px;
+                }}
+                
+                #feesCount {{
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #8E44AD;
+                    background-color: rgba(142, 68, 173, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(142, 68, 173, 0.3);
+                    font-family: {cairo_font};
+                }}
+                
+                #feesTotal {{
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #E67E22;
+                    background-color: rgba(230, 126, 34, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(230, 126, 34, 0.3);
+                    font-family: {cairo_font};
+                }}
+                
+                #feesPaid {{
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #27AE60;
+                    background-color: rgba(39, 174, 96, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(39, 174, 96, 0.3);
+                    font-family: {cairo_font};
+                }}
+                
+                #feesUnpaid {{
+                    font-size: 18px;
+                    font-weight: bold;
+                    background-color: rgba(231, 76, 60, 0.15);
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    border: 2px solid rgba(231, 76, 60, 0.3);
+                    font-family: {cairo_font};
+                }}
                 
                 /* الجداول */
-                #dataTable {
+                #dataTable {{
                     background-color: white;
-                    border: 1px solid #E0E0E0;
-                    border-radius: 8px;
+                    border: 2px solid #E0E0E0;
+                    border-radius: 12px;
                     gridline-color: #F0F0F0;
-                    font-size: 16px;
-                }
+                    font-size: 18px;
+                    font-family: {cairo_font};
+                    margin: 10px 0px;
+                }}
                 
-                #dataTable::item {
-                    padding: 8px;
+                #dataTable::item {{
+                    padding: 10px;
                     border-bottom: 1px solid #F0F0F0;
-                }
+                    font-family: {cairo_font};
+                }}
                 
-                #dataTable::item:selected {
+                #dataTable::item:selected {{
                     background-color: #E3F2FD;
                     color: #1976D2;
-                }
+                }}
                 
-                #dataTable QHeaderView::section {
+                #dataTable QHeaderView::section {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
-                        stop:0 #F5F5F5, stop:1 #E8E8E8);
-                    border: 1px solid #D0D0D0;
-                    padding: 8px;
+                        stop:0 #34495E, stop:1 #2C3E50);
+                    border: 1px solid #2C3E50;
+                    padding: 12px;
                     font-weight: bold;
-                    color: #2C3E50;
-                    font-size: 16px;
-                }
+                    color: white;
+                    font-size: 18px;
+                    font-family: {cairo_font};
+                }}
                 
                 /* الأزرار */
-                #addButton {
+                #addButton {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #27AE60, stop:1 #229954);
                     color: white;
                     border: none;
-                    padding: 8px 16px;
-                    border-radius: 6px;
+                    padding: 10px 18px;
+                    border-radius: 8px;
                     font-weight: bold;
-                    font-size: 16px;
-                }
+                    font-size: 18px;
+                    font-family: {cairo_font};
+                }}
                 
-                #addButton:hover {
+                #addButton:hover {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #229954, stop:1 #1E8449);
-                }
+                }}
                 
-                #deleteButton {
+                #deleteButton {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #E74C3C, stop:1 #C0392B);
                     color: white;
                     border: none;
-                    padding: 4px 8px;
-                    border-radius: 4px;
+                    padding: 6px 12px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    font-size: 14px;
-                }
+                    font-size: 16px;
+                    font-family: {cairo_font};
+                }}
                 
-                #deleteButton:hover {
+                #deleteButton:hover {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #C0392B, stop:1 #A93226);
-                }
+                }}
                 
-                #payButton {
+                #payButton {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #F39C12, stop:1 #E67E22);
                     color: white;
                     border: none;
-                    padding: 4px 8px;
-                    border-radius: 4px;
+                    padding: 6px 12px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    font-size: 14px;
-                }
+                    font-size: 16px;
+                    font-family: {cairo_font};
+                }}
                 
-                #payButton:hover {
+                #payButton:hover {{
                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
                         stop:0 #E67E22, stop:1 #D35400);
-                }
+                }}
+                
+                #printButton {{
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                        stop:0 #9B59B6, stop:1 #8E44AD);
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 16px;
+                    font-family: {cairo_font};
+                }}
+                
+                #printButton:hover {{
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                        stop:0 #8E44AD, stop:1 #7D3C98);
+                }}
             """
             
             self.setStyleSheet(style)
