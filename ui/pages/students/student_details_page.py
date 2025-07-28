@@ -640,14 +640,34 @@ class StudentDetailsPage(QWidget):
             inst = next((i for i in self.installments_data if i[0] == installment_id), None)
             if not inst:
                 return
+
+            # حساب المجموع المدفوع والرصيد
+            total_paid = 0
+            for i in self.installments_data:
+                paid_amount = i[6] if len(i) > 6 and i[6] else i[1]
+                try:
+                    total_paid += float(paid_amount)
+                except:
+                    continue
+            try:
+                total_fee = float(self.student_data[11])
+            except:
+                total_fee = 0
+            remaining = total_fee - total_paid
+
             receipt = {
                 'id': inst[0],
                 'student_name': self.name_label.text(),
                 'school_name': self.school_label.text(),
-                'payment_date': inst[2],
+                'grade': self.grade_label.text(),
+                'section': self.section_label.text(),
+                'payment_date': f"{inst[2]} {inst[3] or ''}",
                 'payment_method': inst[4] or '',  # استخدم الملاحظات كوصف الدفع
                 'description': inst[4] or '',
-                'amount': float(inst[1]) if inst[1] else 0
+                'amount': float(inst[1]) if inst[1] else 0,
+                'total_paid': total_paid,
+                'total_fee': total_fee,
+                'remaining': remaining
             }
             print_payment_receipt(receipt, parent=self)
         except Exception as e:

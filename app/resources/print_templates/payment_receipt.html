@@ -61,22 +61,42 @@
                 <strong>اسم الطالب:</strong>
                 <span>{{ receipt.student_name }}</span>
             </div>
-            <div class="info-row">
-                <strong>المدرسة:</strong>
-                <span>{{ receipt.school_name }}</span>
-            </div>
-            <div class="info-row">
-                <strong>تاريخ الدفع:</strong>
-                <span>{{ receipt.payment_date | date_ar }}</span>
-            </div>
+        <div class="info-row">
+            <strong>المدرسة:</strong>
+            <span>{{ receipt.school_name }}</span>
+        </div>
+        <div class="info-row">
+            <strong>الصف:</strong>
+            <span>{{ receipt.grade }}</span>
+        </div>
+        <div class="info-row">
+            <strong>الشعبة:</strong>
+            <span>{{ receipt.section }}</span>
+        </div>
+        <div class="info-row">
+            <strong>تاريخ التسديد:</strong>
+            <span>{{ receipt.payment_date | date_ar }}</span>
+        </div>
             <div class="info-row">
                 <strong>طريقة الدفع:</strong>
                 <span>{{ receipt.payment_method }}</span>
             </div>
-            <div class="info-row">
-                <strong>الوصف:</strong>
-                <span>{{ receipt.description }}</span>
-            </div>
+        <div class="info-row">
+            <strong>الوصف:</strong>
+            <span>{{ receipt.description }}</span>
+        </div>
+        <div class="info-row">
+            <strong>مجموع التسديد:</strong>
+            <span>{{ receipt.total_paid | currency }}</span>
+        </div>
+        <div class="info-row">
+            <strong>القسط الكلي:</strong>
+            <span>{{ receipt.total_fee | currency }}</span>
+        </div>
+        <div class="info-row">
+            <strong>المتبقي:</strong>
+            <span>{{ receipt.remaining | currency }}</span>
+        </div>
         </div>
         
         <div class="amount-box">
