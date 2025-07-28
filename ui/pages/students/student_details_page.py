@@ -579,11 +579,13 @@ class StudentDetailsPage(QWidget):
                 
                 delete_btn = QPushButton("حذف")
                 delete_btn.setObjectName("deleteButton")
+                delete_btn.setFixedSize(120, 25)  # تكبير زر الحذف
                 delete_btn.clicked.connect(lambda checked, id=installment[0]: self.delete_installment(id))
                 actions_layout.addWidget(delete_btn)
                 # زر طباعة إيصال القسط
                 print_btn = QPushButton("طباعة")
                 print_btn.setObjectName("printButton")
+                print_btn.setFixedSize(120, 25)  # تكبير زر الطباعة
                 print_btn.clicked.connect(lambda checked, id=installment[0]: self.print_installment(id))
                 actions_layout.addWidget(print_btn)
                 
@@ -896,11 +898,13 @@ class StudentDetailsPage(QWidget):
                 if not is_paid:
                     pay_btn = QPushButton("دفع")
                     pay_btn.setObjectName("payButton")
+                    pay_btn.setFixedSize(120, 25)  # تكبير زر الدفع
                     pay_btn.clicked.connect(lambda checked, id=fee[0]: self.pay_additional_fee(id))
                     actions_layout.addWidget(pay_btn)
                 
                 delete_btn = QPushButton("حذف")
                 delete_btn.setObjectName("deleteButton")
+                delete_btn.setFixedSize(120, 25)  # تكبير زر الحذف
                 delete_btn.clicked.connect(lambda checked, id=fee[0]: self.delete_additional_fee(id))
                 actions_layout.addWidget(delete_btn)
                 
