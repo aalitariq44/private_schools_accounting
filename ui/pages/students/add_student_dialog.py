@@ -367,12 +367,12 @@ class AddStudentDialog(QDialog):
         # التحقق من الرسوم
         total_fee_text = self.total_fee_edit.text().strip()
         if not total_fee_text:
-            errors.append("القسط الكلي مطلوب")
+            errors.append("الرسوم الدراسية مطلوبة")
         else:
             try:
                 float(total_fee_text)
             except ValueError:
-                errors.append("يجب أن يكون القسط الكلي رقماً صحيحاً")
+                errors.append("يجب أن يكون الرسوم الدراسية رقماً صحيحاً")
         
         return errors
     
