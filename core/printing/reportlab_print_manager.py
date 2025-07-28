@@ -135,20 +135,15 @@ class ReportLabPrintManager:
         return output_path
 
     def _draw_receipt(self, c, data, top_y):
-        """Helper function to draw a single receipt."""
-        # تحديد منطقة الإيصال (أعلى 45% من الصفحة)
+        """Helper function to draw a single receipt with a more organized layout."""
         receipt_height = self.page_height * 0.48
         bottom_y = top_y - receipt_height
 
-        # رسم إطار الإيصال باللون الأزرق
         c.setStrokeColor(blue)
         c.setLineWidth(1.5)
         c.rect(self.margin, bottom_y, self.content_width, receipt_height - self.margin)
-
-        # استعادة لون الخط الافتراضي
         c.setStrokeColor(black)
 
-        # معلومات الإيصال
         receipt_data = data.get('receipt', data)
         student_name = receipt_data.get('student_name', 'غير محدد')
         amount = receipt_data.get('amount', 0)
@@ -160,10 +155,8 @@ class ReportLabPrintManager:
         self.arabic_font = 'Amiri'
         self.arabic_bold_font = 'Amiri-Bold'
 
-        # --- بدء الرسم داخل الإطار ---
         y_pos = top_y - self.margin - 20
         
-        # 1. رأس الإيصال
         title = self.reshape_arabic_text("إيصال دفع قسط")
         self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
         y_pos -= 25
@@ -176,76 +169,63 @@ class ReportLabPrintManager:
         receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
         c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
         
-        # خط فاصل
         y_pos -= 15
         c.setLineWidth(0.5)
         c.line(self.margin + 10, y_pos, self.page_width - self.margin - 10, y_pos)
         
-        # 2. محتوى الإيصال
-        y_pos -= 25
-        line_height = 22
+        y_pos -= 10
         
-        student_label = self.reshape_arabic_text("اسم الطالب:")
-        student_value = self.reshape_arabic_text(student_name)
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, student_label)
-        c.drawRightString(self.page_width - self.margin - 120, y_pos, student_value)
-        y_pos -= line_height
-        
-        installment_label = self.reshape_arabic_text("رقم القسط:")
-        installment_value = str(installment_number)
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, installment_label)
-        c.drawRightString(self.page_width - self.margin - 120, y_pos, installment_value)
-        y_pos -= line_height
-        
-        amount_label = self.reshape_arabic_text("المبلغ المدفوع:")
-        amount_value = f"{amount:,.0f} دينار"
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, amount_label)
-        c.drawRightString(self.page_width - self.margin - 120, y_pos, amount_value)
-        y_pos -= line_height
+        table_data = [
+            [self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")],
+            [self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")],
+            [self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")],
+            [self.reshape_arabic_text(f"القسط رقم {installment_number}"), self.reshape_arabic_text("بيان الدفع")],
+            [self.reshape_arabic_text(f"{amount:,.0f} د.ع"), self.reshape_arabic_text("المبلغ المدفوع")],
+            [self.reshape_arabic_text(payment_date), self.reshape_arabic_text("تاريخ الدفع")],
+            [self.reshape_arabic_text(f"{receipt_data.get('total_fee', 0):,.0f} د.ع"), self.reshape_arabic_text("إجمالي الرسوم")],
+            [self.reshape_arabic_text(f"{receipt_data.get('total_paid', 0):,.0f} د.ع"), self.reshape_arabic_text("المدفوع تراكمياً")],
+            [self.reshape_arabic_text(f"{receipt_data.get('remaining', 0):,.0f} د.ع"), self.reshape_arabic_text("المبلغ المتبقي")],
+        ]
 
-        date_label = self.reshape_arabic_text("تاريخ الدفع:")
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, date_label)
-        c.drawRightString(self.page_width - self.margin - 120, y_pos, payment_date)
+        col_widths = [self.content_width * 0.5, self.content_width * 0.5]
+        tbl = Table(table_data, colWidths=col_widths, hAlign='CENTER')
+        
+        tbl.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), self.arabic_font),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (1, 0), (1, -1), self.arabic_bold_font),
+            ('GRID', (0, 0), (-1, -1), 0.5, black),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+            ('BACKGROUND', (0, -1), (-1, -1), Color(0.92, 0.92, 0.92)),
+            ('TEXTCOLOR', (0, -1), (-1, -1), red),
+            ('FONTNAME', (0, -1), (-1, -1), self.arabic_bold_font),
+        ]))
+        
+        table_height = tbl.wrapOn(c, self.content_width, receipt_height)[1]
+        y_pos -= table_height
+        tbl.drawOn(c, self.margin, y_pos)
 
-        # صندوق المبلغ
-        y_pos -= 30
-        box_height = 65
+        y_pos -= 15
+        box_height = 40
+        y_pos -= box_height
         c.setLineWidth(1)
-        c.rect(self.margin + 20, y_pos - box_height, self.content_width - 40, box_height)
+        c.rect(self.margin + 20, y_pos, self.content_width - 40, box_height)
         
-        y_pos -= 20
-        amount_digits = f"{amount:,.0f}"
-        self.draw_centered_text(c, amount_digits, self.page_width / 2, y_pos, self.arabic_bold_font, 14)
+        amount_digits_text = self.reshape_arabic_text(f"المبلغ: {amount:,.0f} د.ع")
+        self.draw_centered_text(c, amount_digits_text, self.page_width / 2, y_pos + 25, self.arabic_bold_font, 13)
         
-        y_pos -= 22
-        amount_words = self.reshape_arabic_text(self._number_to_arabic_words(amount))
-        self.draw_centered_text(c, amount_words, self.page_width / 2, y_pos, self.arabic_font, 11)
+        amount_words_text = self.reshape_arabic_text(f"فقط ({self._number_to_arabic_words(amount)}) دينار عراقي لا غير")
+        self.draw_centered_text(c, amount_words_text, self.page_width / 2, y_pos + 10, self.arabic_font, 10)
         
-        y_pos -= 18
-        currency_text = self.reshape_arabic_text("دينار عراقي لا غير")
-        self.draw_centered_text(c, currency_text, self.page_width / 2, y_pos, self.arabic_font, 10)
-        
-        # 3. الملخص المالي على الإيصال
-        y_pos -= line_height
-        total_paid = receipt_data.get('total_paid', 0)
-        paid_text = self.reshape_arabic_text(f"إجمالي المدفوع: {total_paid:,.0f} د.ع")
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, paid_text)
-        y_pos -= line_height
-        total_fee_val = receipt_data.get('total_fee', 0)
-        fee_text = self.reshape_arabic_text(f"إجمالي القسط: {total_fee_val:,.0f} د.ع")
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, fee_text)
-        y_pos -= line_height
-        remaining = receipt_data.get('remaining', 0)
-        rem_text = self.reshape_arabic_text(f"المتبقي: {remaining:,.0f} د.ع")
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, rem_text)
-        
-        # 4. الملاحظة السفلية
         note_y_pos = bottom_y + 15
-        note_text = self.reshape_arabic_text("هذا الإيصال محاسبي")
+        note_text = self.reshape_arabic_text("هذا الإيصال هو نسخة محاسبية. المستلم: __________ التوقيع: __________")
         self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
 
-    
-    
     def _number_to_arabic_words(self, number: float) -> str:
         """تحويل الرقم إلى كلمات عربية"""
         # تنفيذ بسيط لتحويل الأرقام إلى كلمات
@@ -258,36 +238,51 @@ class ReportLabPrintManager:
         if number == 0:
             return 'صفر'
         
-        # تنفيذ بسيط للأرقام حتى 999
         num = int(number)
-        if num > 999:
-            return f'{num:,} دينار'
+        if num > 999999:
+            return f'{num:,}'
+
+        if num >= 1000:
+            thousands = num // 1000
+            remainder = num % 1000
+            if thousands == 1:
+                k_str = 'ألف'
+            elif thousands == 2:
+                k_str = 'ألفان'
+            elif 3 <= thousands <= 10:
+                k_str = self._number_to_arabic_words(thousands) + ' آلاف'
+            else:
+                k_str = self._number_to_arabic_words(thousands) + ' ألف'
+
+            if remainder > 0:
+                return k_str + ' و' + self._number_to_arabic_words(remainder)
+            else:
+                return k_str
+
+        result = []
         
-        result = ''
-        
-        # المئات
         h = num // 100
         if h > 0:
-            result += hundreds[h] + ' '
+            result.append(hundreds[h])
         
-        # العشرات والوحدات
-        remainder = num % 100
-        if remainder >= 20:
-            t = remainder // 10
-            u = remainder % 10
-            result += tens[t]
-            if u > 0:
-                result += ' ' + units[u]
-        elif remainder >= 11:
-            teens = ['أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 
-                    'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر']
-            result += teens[remainder - 11]
-        elif remainder == 10:
-            result += 'عشرة'
-        elif remainder > 0:
-            result += units[remainder]
+        rem = num % 100
+        if rem > 0:
+            if rem >= 20:
+                t = rem // 10
+                u = rem % 10
+                if u > 0:
+                    result.append(units[u])
+                result.append(tens[t])
+            elif rem >= 11:
+                teens = ['أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 
+                         'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر']
+                result.append(teens[rem - 11])
+            elif rem == 10:
+                result.append('عشرة')
+            else:
+                result.append(units[rem])
         
-        return result.strip()
+        return ' و'.join(result)
     
     def preview_installment_receipt(self, data: Dict[str, Any]) -> str:
         """معاينة إيصال دفع قسط"""
