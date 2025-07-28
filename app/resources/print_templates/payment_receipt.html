@@ -1,21 +1,26 @@
-
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>إيصال دفع</title>
     <style>
+        /* Page setup for printing: A4 with 20mm margins */
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             direction: rtl;
-            font-size: 14px;
+            font-size: 12pt; /* converted from 24px to 12pt for base text */
         }
         .receipt {
             border: 2px solid #333;
             padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            margin: 0;
         }
         .header {
             text-align: center;
@@ -36,7 +41,7 @@
             background-color: #f0f0f0;
             padding: 15px;
             text-align: center;
-            font-size: 18px;
+            font-size: 14pt; /* converted from 28px to 14pt */
             font-weight: bold;
             border: 1px solid #ddd;
             margin: 20px 0;
@@ -44,11 +49,40 @@
         .footer {
             text-align: center;
             margin-top: 30px;
-            font-size: 12px;
+            font-size: 9pt; /* converted from 18px to 9pt */
+        }
+        /* Set header sizes for print and screen */
+        .header h2 {
+            font-size: 28pt; /* main title size */
+        }
+        .header h3 {
+            font-size: 24pt; /* subtitle size */
+        }
+        /* اجبار فصل الصفحة عند طباعة كل إيصال */
+        @media print {
+            /* enforce header sizes when printing */
+            .header h2 {
+                font-size: 28pt !important;
+            }
+            .header h3 {
+                font-size: 24pt !important;
+            }
+            .receipt {
+                page-break-after: always;
+                page-break-inside: avoid;
+            }
+            .receipt:last-child {
+                page-break-after: auto;
+            }
+            /* hide dashed separator when printing */
+            hr {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
+    {% for copy in [1,2] %}
     <div class="receipt">
         <div class="header">
             <h2>{{ company_name }}</h2>
@@ -108,6 +142,9 @@
             <p>{{ company_name }} - نشكركم لثقتكم</p>
         </div>
     </div>
+    {% if not loop.last %}
+    <hr style="border: dashed 1px; margin: 40px 20px;">
+    {% endif %}
+    {% endfor %}
 </body>
 </html>
-        
