@@ -156,7 +156,9 @@ class TemplateManager:
             TemplateType.PAYMENT_RECEIPT: self.get_payment_receipt_template(),
             TemplateType.SALARY_SLIP: self.get_salary_slip_template(),
             TemplateType.STAFF_REPORT: self.get_staff_report_template(),
-            TemplateType.SCHOOL_REPORT: self.get_school_report_template()
+            TemplateType.SCHOOL_REPORT: self.get_school_report_template(),
+            TemplateType.TEACHERS_LIST: self.get_teachers_list_template(),
+            TemplateType.EMPLOYEES_LIST: self.get_employees_list_template()
         }
         
         for template_type, content in templates.items():
@@ -785,6 +787,204 @@ class TemplateManager:
             <h2>{{ stats.total_expenses | currency }}</h2>
         </div>
     </div>
+    
+    <div class="footer">
+        <p>{{ company_name }} - {{ system_version }}</p>
+    </div>
+</body>
+</html>
+        """
+        
+    def get_teachers_list_template(self) -> str:
+        """قالب قائمة المعلمين"""
+        return """
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قائمة المعلمين</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .summary {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>قائمة المعلمين</h2>
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+    </div>
+    
+    <div class="summary">
+        <p><strong>إجمالي المعلمين:</strong> {{ teachers|length }}</p>
+        {% if filter_info %}
+        <p><strong>الفلاتر المطبقة:</strong> {{ filter_info }}</p>
+        {% endif %}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>المعرف</th>
+                <th>الاسم</th>
+                <th>المدرسة</th>
+                <th>عدد الحصص</th>
+                <th>الراتب الشهري</th>
+                <th>رقم الهاتف</th>
+                <th>ملاحظات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for teacher in teachers %}
+            <tr>
+                <td>{{ teacher.id }}</td>
+                <td>{{ teacher.name }}</td>
+                <td>{{ teacher.school_name }}</td>
+                <td>{{ teacher.class_hours or '0' }}</td>
+                <td>{{ teacher.monthly_salary | currency }}</td>
+                <td>{{ teacher.phone or 'غير محدد' }}</td>
+                <td>{{ teacher.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <p>{{ company_name }} - {{ system_version }}</p>
+    </div>
+</body>
+</html>
+        """
+
+    def get_employees_list_template(self) -> str:
+        """قالب قائمة الموظفين"""
+        return """
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قائمة الموظفين</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .summary {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>قائمة الموظفين</h2>
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+    </div>
+    
+    <div class="summary">
+        <p><strong>إجمالي الموظفين:</strong> {{ employees|length }}</p>
+        {% if filter_info %}
+        <p><strong>الفلاتر المطبقة:</strong> {{ filter_info }}</p>
+        {% endif %}
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>المعرف</th>
+                <th>الاسم</th>
+                <th>المدرسة</th>
+                <th>نوع الوظيفة</th>
+                <th>الراتب الشهري</th>
+                <th>رقم الهاتف</th>
+                <th>ملاحظات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+            <tr>
+                <td>{{ employee.id }}</td>
+                <td>{{ employee.name }}</td>
+                <td>{{ employee.school_name }}</td>
+                <td>{{ employee.job_type or 'غير محدد' }}</td>
+                <td>{{ employee.monthly_salary | currency }}</td>
+                <td>{{ employee.phone or 'غير محدد' }}</td>
+                <td>{{ employee.notes or '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     
     <div class="footer">
         <p>{{ company_name }} - {{ system_version }}</p>

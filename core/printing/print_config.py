@@ -50,6 +50,8 @@ class TemplateType(Enum):
     STAFF_REPORT = "staff_report"
     SCHOOL_REPORT = "school_report"
     INSTALLMENT_RECEIPT = "installment_receipt"  # إيصال قسط جديد
+    TEACHERS_LIST = "teachers_list"  # قائمة المعلمين
+    EMPLOYEES_LIST = "employees_list"  # قائمة الموظفين
     CUSTOM = "custom"
 
 
@@ -63,6 +65,8 @@ TEMPLATE_PRINT_METHODS = {
     TemplateType.STAFF_REPORT: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.SCHOOL_REPORT: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.SALARY_SLIP: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.TEACHERS_LIST: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.EMPLOYEES_LIST: PrintMethod.HTML_WEB_ENGINE,
     
     # الوصولات والفواتير - ReportLab
     TemplateType.PAYMENT_RECEIPT: PrintMethod.REPORTLAB_CANVAS,

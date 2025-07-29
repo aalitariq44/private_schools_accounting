@@ -213,6 +213,10 @@ class EmployeesPage(QWidget):
             self.refresh_btn.setObjectName("secondaryButton")
             self.refresh_btn.setMinimumWidth(100)
             
+            self.print_btn = QPushButton("طباعة القائمة")
+            self.print_btn.setObjectName("primaryButton")
+            self.print_btn.setMinimumWidth(120)
+            
             # معلومات الإحصائيات
             self.stats_label = QLabel("إجمالي الموظفين: 0")
             self.stats_label.setObjectName("statsLabel")
@@ -222,6 +226,7 @@ class EmployeesPage(QWidget):
             toolbar_layout.addWidget(self.edit_btn)
             toolbar_layout.addWidget(self.delete_btn)
             toolbar_layout.addWidget(self.refresh_btn)
+            toolbar_layout.addWidget(self.print_btn)
             toolbar_layout.addStretch()
             toolbar_layout.addWidget(self.stats_label)
             
@@ -329,6 +334,7 @@ class EmployeesPage(QWidget):
             self.edit_btn.clicked.connect(self.edit_employee)
             self.delete_btn.clicked.connect(self.delete_employee)
             self.refresh_btn.clicked.connect(self.refresh_data)
+            self.print_btn.clicked.connect(self.print_employees_list)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد الاتصالات: {e}")
@@ -579,3 +585,28 @@ class EmployeesPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في قائمة السياق: {e}")
+    
+    def print_employees_list(self):
+        """طباعة قائمة الموظفين مع المعاينة والفلترة"""
+        try:
+            log_user_action("طباعة قائمة الموظفين")
+            
+            # إعداد معلومات الفلاتر
+            filters = []
+            school = self.school_filter.currentText()
+            if school and school != "جميع المدارس":
+                filters.append(f"المدرسة: {school}")
+            
+            search = self.search_input.text().strip()
+            if search:
+                filters.append(f"بحث: {search}")
+            
+            filter_info = "؛ ".join(filters) if filters else None
+            
+            # استدعاء دالة الطباعة مع المعاينة
+            from core.printing.print_manager import print_employees_list
+            print_employees_list(self.current_employees, filter_info, parent=self)
+            
+        except Exception as e:
+            logging.error(f"خطأ في طباعة قائمة الموظفين: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في طباعة قائمة الموظفين:\n{e}")

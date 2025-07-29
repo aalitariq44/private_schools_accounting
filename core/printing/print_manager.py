@@ -232,3 +232,21 @@ def print_financial_report(data, date_range=None, parent=None, use_web_engine=Tr
     if date_range:
         payload['date_range'] = date_range
     pm.preview_document(TemplateType.FINANCIAL_REPORT, payload)
+
+
+def print_teachers_list(teachers, filter_info=None, parent=None, use_web_engine=True):
+    """طباعة قائمة المعلمين مع معاينة"""
+    pm = PrintManager(parent, use_web_engine)
+    data = {'teachers': teachers}
+    if filter_info:
+        data['filter_info'] = filter_info
+    pm.preview_document(TemplateType.TEACHERS_LIST, data)
+
+
+def print_employees_list(employees, filter_info=None, parent=None, use_web_engine=True):
+    """طباعة قائمة الموظفين مع معاينة"""
+    pm = PrintManager(parent, use_web_engine)
+    data = {'employees': employees}
+    if filter_info:
+        data['filter_info'] = filter_info
+    pm.preview_document(TemplateType.EMPLOYEES_LIST, data)

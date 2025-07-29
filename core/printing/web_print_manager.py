@@ -243,3 +243,21 @@ def web_print_financial_report(data, date_range=None, parent=None):
     if date_range:
         payload['date_range'] = date_range
     pm.preview_document(TemplateType.FINANCIAL_REPORT, payload)
+
+
+def web_print_teachers_list(teachers, filter_info=None, parent=None):
+    """طباعة قائمة المعلمين باستخدام محرك الويب الحديث"""
+    pm = WebPrintManager(parent)
+    data = {'teachers': teachers}
+    if filter_info:
+        data['filter_info'] = filter_info
+    pm.preview_document(TemplateType.TEACHERS_LIST, data)
+
+
+def web_print_employees_list(employees, filter_info=None, parent=None):
+    """طباعة قائمة الموظفين باستخدام محرك الويب الحديث"""
+    pm = WebPrintManager(parent)
+    data = {'employees': employees}
+    if filter_info:
+        data['filter_info'] = filter_info
+    pm.preview_document(TemplateType.EMPLOYEES_LIST, data)

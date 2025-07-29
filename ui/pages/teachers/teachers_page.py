@@ -199,6 +199,10 @@ class TeachersPage(QWidget):
             self.refresh_btn.setObjectName("secondaryButton")
             self.refresh_btn.setMinimumWidth(100)
             
+            self.print_btn = QPushButton("طباعة القائمة")
+            self.print_btn.setObjectName("primaryButton")
+            self.print_btn.setMinimumWidth(120)
+            
             # معلومات الإحصائيات
             self.stats_label = QLabel("إجمالي المعلمين: 0")
             self.stats_label.setObjectName("statsLabel")
@@ -208,6 +212,7 @@ class TeachersPage(QWidget):
             toolbar_layout.addWidget(self.edit_btn)
             toolbar_layout.addWidget(self.delete_btn)
             toolbar_layout.addWidget(self.refresh_btn)
+            toolbar_layout.addWidget(self.print_btn)
             toolbar_layout.addStretch()
             toolbar_layout.addWidget(self.stats_label)
             
@@ -315,6 +320,7 @@ class TeachersPage(QWidget):
             self.edit_btn.clicked.connect(self.edit_teacher)
             self.delete_btn.clicked.connect(self.delete_teacher)
             self.refresh_btn.clicked.connect(self.refresh_data)
+            self.print_btn.clicked.connect(self.print_teachers_list)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد الاتصالات: {e}")
@@ -560,3 +566,28 @@ class TeachersPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في قائمة السياق: {e}")
+    
+    def print_teachers_list(self):
+        """طباعة قائمة المعلمين مع المعاينة والفلترة"""
+        try:
+            log_user_action("طباعة قائمة المعلمين")
+            
+            # إعداد معلومات الفلاتر
+            filters = []
+            school = self.school_filter.currentText()
+            if school and school != "جميع المدارس":
+                filters.append(f"المدرسة: {school}")
+            
+            search = self.search_input.text().strip()
+            if search:
+                filters.append(f"بحث: {search}")
+            
+            filter_info = "؛ ".join(filters) if filters else None
+            
+            # استدعاء دالة الطباعة مع المعاينة
+            from core.printing.print_manager import print_teachers_list
+            print_teachers_list(self.current_teachers, filter_info, parent=self)
+            
+        except Exception as e:
+            logging.error(f"خطأ في طباعة قائمة المعلمين: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في طباعة قائمة المعلمين:\n{e}")
