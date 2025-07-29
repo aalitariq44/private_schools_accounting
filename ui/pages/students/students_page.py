@@ -51,6 +51,9 @@ class StudentsPage(QWidget):
             layout.setContentsMargins(20, 20, 20, 20)
             layout.setSpacing(15)
             
+            # العنوان الرئيسي
+            self.create_page_header(layout)
+            
             # شريط الأدوات والفلاتر
             self.create_toolbar(layout)
             
@@ -66,16 +69,60 @@ class StudentsPage(QWidget):
             logging.error(f"خطأ في إعداد واجهة صفحة الطلاب: {e}")
             raise
     
+    def create_page_header(self, layout):
+        """إنشاء رأس الصفحة"""
+        try:
+            header_frame = QFrame()
+            header_frame.setObjectName("headerFrame")
+            
+            header_layout = QHBoxLayout(header_frame)
+            header_layout.setContentsMargins(20, 15, 20, 15)
+            
+            # العنوان والوصف
+            text_layout = QVBoxLayout()
+            
+            title_label = QLabel("إدارة الطلاب")
+            title_label.setObjectName("pageTitle")
+            title_label.setStyleSheet("color: black;")
+            text_layout.addWidget(title_label)
+            
+            desc_label = QLabel("عرض وإدارة بيانات الطلاب، بما في ذلك معلوماتهم الشخصية، المدرسية، والمالية.")
+            desc_label.setObjectName("pageDesc")
+            desc_label.setStyleSheet("color: black;")
+            text_layout.addWidget(desc_label)
+            
+            header_layout.addLayout(text_layout)
+            header_layout.addStretch()
+            
+            # إحصائيات سريعة في الرأس
+            stats_layout = QHBoxLayout()
+            
+            self.total_students_header_label = QLabel("إجمالي الطلاب: 0")
+            self.total_students_header_label.setObjectName("quickStat")
+            stats_layout.addWidget(self.total_students_header_label)
+            
+            self.active_students_header_label = QLabel("الطلاب النشطون: 0")
+            self.active_students_header_label.setObjectName("quickStat")
+            stats_layout.addWidget(self.active_students_header_label)
+            
+            header_layout.addLayout(stats_layout)
+            
+            layout.addWidget(header_frame)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء رأس الصفحة: {e}")
+    
     def create_toolbar(self, layout):
         """إنشاء شريط الأدوات والفلاتر"""
         try:
             toolbar_frame = QFrame()
             toolbar_frame.setObjectName("toolbarFrame")
             
-            toolbar_layout = QHBoxLayout(toolbar_frame)
+            toolbar_layout = QVBoxLayout(toolbar_frame)
             toolbar_layout.setContentsMargins(15, 10, 15, 10)
+            toolbar_layout.setSpacing(10)
             
-            # فلاتر البحث
+            # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
             
             # فلتر المدرسة
@@ -85,6 +132,7 @@ class StudentsPage(QWidget):
             
             self.school_combo = QComboBox()
             self.school_combo.setObjectName("filterCombo")
+            self.school_combo.setMinimumWidth(200)
             filters_layout.addWidget(self.school_combo)
             
             # فلتر الصف
@@ -119,37 +167,47 @@ class StudentsPage(QWidget):
             self.gender_combo.setObjectName("filterCombo")
             self.gender_combo.addItems(["جميع الطلاب", "ذكر", "أنثى"])
             filters_layout.addWidget(self.gender_combo)
-
+            
+            filters_layout.addStretch()
+            
+            toolbar_layout.addLayout(filters_layout)
+            
+            # الصف الثاني - البحث والعمليات
+            actions_layout = QHBoxLayout()
+            
             # مربع البحث
             search_label = QLabel("البحث:")
             search_label.setObjectName("filterLabel")
-            filters_layout.addWidget(search_label)
+            actions_layout.addWidget(search_label)
             
             self.search_input = QLineEdit()
             self.search_input.setObjectName("searchInput")
             self.search_input.setPlaceholderText("ابحث في أسماء الطلاب...")
-            filters_layout.addWidget(self.search_input)
+            self.search_input.setMinimumWidth(300)
+            actions_layout.addWidget(self.search_input)
             
-            toolbar_layout.addLayout(filters_layout)
-            toolbar_layout.addStretch()
+            actions_layout.addStretch()
             
             # أزرار العمليات
-            actions_layout = QHBoxLayout()
-            
             self.add_student_button = QPushButton("إضافة طالب")
             self.add_student_button.setObjectName("primaryButton")
             actions_layout.addWidget(self.add_student_button)
-            # زر طباعة قائمة الطلاب
+            
             self.print_list_button = QPushButton("طباعة قائمة الطلاب")
             self.print_list_button.setObjectName("primaryButton")
             actions_layout.addWidget(self.print_list_button)
             
+            self.refresh_button = QPushButton("تحديث")
+            self.refresh_button.setObjectName("refreshButton")
+            actions_layout.addWidget(self.refresh_button)
             
+            self.clear_filters_button = QPushButton("مسح الفلاتر")
+            self.clear_filters_button.setObjectName("secondaryButton")
+            actions_layout.addWidget(self.clear_filters_button)
             
             toolbar_layout.addLayout(actions_layout)
             
             layout.addWidget(toolbar_frame)
-            
         except Exception as e:
             logging.error(f"خطأ في إنشاء شريط الأدوات: {e}")
             raise
@@ -200,45 +258,86 @@ class StudentsPage(QWidget):
             logging.error(f"خطأ في إنشاء جدول الطلاب: {e}")
             raise
     
-    def create_quick_stats(self, layout):
-        """إنشاء إحصائيات سريعة"""
+    def create_summary(self, layout):
+        """إنشاء ملخص الطلاب"""
         try:
-            stats_frame = QFrame()
-            stats_frame.setObjectName("statsFrame")
+            summary_frame = QFrame()
+            summary_frame.setObjectName("summaryFrame")
             
-            stats_layout = QHBoxLayout(stats_frame)
-            stats_layout.setContentsMargins(15, 10, 15, 10)
+            summary_layout = QHBoxLayout(summary_frame)
+            summary_layout.setContentsMargins(15, 10, 15, 10)
             
-            # عداد الطلاب المعروضين
+            # ملخص الأرقام
+            numbers_layout = QVBoxLayout()
+            
+            summary_title = QLabel("ملخص الطلاب")
+            summary_title.setObjectName("summaryTitle")
+            numbers_layout.addWidget(summary_title)
+            
+            numbers_grid = QHBoxLayout()
+            
+            # إجمالي الطلاب
+            total_layout = QVBoxLayout()
+            self.total_students_label = QLabel("إجمالي الطلاب")
+            self.total_students_label.setObjectName("summaryLabel")
+            total_layout.addWidget(self.total_students_label)
+            
+            self.total_students_value = QLabel("0")
+            self.total_students_value.setObjectName("summaryValue")
+            total_layout.addWidget(self.total_students_value)
+            numbers_grid.addLayout(total_layout)
+            
+            # الطلاب النشطون
+            active_layout = QVBoxLayout()
+            self.active_students_label = QLabel("النشطون")
+            self.active_students_label.setObjectName("summaryLabel")
+            active_layout.addWidget(self.active_students_label)
+            
+            self.active_students_value = QLabel("0")
+            self.active_students_value.setObjectName("summaryValueSuccess")
+            active_layout.addWidget(self.active_students_value)
+            numbers_grid.addLayout(active_layout)
+            
+            # الطلاب غير النشطين (منقطع، متخرج، محول)
+            inactive_layout = QVBoxLayout()
+            self.inactive_students_label = QLabel("غير النشطين")
+            self.inactive_students_label.setObjectName("summaryLabel")
+            inactive_layout.addWidget(self.inactive_students_label)
+            
+            self.inactive_students_value = QLabel("0")
+            self.inactive_students_value.setObjectName("summaryValueWarning")
+            inactive_layout.addWidget(self.inactive_students_value)
+            numbers_grid.addLayout(inactive_layout)
+            
+            numbers_layout.addLayout(numbers_grid)
+            summary_layout.addLayout(numbers_layout)
+            
+            # إحصائيات أخرى
+            stats_layout = QVBoxLayout()
+            
             self.displayed_count_label = QLabel("عدد الطلاب المعروضين: 0")
-            self.displayed_count_label.setObjectName("countLabel")
+            self.displayed_count_label.setObjectName("statLabel")
             stats_layout.addWidget(self.displayed_count_label)
-
-            # إحصائيات إضافية
-            self.total_students_label = QLabel("إجمالي الطلاب: 0")
-            self.total_students_label.setObjectName("countLabel")
-            stats_layout.addWidget(self.total_students_label)
-
-            self.active_students_label = QLabel("الطلاب النشطون: 0")
-            self.active_students_label.setObjectName("countLabel")
-            stats_layout.addWidget(self.active_students_label)
             
-            stats_layout.addStretch()
+            self.male_students_label = QLabel("الذكور: 0")
+            self.male_students_label.setObjectName("statLabel")
+            stats_layout.addWidget(self.male_students_label)
+            
+            self.female_students_label = QLabel("الإناث: 0")
+            self.female_students_label.setObjectName("statLabel")
+            stats_layout.addWidget(self.female_students_label)
+            
+            summary_layout.addLayout(stats_layout)
             
             # معلومات آخر تحديث
             self.last_update_label = QLabel("آخر تحديث: --")
-            self.last_update_label.setObjectName("countLabel")
-            stats_layout.addWidget(self.last_update_label)
-
-            # زر التحديث
-            self.refresh_button = QPushButton("تحديث")
-            self.refresh_button.setObjectName("refreshButton")
-            stats_layout.addWidget(self.refresh_button)
+            self.last_update_label.setObjectName("statLabel")
+            summary_layout.addWidget(self.last_update_label)
             
-            layout.addWidget(stats_frame)
+            layout.addWidget(summary_frame)
             
         except Exception as e:
-            logging.error(f"خطأ في إنشاء الإحصائيات: {e}")
+            logging.error(f"خطأ في إنشاء ملخص الطلاب: {e}")
             raise
     
     def setup_connections(self):
@@ -246,9 +345,9 @@ class StudentsPage(QWidget):
         try:
             # ربط أزرار العمليات
             self.add_student_button.clicked.connect(self.add_student)
-            self.refresh_button.clicked.connect(self.refresh)
-            # ربط زر الطباعة
             self.print_list_button.clicked.connect(self.print_student_list)
+            self.refresh_button.clicked.connect(self.refresh)
+            self.clear_filters_button.clicked.connect(self.clear_filters)
             
             # ربط الفلاتر
             self.school_combo.currentTextChanged.connect(self.apply_filters)
@@ -420,16 +519,40 @@ class StudentsPage(QWidget):
         """تحديث الإحصائيات"""
         try:
             # إحصائيات عامة
-            total_query = "SELECT COUNT(*) FROM students"
-            total_result = db_manager.execute_query(total_query)
-            total_count = total_result[0][0] if total_result else 0
+            # حساب الإجماليات للطلاب المعروضين
+            total_students_count = len(self.current_students)
+            active_students_count = 0
+            inactive_students_count = 0
+            male_students_count = 0
+            female_students_count = 0
             
-            active_query = "SELECT COUNT(*) FROM students WHERE status = 'نشط'"
-            active_result = db_manager.execute_query(active_query)
-            active_count = active_result[0][0] if active_result else 0
+            for student in self.current_students:
+                status = student['status']
+                gender = student['gender']
+                
+                if status == 'نشط':
+                    active_students_count += 1
+                else:
+                    inactive_students_count += 1
+                
+                if gender == 'ذكر':
+                    male_students_count += 1
+                elif gender == 'أنثى':
+                    female_students_count += 1
             
-            self.total_students_label.setText(f"إجمالي الطلاب: {total_count}")
-            self.active_students_label.setText(f"الطلاب النشطون: {active_count}")
+            # تحديث الملصقات الرئيسية
+            self.total_students_value.setText(str(total_students_count))
+            self.active_students_value.setText(str(active_students_count))
+            self.inactive_students_value.setText(str(inactive_students_count))
+            
+            # تحديث ملصقات الرأس
+            self.total_students_header_label.setText(f"إجمالي الطلاب: {total_students_count}")
+            self.active_students_header_label.setText(f"الطلاب النشطون: {active_students_count}")
+            
+            # تحديث الإحصائيات الأخرى
+            self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {total_students_count}")
+            self.male_students_label.setText(f"الذكور: {male_students_count}")
+            self.female_students_label.setText(f"الإناث: {female_students_count}")
             
             # تحديث وقت آخر تحديث
             from datetime import datetime
@@ -440,6 +563,12 @@ class StudentsPage(QWidget):
             # تعيين قيم افتراضية في حالة الخطأ
             self.total_students_label.setText("إجمالي الطلاب: --")
             self.active_students_label.setText("الطلاب النشطون: --")
+            self.inactive_students_label.setText("غير النشطين: --")
+            self.total_students_header_label.setText("إجمالي الطلاب: --")
+            self.active_students_header_label.setText("الطلاب النشطون: --")
+            self.displayed_count_label.setText("عدد الطلاب المعروضين: --")
+            self.male_students_label.setText("الذكور: --")
+            self.female_students_label.setText("الإناث: --")
     
     def apply_filters(self):
         """تطبيق الفلاتر وإعادة تحميل البيانات"""
@@ -457,6 +586,20 @@ class StudentsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث صفحة الطلاب: {e}")
+            
+    def clear_filters(self):
+        """مسح جميع الفلاتر وإعادة تعيينها إلى الوضع الافتراضي"""
+        try:
+            self.school_combo.setCurrentIndex(0) # "جميع المدارس"
+            self.grade_combo.setCurrentIndex(0) # "جميع الصفوف"
+            self.status_combo.setCurrentIndex(0) # "جميع الحالات"
+            self.gender_combo.setCurrentIndex(0) # "جميع الطلاب"
+            self.search_input.clear()
+            self.apply_filters()
+            log_user_action("مسح فلاتر صفحة الطلاب")
+        except Exception as e:
+            logging.error(f"خطأ في مسح الفلاتر: {e}")
+            
     def print_student_list(self):
         """طباعة قائمة الطلاب مع المعاينة والفلترة"""
         try:
@@ -518,108 +661,126 @@ class StudentsPage(QWidget):
                 
                 /* رأس الصفحة */
                 #headerFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2=1, 
-                        stop:0 #3498DB, stop:1 #2980B9);
-                    border-radius: 15px;
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
+                        stop:0 #9B59B6, stop:1 #8E44AD);
+                    border-radius: 10px;
                     color: white;
-                    margin-bottom: 15px;
-                    padding: 20px;
+                    margin-bottom: 10px;
                 }
                 
                 #pageTitle {
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     color: white;
-                    margin-bottom: 8px;
+                    margin-bottom: 5px;
                 }
                 
                 #pageDesc {
-                    font-size: 16px;
-                    color: #E8F4FD;
+                    font-size: 18px;
+                    color: #E8DAEF;
                 }
                 
                 #quickStat {
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: bold;
                     color: white;
                     background-color: rgba(255, 255, 255, 0.2);
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    margin: 0 10px;
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    margin: 0 5px;
                 }
                 
                 /* شريط الأدوات */
                 #toolbarFrame {
                     background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                    padding: 20px;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    margin-bottom: 10px;
                 }
                 
                 #filterLabel {
                     font-weight: bold;
                     color: #2C3E50;
-                    margin-right: 10px;
-                    font-size: 16px;
+                    margin-right: 5px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #filterCombo {
-                    padding: 12px 20px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 8px;
+                    padding: 6px 10px;
+                    border: 1px solid #BDC3C7;
+                    border-radius: 4px;
                     background-color: white;
-                    min-width: 150px;
-                    font-size: 16px;
-                    margin: 5px;
+                    min-width: 100px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                }
+                
+                #filterCombo:focus { /* Added focus style */
+                    border-color: #9B59B6;
+                    outline: none;
                 }
                 
                 #searchInput {
-                    padding: 15px 20px;
-                    border: 2px solid #3498DB;
-                    border-radius: 10px;
-                    font-size: 16px;
+                    padding: 8px 12px;
+                    border: 2px solid #9B59B6;
+                    border-radius: 6px;
+                    font-size: 18px;
                     background-color: white;
-                    margin: 5px;
+                }
+                
+                #searchInput:focus { /* Added focus style */
+                    border-color: #8E44AD;
+                    outline: none;
                 }
                 
                 /* الأزرار */
                 #primaryButton {
-                    background-color: #27AE60;
+                    background-color: #9B59B6;
                     color: white;
                     border: none;
-                    padding: 15px 30px;
-                    border-radius: 8px;
+                    padding: 8px 16px;
+                    border-radius: 4px;
                     font-weight: bold;
-                    min-width: 150px;
-                    font-size: 16px;
-                    margin: 5px;
+                    min-width: 100px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #primaryButton:hover {
-                    background-color: #229954;
+                    background-color: #8E44AD;
+                }
+                
+                #secondaryButton { /* Added secondaryButton style */
+                    background-color: #3498DB;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    min-width: 100px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                }
+                
+                #secondaryButton:hover {
+                    background-color: #2980B9;
                 }
                 
                 #refreshButton {
-                    background-color: #F39C12;
+                    background-color: #95A5A6;
                     color: white;
                     border: none;
-                    padding: 15px 30px;
-                    border-radius: 8px;
+                    padding: 8px 16px;
+                    border-radius: 4px;
                     font-weight: bold;
-                    min-width: 120px;
-                    font-size: 16px;
-                    margin: 5px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #refreshButton:hover {
-                    background-color: #E67E22;
+                    background-color: #7F8C8D;
                 }
                 
                 #editButton, #deleteButton, #detailsButton {
                     padding: 8px 15px;
                     border-radius: 5px;
-                    font-size: 16px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                     font-weight: bold;
                     border: none;
                     margin: 2px;
@@ -643,48 +804,104 @@ class StudentsPage(QWidget):
                 /* الجدول */
                 QTableWidget {
                     background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
+                    border: none; /* Adjusted to match additional_fees_page.py */
+                    border-radius: 6px; /* Adjusted to match additional_fees_page.py */
                     gridline-color: #E9ECEF;
-                    font-size: 16px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                     margin: 10px 0px;
                 }
                 
                 QTableWidget::item {
-                    padding: 15px 10px;
-                    border-bottom: 1px solid #E9ECEF;
-                    font-size: 16px;
+                    padding: 8px; /* Adjusted to match additional_fees_page.py */
+                    border-bottom: 1px solid #F1F2F6; /* Adjusted to match additional_fees_page.py */
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 QTableWidget::item:selected {
-                    background-color: #E3F2FD;
-                    color: #1976D2;
+                    background-color: #E8DAEF; /* Adjusted to match additional_fees_page.py */
+                    color: #6C3483; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 QHeaderView::section {
-                    background-color: #3498DB;
+                    background-color: #34495E; /* Adjusted to match additional_fees_page.py */
                     color: white;
-                    padding: 15px 10px;
+                    padding: 10px 8px; /* Adjusted to match additional_fees_page.py */
                     font-weight: bold;
-                    font-size: 16px;
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
                     border: none;
-                    border-right: 1px solid #2980B9;
+                    border-right: 1px solid #2C3E50; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 /* إحصائيات */
-                #statsFrame {
+                #statsFrame { /* Renamed from statsFrame to summaryFrame for consistency */
                     background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-top: 15px;
-                    padding: 20px;
+                    border: 1px solid #E9ECEF; /* Adjusted to match additional_fees_page.py */
+                    border-radius: 8px; /* Adjusted to match additional_fees_page.py */
+                    margin-top: 10px; /* Adjusted to match additional_fees_page.py */
                 }
                 
-                #countLabel {
-                    font-size: 16px;
+                #summaryTitle { /* Added summaryTitle style */
+                    font-size: 18px;
                     font-weight: bold;
                     color: #2C3E50;
-                    margin: 5px;
+                    margin-bottom: 10px;
+                }
+                
+                #summaryLabel { /* Added summaryLabel style */
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #7F8C8D;
+                    text-align: center;
+                }
+                
+                #summaryValue { /* Added summaryValue style */
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #2C3E50;
+                    text-align: center;
+                }
+                
+                #summaryValueSuccess { /* Added summaryValueSuccess style */
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #27AE60;
+                    text-align: center;
+                }
+                
+                #summaryValueWarning { /* Added summaryValueWarning style */
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #F39C12;
+                    text-align: center;
+                }
+                
+                #countLabel { /* Renamed from countLabel to statLabel for consistency */
+                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-weight: bold;
+                    color: #2C3E50;
+                    margin: 2px 0; /* Adjusted to match additional_fees_page.py */
+                }
+                
+                /* أشرطة التمرير */
+                QScrollBar:vertical { /* Added scrollbar styles */
+                    background-color: #F1F2F6;
+                    width: 12px;
+                    border-radius: 6px;
+                }
+                
+                QScrollBar::handle:vertical {
+                    background-color: #BDC3C7;
+                    border-radius: 6px;
+                    min-height: 20px;
+                }
+                
+                QScrollBar::handle:vertical:hover {
+                    background-color: #95A5A6;
+                }
+                
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    border: none;
+                    background: none;
                 }
             """
             
