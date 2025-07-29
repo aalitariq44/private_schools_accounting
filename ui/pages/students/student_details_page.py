@@ -5,6 +5,7 @@
 """
 
 import logging
+import os
 from datetime import datetime, date, time
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QPushButton,
@@ -22,9 +23,11 @@ from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 from .add_installment_dialog import AddInstallmentDialog
 from .add_additional_fee_dialog import AddAdditionalFeeDialog
+from .additional_fees_print_dialog import AdditionalFeesPrintDialog
 from core.printing.print_manager import print_payment_receipt  # دالة طباعة إيصال القسط
 from core.printing.print_manager import PrintManager
 from core.printing.print_config import TemplateType
+from core.printing.additional_fees_print_manager import print_additional_fees_receipt
 
 
 class StudentDetailsPage(QWidget):
@@ -339,6 +342,11 @@ class StudentDetailsPage(QWidget):
             
             header_layout.addStretch()
             
+            # زر طباعة إيصال الرسوم الإضافية
+            self.print_fees_button = QPushButton("طباعة إيصال الرسوم")
+            self.print_fees_button.setObjectName("printButton")
+            header_layout.addWidget(self.print_fees_button)
+            
             # زر إضافة رسم
             self.add_fee_button = QPushButton("+ إضافة رسم")
             self.add_fee_button.setObjectName("addButton")
@@ -430,6 +438,7 @@ class StudentDetailsPage(QWidget):
             self.refresh_button.clicked.connect(self.refresh_data)
             self.print_button.clicked.connect(self.print_details)
             self.add_installment_button.clicked.connect(self.add_installment)
+            self.print_fees_button.clicked.connect(self.print_additional_fees_receipt)
             self.add_fee_button.clicked.connect(self.add_additional_fee)
             
         except Exception as e:
@@ -1019,6 +1028,81 @@ class StudentDetailsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث البيانات: {e}")
+    
+    def print_additional_fees_receipt(self):
+        """فتح نافذة طباعة إيصال الرسوم الإضافية"""
+        try:
+            # التحقق من وجود رسوم إضافية
+            if not self.additional_fees_data:
+                QMessageBox.information(
+                    self, 
+                    "معلومات", 
+                    "لا توجد رسوم إضافية للطالب لطباعتها"
+                )
+                return
+            
+            # فتح نافذة اختيار الرسوم للطباعة
+            print_dialog = AdditionalFeesPrintDialog(self.student_id, self)
+            
+            # ربط إشارة الطباعة
+            print_dialog.print_requested.connect(self.handle_fees_print_request)
+            
+            # عرض النافذة
+            print_dialog.exec_()
+            
+        except Exception as e:
+            logging.error(f"خطأ في فتح نافذة طباعة الرسوم الإضافية: {e}")
+            QMessageBox.critical(
+                self, 
+                "خطأ", 
+                f"فشل في فتح نافذة طباعة الرسوم الإضافية: {str(e)}"
+            )
+    
+    def handle_fees_print_request(self, print_data):
+        """معالجة طلب طباعة الرسوم الإضافية"""
+        try:
+            preview_only = print_data.get('preview_only', True)
+            
+            # طباعة أو معاينة الإيصال
+            receipt_path = print_additional_fees_receipt(print_data, preview_only)
+            
+            if receipt_path and os.path.exists(receipt_path):
+                # فتح الملف للمعاينة أو الطباعة
+                if preview_only:
+                    # فتح المعاينة
+                    import subprocess
+                    import platform
+                    
+                    if platform.system() == 'Windows':
+                        os.startfile(receipt_path)
+                    elif platform.system() == 'Darwin':  # macOS
+                        subprocess.run(['open', receipt_path])
+                    else:  # Linux
+                        subprocess.run(['xdg-open', receipt_path])
+                    
+                    log_user_action(f"معاينة إيصال الرسوم الإضافية للطالب: {self.student_id}")
+                else:
+                    # طباعة فعلية
+                    QMessageBox.information(
+                        self, 
+                        "نجاح", 
+                        f"تم إنشاء إيصال الرسوم الإضافية بنجاح\nالمسار: {receipt_path}"
+                    )
+                    log_user_action(f"طباعة إيصال الرسوم الإضافية للطالب: {self.student_id}")
+            else:
+                QMessageBox.warning(
+                    self, 
+                    "تحذير", 
+                    "فشل في إنشاء ملف الإيصال"
+                )
+                
+        except Exception as e:
+            logging.error(f"خطأ في معالجة طلب طباعة الرسوم الإضافية: {e}")
+            QMessageBox.critical(
+                self, 
+                "خطأ", 
+                f"فشل في طباعة إيصال الرسوم الإضافية: {str(e)}"
+            )
     
     def setup_styles(self):
         """إعداد التنسيقات"""
