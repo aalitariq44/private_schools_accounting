@@ -151,10 +151,11 @@ class ExternalIncomePage(QWidget):
             toolbar_frame = QFrame()
             toolbar_frame.setObjectName("toolbarFrame")
             
-            toolbar_layout = QHBoxLayout(toolbar_frame)
+            toolbar_layout = QVBoxLayout(toolbar_frame)
             toolbar_layout.setContentsMargins(15, 10, 15, 10)
+            toolbar_layout.setSpacing(5) # Added spacing between rows
             
-            # فلاتر البحث
+            # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
             
             # فلتر المدرسة
@@ -200,26 +201,29 @@ class ExternalIncomePage(QWidget):
             self.end_date.setCalendarPopup(True)
             filters_layout.addWidget(self.end_date)
             
+            filters_layout.addStretch() # Add stretch to push items to left
+            toolbar_layout.addLayout(filters_layout)
+            
+            # الصف الثاني - البحث وأزرار العمليات
+            actions_layout = QHBoxLayout()
+            
             # مربع البحث
             search_label = QLabel("البحث:")
             search_label.setObjectName("filterLabel")
-            filters_layout.addWidget(search_label)
+            actions_layout.addWidget(search_label)
             
             self.search_input = QLineEdit()
             self.search_input.setObjectName("searchInput")
             self.search_input.setPlaceholderText("ابحث في العناوين والملاحظات...")
-            filters_layout.addWidget(self.search_input)
+            actions_layout.addWidget(self.search_input)
             
-            toolbar_layout.addLayout(filters_layout)
-            toolbar_layout.addStretch()
+            actions_layout.addStretch() # Add stretch to push buttons to right
             
             # أزرار العمليات
-            actions_layout = QHBoxLayout()
-            
             self.add_income_button = QPushButton("إضافة وارد")
             self.add_income_button.setObjectName("primaryButton")
             actions_layout.addWidget(self.add_income_button)
-            # زر مسح التصفيات
+            
             self.clear_filters_button = QPushButton("مسح الفلاتر")
             self.clear_filters_button.setObjectName("secondaryButton")
             actions_layout.addWidget(self.clear_filters_button)
@@ -744,7 +748,7 @@ class ExternalIncomePage(QWidget):
                     border-radius: 15px;
                     color: white;
                     margin-bottom: 15px;
-                    padding: 20px;
+                    padding: 10px;
                 }
                 
                 #pageTitle {
@@ -765,7 +769,7 @@ class ExternalIncomePage(QWidget):
                     border: 2px solid #E9ECEF;
                     border-radius: 12px;
                     margin-bottom: 15px;
-                    padding: 15px;
+                    padding: 5px;
                 }
                 
                 #filterLabel {
@@ -792,7 +796,7 @@ class ExternalIncomePage(QWidget):
                     font-size: 18px;
                     background-color: white;
                     margin: 3px;
-                    min-width: 200px;
+                    min-width: 250px; /* Increased min-width for search input */
                 }
                 
                 /* الأزرار */
