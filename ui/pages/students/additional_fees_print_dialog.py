@@ -148,6 +148,11 @@ class AdditionalFeesPrintDialog(QDialog):
         self.cancel_button.setObjectName("cancelButton")
         buttons_layout.addWidget(self.cancel_button)
         
+        # زر تشخيص (مؤقت للتصحيح)
+        self.debug_button = QPushButton("تشخيص البيانات")
+        self.debug_button.setObjectName("debugButton")
+        buttons_layout.addWidget(self.debug_button)
+        
         buttons_layout.addStretch()
         
         # زر المعاينة
@@ -172,6 +177,7 @@ class AdditionalFeesPrintDialog(QDialog):
         
         # أزرار العمليات
         self.cancel_button.clicked.connect(self.reject)
+        self.debug_button.clicked.connect(self.debug_data)
         self.preview_button.clicked.connect(self.preview_receipt)
         self.print_button.clicked.connect(self.print_receipt)
         
@@ -188,12 +194,28 @@ class AdditionalFeesPrintDialog(QDialog):
                 ORDER BY created_at DESC
             """
             self.fees_data = db_manager.execute_query(query, (self.student_id,))
+            
+            # تسجيل معلومات التشخيص
+            logging.info(f"تحميل الرسوم الإضافية للطالب {self.student_id}: {len(self.fees_data) if self.fees_data else 0} رسم")
+            
+            # التحقق من وجود بيانات
+            if not self.fees_data:
+                self.fees_data = []
+                logging.info("لا توجد رسوم إضافية للطالب")
+            
             self.populate_table()
             
         except Exception as e:
             logging.error(f"خطأ في تحميل بيانات الرسوم الإضافية: {e}")
-            QMessageBox.critical(self, "خطأ", "فشل في تحميل بيانات الرسوم الإضافية")
-            self.reject()
+            import traceback
+            logging.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
+            
+            # في حالة الخطأ، تعيين قائمة فارغة
+            self.fees_data = []
+            self.populate_table()
+            
+            QMessageBox.warning(self, "تحذير", f"تعذر تحميل بيانات الرسوم الإضافية: {str(e)}")
+            # لا نغلق النافذة، بل نعرض رسالة تحذير فقط
     
     def populate_table(self):
         """ملء الجدول بالبيانات"""
@@ -201,47 +223,90 @@ class AdditionalFeesPrintDialog(QDialog):
             filtered_fees = self.get_filtered_fees()
             self.fees_table.setRowCount(len(filtered_fees))
             
+            logging.info(f"ملء الجدول بـ {len(filtered_fees)} رسم مفلتر")
+            
+            if not filtered_fees:
+                # إذا لم توجد رسوم، عرض رسالة في الجدول
+                self.fees_table.setRowCount(1)
+                no_data_item = QTableWidgetItem("لا توجد رسوم إضافية لعرضها")
+                no_data_item.setTextAlignment(Qt.AlignCenter)
+                # دمج جميع الأعمدة لعرض الرسالة
+                self.fees_table.setItem(0, 0, no_data_item)
+                self.fees_table.setSpan(0, 0, 1, 7)  # دمج جميع الأعمدة السبعة
+                
+                # تحديث معلومات الاختيار
+                self.update_selection_info()
+                return
+            
             for row, fee in enumerate(filtered_fees):
-                # خانة الاختيار
-                checkbox = QCheckBox()
-                checkbox.setChecked(True)  # الافتراضي محدد
-                checkbox.stateChanged.connect(self.update_selection_info)
-                self.fees_table.setCellWidget(row, 0, checkbox)
-                
-                # النوع
-                self.fees_table.setItem(row, 1, QTableWidgetItem(str(fee[1])))
-                
-                # المبلغ
-                amount_item = QTableWidgetItem(f"{fee[2]:,.0f} د.ع")
-                amount_item.setTextAlignment(Qt.AlignCenter)
-                self.fees_table.setItem(row, 2, amount_item)
-                
-                # الحالة
-                status = "مدفوع" if fee[3] else "غير مدفوع"
-                status_item = QTableWidgetItem(status)
-                status_item.setTextAlignment(Qt.AlignCenter)
-                if fee[3]:
-                    status_item.setBackground(Qt.lightGreen)
-                else:
-                    status_item.setBackground(Qt.yellow)
-                self.fees_table.setItem(row, 3, status_item)
-                
-                # تاريخ الإضافة
-                created_date = str(fee[5]) if fee[5] else "--"
-                self.fees_table.setItem(row, 4, QTableWidgetItem(created_date))
-                
-                # تاريخ الدفع
-                payment_date = str(fee[4]) if fee[4] else "--"
-                self.fees_table.setItem(row, 5, QTableWidgetItem(payment_date))
-                
-                # الملاحظات
-                notes = str(fee[6]) if fee[6] else ""
-                self.fees_table.setItem(row, 6, QTableWidgetItem(notes))
+                try:
+                    # التحقق من صحة البيانات
+                    if not fee or len(fee) < 7:
+                        logging.warning(f"بيانات رسم غير كاملة في الصف {row}: {fee}")
+                        continue
+                    
+                    # خانة الاختيار
+                    checkbox = QCheckBox()
+                    checkbox.setChecked(True)  # الافتراضي محدد
+                    checkbox.stateChanged.connect(self.update_selection_info)
+                    self.fees_table.setCellWidget(row, 0, checkbox)
+                    
+                    # النوع
+                    fee_type = str(fee[1]) if fee[1] else "غير محدد"
+                    self.fees_table.setItem(row, 1, QTableWidgetItem(fee_type))
+                    
+                    # المبلغ
+                    try:
+                        amount = float(fee[2]) if fee[2] else 0
+                        amount_item = QTableWidgetItem(f"{amount:,.0f} د.ع")
+                    except (ValueError, TypeError):
+                        amount_item = QTableWidgetItem("0 د.ع")
+                    amount_item.setTextAlignment(Qt.AlignCenter)
+                    self.fees_table.setItem(row, 2, amount_item)
+                    
+                    # الحالة
+                    paid = bool(fee[3]) if fee[3] is not None else False
+                    status = "مدفوع" if paid else "غير مدفوع"
+                    status_item = QTableWidgetItem(status)
+                    status_item.setTextAlignment(Qt.AlignCenter)
+                    if paid:
+                        status_item.setBackground(Qt.lightGreen)
+                    else:
+                        status_item.setBackground(Qt.yellow)
+                    self.fees_table.setItem(row, 3, status_item)
+                    
+                    # تاريخ الإضافة
+                    created_date = str(fee[5]) if fee[5] else "--"
+                    self.fees_table.setItem(row, 4, QTableWidgetItem(created_date))
+                    
+                    # تاريخ الدفع
+                    payment_date = str(fee[4]) if fee[4] and paid else "--"
+                    self.fees_table.setItem(row, 5, QTableWidgetItem(payment_date))
+                    
+                    # الملاحظات
+                    notes = str(fee[6]) if fee[6] else ""
+                    self.fees_table.setItem(row, 6, QTableWidgetItem(notes))
+                    
+                    logging.debug(f"تم إضافة الصف {row}: {fee_type}, {amount}, {status}")
+                    
+                except Exception as row_error:
+                    logging.error(f"خطأ في معالجة الصف {row}: {row_error}")
+                    continue
             
             self.update_selection_info()
+            logging.info("تم ملء الجدول بنجاح")
             
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الرسوم: {e}")
+            import traceback
+            logging.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
+            
+            # في حالة الخطأ، عرض رسالة خطأ
+            self.fees_table.setRowCount(1)
+            error_item = QTableWidgetItem(f"خطأ في تحميل البيانات: {str(e)}")
+            error_item.setTextAlignment(Qt.AlignCenter)
+            self.fees_table.setItem(0, 0, error_item)
+            self.fees_table.setSpan(0, 0, 1, 7)
     
     def get_filtered_fees(self):
         """الحصول على الرسوم المفلترة حسب الاختيار"""
@@ -278,26 +343,44 @@ class AdditionalFeesPrintDialog(QDialog):
             
             filtered_fees = self.get_filtered_fees()
             
+            # إذا لم توجد رسوم، عرض رسالة مناسبة
+            if not filtered_fees:
+                self.selection_info_label.setText("لا توجد رسوم لعرضها")
+                self.select_all_checkbox.setCheckState(Qt.Unchecked)
+                return
+            
+            # حساب الرسوم المحددة
             for row in range(self.fees_table.rowCount()):
                 checkbox = self.fees_table.cellWidget(row, 0)
                 if checkbox and checkbox.isChecked() and row < len(filtered_fees):
                     selected_count += 1
-                    selected_total += float(filtered_fees[row][2])
+                    try:
+                        # التأكد من صحة البيانات قبل الإضافة
+                        amount = float(filtered_fees[row][2]) if filtered_fees[row][2] else 0
+                        selected_total += amount
+                    except (ValueError, TypeError, IndexError):
+                        logging.warning(f"مبلغ غير صحيح في الصف {row}")
+                        continue
             
+            # عرض المعلومات
             self.selection_info_label.setText(
                 f"المحدد: {selected_count} رسوم - المجموع: {selected_total:,.0f} د.ع"
             )
             
             # تحديث حالة خانة تحديد الجميع
+            total_rows_with_checkboxes = sum(1 for row in range(self.fees_table.rowCount()) 
+                                           if self.fees_table.cellWidget(row, 0) is not None)
+            
             if selected_count == 0:
                 self.select_all_checkbox.setCheckState(Qt.Unchecked)
-            elif selected_count == self.fees_table.rowCount():
+            elif selected_count == total_rows_with_checkboxes:
                 self.select_all_checkbox.setCheckState(Qt.Checked)
             else:
                 self.select_all_checkbox.setCheckState(Qt.PartiallyChecked)
                 
         except Exception as e:
             logging.error(f"خطأ في تحديث معلومات الاختيار: {e}")
+            self.selection_info_label.setText("خطأ في حساب الاختيار")
     
     def get_selected_fees_data(self):
         """الحصول على بيانات الرسوم المحددة"""
@@ -421,6 +504,44 @@ class AdditionalFeesPrintDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في إعداد بيانات الطباعة: {e}")
             raise
+    
+    def debug_data(self):
+        """دالة تشخيص البيانات (مؤقتة للتصحيح)"""
+        try:
+            debug_info = []
+            debug_info.append(f"معرف الطالب: {self.student_id}")
+            debug_info.append(f"عدد الرسوم الأصلية: {len(self.fees_data) if self.fees_data else 0}")
+            
+            if self.fees_data:
+                debug_info.append("الرسوم الأصلية:")
+                for i, fee in enumerate(self.fees_data):
+                    debug_info.append(f"  {i+1}. {fee}")
+            
+            filtered_fees = self.get_filtered_fees()
+            debug_info.append(f"عدد الرسوم المفلترة: {len(filtered_fees)}")
+            
+            if filtered_fees:
+                debug_info.append("الرسوم المفلترة:")
+                for i, fee in enumerate(filtered_fees):
+                    debug_info.append(f"  {i+1}. {fee}")
+            
+            debug_info.append(f"عدد صفوف الجدول: {self.fees_table.rowCount()}")
+            debug_info.append(f"فلتر مختار: {self.filter_group.checkedId()}")
+            
+            # اختبار الاتصال بقاعدة البيانات
+            try:
+                test_query = "SELECT COUNT(*) FROM additional_fees WHERE student_id = ?"
+                result = db_manager.execute_query(test_query, (self.student_id,))
+                debug_info.append(f"عدد الرسوم في قاعدة البيانات: {result[0][0] if result else 'خطأ'}")
+            except Exception as db_error:
+                debug_info.append(f"خطأ في قاعدة البيانات: {db_error}")
+            
+            # عرض المعلومات في نافذة رسالة
+            debug_text = "\n".join(debug_info)
+            QMessageBox.information(self, "معلومات التشخيص", debug_text)
+            
+        except Exception as e:
+            QMessageBox.critical(self, "خطأ في التشخيص", f"فشل في تشخيص البيانات: {str(e)}")
     
     def apply_styles(self):
         """تطبيق التنسيقات"""
