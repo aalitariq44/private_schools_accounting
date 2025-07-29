@@ -51,8 +51,6 @@ class StudentsPage(QWidget):
             layout.setContentsMargins(20, 20, 20, 20)
             layout.setSpacing(15)
             
-            # العنوان الرئيسي
-            self.create_page_header(layout)
             
             # شريط الأدوات والفلاتر
             self.create_toolbar(layout)
@@ -69,48 +67,6 @@ class StudentsPage(QWidget):
             logging.error(f"خطأ في إعداد واجهة صفحة الطلاب: {e}")
             raise
     
-    def create_page_header(self, layout):
-        """إنشاء رأس الصفحة"""
-        try:
-            header_frame = QFrame()
-            header_frame.setObjectName("headerFrame")
-            
-            header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 15, 20, 15)
-            
-            # العنوان والوصف
-            text_layout = QVBoxLayout()
-            
-            title_label = QLabel("إدارة الطلاب")
-            title_label.setObjectName("pageTitle")
-            title_label.setStyleSheet("color: black;")
-            text_layout.addWidget(title_label)
-            
-            desc_label = QLabel("عرض وإدارة بيانات الطلاب، بما في ذلك معلوماتهم الشخصية، المدرسية، والمالية.")
-            desc_label.setObjectName("pageDesc")
-            desc_label.setStyleSheet("color: black;")
-            text_layout.addWidget(desc_label)
-            
-            header_layout.addLayout(text_layout)
-            header_layout.addStretch()
-            
-            # إحصائيات سريعة في الرأس
-            stats_layout = QHBoxLayout()
-            
-            self.total_students_header_label = QLabel("إجمالي الطلاب: 0")
-            self.total_students_header_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.total_students_header_label)
-            
-            self.active_students_header_label = QLabel("الطلاب النشطون: 0")
-            self.active_students_header_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.active_students_header_label)
-            
-            header_layout.addLayout(stats_layout)
-            
-            layout.addWidget(header_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء رأس الصفحة: {e}")
     
     def create_toolbar(self, layout):
         """إنشاء شريط الأدوات والفلاتر"""
@@ -545,9 +501,6 @@ class StudentsPage(QWidget):
             self.active_students_value.setText(str(active_students_count))
             self.inactive_students_value.setText(str(inactive_students_count))
             
-            # تحديث ملصقات الرأس
-            self.total_students_header_label.setText(f"إجمالي الطلاب: {total_students_count}")
-            self.active_students_header_label.setText(f"الطلاب النشطون: {active_students_count}")
             
             # تحديث الإحصائيات الأخرى
             self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {total_students_count}")
@@ -561,14 +514,12 @@ class StudentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في تحديث الإحصائيات: {e}")
             # تعيين قيم افتراضية في حالة الخطأ
-            self.total_students_label.setText("إجمالي الطلاب: --")
-            self.active_students_label.setText("الطلاب النشطون: --")
-            self.inactive_students_label.setText("غير النشطين: --")
-            self.total_students_header_label.setText("إجمالي الطلاب: --")
-            self.active_students_header_label.setText("الطلاب النشطون: --")
-            self.displayed_count_label.setText("عدد الطلاب المعروضين: --")
-            self.male_students_label.setText("الذكور: --")
-            self.female_students_label.setText("الإناث: --")
+            self.total_students_label.setText("--")
+            self.active_students_label.setText("--")
+            self.inactive_students_label.setText("--")
+            self.displayed_count_label.setText("--")
+            self.male_students_label.setText("--")
+            self.female_students_label.setText("--")
     
     def apply_filters(self):
         """تطبيق الفلاتر وإعادة تحميل البيانات"""
