@@ -60,8 +60,8 @@ class StudentsPage(QWidget):
             # جدول الطلاب
             self.create_students_table(layout)
             
-            # إحصائيات سريعة
-            self.create_quick_stats(layout)
+            # ملخص الطلاب
+            self.create_summary(layout)
             
             self.setLayout(layout)
             
@@ -656,7 +656,7 @@ class StudentsPage(QWidget):
                 QWidget {
                     background-color: #F8F9FA;
                     font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 16px;
+                    font-size: 18px;
                 }
                 
                 /* رأس الصفحة */
