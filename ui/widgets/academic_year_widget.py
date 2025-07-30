@@ -35,15 +35,15 @@ class AcademicYearWidget(QWidget):
         """إعداد واجهة المستخدم"""
         try:
             layout = QHBoxLayout()
-            layout.setContentsMargins(5, 5, 5, 5)
-            layout.setSpacing(10)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
             
             # إطار الويدجت
             self.frame = QFrame()
             self.frame.setObjectName("academicYearFrame")
             frame_layout = QHBoxLayout()
-            frame_layout.setContentsMargins(10, 5, 10, 5)
-            frame_layout.setSpacing(8)
+            frame_layout.setContentsMargins(0, 0, 0, 0)
+            frame_layout.setSpacing(0)
             
             if self.show_label:
                 # تسمية
@@ -71,26 +71,23 @@ class AcademicYearWidget(QWidget):
         try:
             self.setStyleSheet("""
                 #academicYearFrame {
-                    background-color: #3498db;
-                    border: 2px solid #2980b9;
-                    border-radius: 8px;
-                    min-height: 30px;
+                    background-color: #3498db; /* Blue color */
+                    border-radius: 5px; /* Same rounding as the button */
+                    border: none;
+                    padding: 8px 16px;
                 }
                 
                 #academicYearLabel {
                     color: white;
                     font-weight: bold;
-                    font-size: 12px;
+                    font-size: 12px; /* Same font size as the button */
+                    padding-right: 5px;
                 }
                 
                 #academicYearValue {
                     color: white;
                     font-weight: bold;
-                    font-size: 14px;
-                    background-color: #2980b9;
-                    border-radius: 4px;
-                    padding: 3px 8px;
-                    min-width: 100px;
+                    font-size: 12px; /* Same font size as the button */
                 }
             """)
             
