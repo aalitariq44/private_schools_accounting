@@ -6,6 +6,7 @@
 
 import sys
 import logging
+import json
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
@@ -82,12 +83,7 @@ class AddGroupStudentsDialog(QDialog):
         # الصف
         self.grade_combo = QComboBox()
         self.grade_combo.setObjectName("inputCombo")
-        grades = ["الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي", 
-                 "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي",
-                 "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط",
-                 "الرابع العلمي", "الرابع الأدبي", "الخامس العلمي", 
-                 "الخامس الأدبي", "السادس العلمي", "السادس الأدبي"]
-        self.grade_combo.addItems(grades)
+        self.grade_combo.addItem("اختر الصف", None)
         shared_layout.addRow("الصف:", self.grade_combo)
         
         # الشعبة
@@ -193,15 +189,19 @@ class AddGroupStudentsDialog(QDialog):
     def load_schools(self):
         """تحميل المدارس"""
         try:
-            # use Arabic name column for schools
-            query = "SELECT id, name_ar AS name FROM schools ORDER BY name_ar"
+            query = "SELECT id, name_ar, school_types FROM schools ORDER BY name_ar"
             schools = db_manager.execute_query(query)
             
             self.school_combo.clear()
             self.school_combo.addItem("اختر المدرسة", None)
             
             for school in schools:
-                self.school_combo.addItem(school['name'], school['id'])
+                school_data = {
+                    'id': school['id'],
+                    'name': school['name_ar'],
+                    'types': school['school_types']
+                }
+                self.school_combo.addItem(school['name_ar'], school_data)
                 
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
@@ -210,13 +210,60 @@ class AddGroupStudentsDialog(QDialog):
     def update_grades_for_school(self):
         """تحديث الصفوف حسب المدرسة المختارة"""
         try:
-            school_id = self.school_combo.currentData()
-            if not school_id:
+            self.grade_combo.clear()
+            
+            if self.school_combo.currentIndex() <= 0:
+                self.grade_combo.addItem("اختر الصف", None)
                 return
                 
-            # يمكن إضافة منطق لتحديد الصفوف حسب المدرسة لاحقاً
-            # حالياً نعرض جميع الصفوف
+            school_data = self.school_combo.currentData()
+            if not school_data:
+                self.grade_combo.addItem("اختر الصف", None)
+                return
             
+            school_types_str = school_data.get('types', '')
+            
+            # تحليل أنواع المدرسة
+            school_types = []
+            if school_types_str:
+                try:
+                    # محاولة تحليل JSON
+                    parsed_types = json.loads(school_types_str)
+                    if isinstance(parsed_types, list):
+                        school_types = parsed_types
+                    else:
+                        school_types = [school_types_str]
+                except json.JSONDecodeError:
+                    # إذا لم يكن JSON صحيح، نعامله كنص مفصول بفواصل
+                    school_types = [t.strip() for t in school_types_str.split(',') if t.strip()]
+            
+            # قائمة الصفوف
+            all_grades = []
+            
+            # إضافة الصفوف حسب نوع المدرسة
+            if "ابتدائية" in school_types:
+                all_grades.extend([
+                    "الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي",
+                    "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي"
+                ])
+            
+            if "متوسطة" in school_types:
+                all_grades.extend([
+                    "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط"
+                ])
+            
+            if "إعدادية" in school_types or "ثانوية" in school_types:
+                all_grades.extend([
+                    "الرابع العلمي", "الرابع الأدبي",
+                    "الخامس العلمي", "الخامس الأدبي", 
+                    "السادس العلمي", "السادس الأدبي"
+                ])
+            
+            # إضافة الصفوف إلى القائمة
+            self.grade_combo.addItem("اختر الصف", None)
+            for grade in all_grades:
+                self.grade_combo.addItem(grade, grade)
+                
         except Exception as e:
             logging.error(f"خطأ في تحديث الصفوف: {e}")
             
@@ -299,6 +346,10 @@ class AddGroupStudentsDialog(QDialog):
             QMessageBox.warning(self, "تحذير", "يرجى اختيار المدرسة")
             return False
             
+        if self.grade_combo.currentData() is None:
+            QMessageBox.warning(self, "تحذير", "يرجى اختيار الصف")
+            return False
+            
         if not self.section_input.text().strip():
             QMessageBox.warning(self, "تحذير", "يرجى إدخال الشعبة")
             return False
@@ -345,8 +396,8 @@ class AddGroupStudentsDialog(QDialog):
                 
             # جمع البيانات المشتركة
             shared_data = {
-                'school_id': self.school_combo.currentData(),
-                'grade': self.grade_combo.currentText(),
+                'school_id': self.school_combo.currentData()['id'],
+                'grade': self.grade_combo.currentData(),
                 'section': self.section_input.text().strip(),
                 'total_fee': self.total_fee_input.value(),
                 'start_date': self.start_date_input.date().toString('yyyy-MM-dd'),
@@ -397,8 +448,8 @@ class AddGroupStudentsDialog(QDialog):
                     logging.error(f"خطأ في حفظ الطالب {student['name']}: {e}")
                     
             if success_count > 0:
-                school_name = self.school_combo.currentText()
-                grade = self.grade_combo.currentText()
+                school_name = self.school_combo.currentData()['name']
+                grade = self.grade_combo.currentData()
                 section = self.section_input.text().strip()
                 
                 success_message = f"""تم إضافة {success_count} طالب بنجاح
