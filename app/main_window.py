@@ -63,6 +63,9 @@ class MainWindow(QMainWindow):
             
             # أيقونة النافذة
             self.setup_window_icon()
+
+            # افتح النافذة بوضع موسع افتراضياً
+            self.setWindowState(Qt.WindowMaximized)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد النافذة الرئيسية: {e}")
