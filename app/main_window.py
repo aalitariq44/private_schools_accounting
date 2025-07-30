@@ -210,8 +210,7 @@ class MainWindow(QMainWindow):
                 {"name": "salaries", "text": "الرواتب", "icon": "salaries.png", "active": True},
                 {"name": "separator2", "text": "---", "icon": None, "active": False},
                 {"name": "backup", "text": "النسخ الاحتياطية", "icon": "backup.png", "active": True},
-                {"name": "reports", "text": "التقارير", "icon": "reports.png", "active": False},
-                {"name": "separator3", "text": "---", "icon": None, "active": False},
+                
                 {"name": "settings", "text": "الإعدادات", "icon": "settings.png", "active": False},
                 {"name": "logout", "text": "تسجيل خروج", "icon": "logout.png", "active": True},
             ]
@@ -377,8 +376,7 @@ class MainWindow(QMainWindow):
             # صفحة النسخ الاحتياطية
             self.load_backup_page()
             
-            # الصفحات الشكلية
-            self.load_placeholder_pages()
+            
             
         except Exception as e:
             logging.error(f"خطأ في تحميل الصفحات: {e}")
@@ -550,24 +548,7 @@ class MainWindow(QMainWindow):
             self.pages["backup"] = placeholder
             self.pages_stack.addWidget(placeholder)
     
-    def load_placeholder_pages(self):
-        """تحميل الصفحات الشكلية"""
-        try:
-            placeholder_pages = [
-                ("reports", "التقارير"),
-                ("settings", "الإعدادات")
-            ]
-            
-            for page_name, page_title in placeholder_pages:
-                placeholder = self.create_placeholder_page(
-                    page_title, 
-                    f"صفحة {page_title} قيد التطوير..."
-                )
-                self.pages[page_name] = placeholder
-                self.pages_stack.addWidget(placeholder)
-                
-        except Exception as e:
-            logging.error(f"خطأ في تحميل الصفحات الشكلية: {e}")
+    
     
     def create_placeholder_page(self, title: str, message: str):
         """إنشاء صفحة بديلة"""
@@ -637,7 +618,7 @@ class MainWindow(QMainWindow):
                 "employees": "الموظفين",
                 "installments": "الأقساط",
                 "additional_fees": "الرسوم الإضافية",
-                "reports": "التقارير",
+                
                 "external_income": "الواردات الخارجية",
                 "expenses": "المصروفات",
                 "salaries": "الرواتب",
