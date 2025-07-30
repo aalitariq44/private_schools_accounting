@@ -314,6 +314,14 @@ class MainWindow(QMainWindow):
             # مساحة مرنة
             header_layout.addStretch()
             
+            # ويدجت العام الدراسي
+            try:
+                from ui.widgets.academic_year_widget import AcademicYearWidget
+                self.academic_year_widget = AcademicYearWidget(show_label=True, auto_refresh=True)
+                header_layout.addWidget(self.academic_year_widget)
+            except ImportError as e:
+                logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
+
             # زر النسخ الاحتياطي السريع
             self.quick_backup_btn = QPushButton("نسخ احتياطي سريع")
             self.quick_backup_btn.setObjectName("quickBackupButton")
