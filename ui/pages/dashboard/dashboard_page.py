@@ -75,21 +75,33 @@ class DashboardPage(QWidget):
             stats_grid = QGridLayout()
             stats_grid.setSpacing(1)
             
-            # إنشاء بطاقات الإحصائيات
+
+            # إنشاء بطاقات الإحصائيات الجديدة
             self.schools_card = self.create_stat_card("المدارس", "0", "#3498DB")
             self.students_card = self.create_stat_card("الطلاب", "0", "#27AE60")
-            self.total_fees_card = self.create_stat_card("إجمالي الأقساط", "0 د.ع", "#F39C12")
-            self.paid_fees_card = self.create_stat_card("المبالغ المدفوعة", "0 د.ع", "#2ECC71")
-            self.remaining_fees_card = self.create_stat_card("المبالغ المتبقية", "0 د.ع", "#E74C3C")
-            self.additional_fees_card = self.create_stat_card("الرسوم الإضافية", "0 د.ع", "#9B59B6")
-            
-            # ترتيب البطاقات في الشبكة
+            self.teachers_card = self.create_stat_card("المعلمين", "0", "#8E44AD")
+
+            self.total_fees_card = self.create_stat_card("مجموع الرسوم الدراسية", "0 د.ع", "#F39C12")
+            self.paid_fees_card = self.create_stat_card("مجموع الأقساط المدفوعة", "0 د.ع", "#2ECC71")
+            self.remaining_fees_card = self.create_stat_card("المتبقي", "0 د.ع", "#E74C3C")
+
+            self.additional_fees_card = self.create_stat_card("مجموع الرسوم الإضافية", "0 د.ع", "#9B59B6")
+            self.additional_fees_paid_card = self.create_stat_card("الرسوم الإضافية المدفوعة فقط", "0 د.ع", "#16A085")
+            self.additional_fees_unpaid_card = self.create_stat_card("الرسوم الإضافية غير المدفوعة فقط", "0 د.ع", "#D35400")
+
+            # ترتيب البطاقات في الشبكة حسب الطلب
+            # الصف الأول
             stats_grid.addWidget(self.schools_card, 0, 0)
             stats_grid.addWidget(self.students_card, 0, 1)
-            stats_grid.addWidget(self.total_fees_card, 0, 2)
-            stats_grid.addWidget(self.paid_fees_card, 1, 0)
-            stats_grid.addWidget(self.remaining_fees_card, 1, 1)
-            stats_grid.addWidget(self.additional_fees_card, 1, 2)
+            stats_grid.addWidget(self.teachers_card, 0, 2)
+            # الصف الثاني
+            stats_grid.addWidget(self.total_fees_card, 1, 0)
+            stats_grid.addWidget(self.paid_fees_card, 1, 1)
+            stats_grid.addWidget(self.remaining_fees_card, 1, 2)
+            # الصف الثالث
+            stats_grid.addWidget(self.additional_fees_card, 2, 0)
+            stats_grid.addWidget(self.additional_fees_paid_card, 2, 1)
+            stats_grid.addWidget(self.additional_fees_unpaid_card, 2, 2)
             
             stats_layout.addLayout(stats_grid)
             layout.addWidget(stats_frame)
@@ -244,23 +256,68 @@ class DashboardPage(QWidget):
     def load_statistics(self):
         """تحميل الإحصائيات من قاعدة البيانات"""
         try:
-            # إحصائيات المدارس
+
+            # الصف الأول
             schools_count = self.get_schools_count()
             self.update_stat_card(self.schools_card, str(schools_count))
-            
-            # إحصائيات الطلاب
+
             students_count = self.get_students_count()
             self.update_stat_card(self.students_card, str(students_count))
-            
-            # إحصائيات الأقساط
+
+            teachers_count = self.get_teachers_count()
+            self.update_stat_card(self.teachers_card, str(teachers_count))
+
+            # الصف الثاني
             total_fees, paid_fees, remaining_fees = self.get_fees_statistics()
             self.update_stat_card(self.total_fees_card, f"{total_fees:,.0f} د.ع")
             self.update_stat_card(self.paid_fees_card, f"{paid_fees:,.0f} د.ع")
             self.update_stat_card(self.remaining_fees_card, f"{remaining_fees:,.0f} د.ع")
+
+            # الصف الثالث
+            additional_fees_total = self.get_additional_fees_total()
+            additional_fees_paid = self.get_additional_fees_paid()
+            additional_fees_unpaid = self.get_additional_fees_unpaid()
+            self.update_stat_card(self.additional_fees_card, f"{additional_fees_total:,.0f} د.ع")
+            self.update_stat_card(self.additional_fees_paid_card, f"{additional_fees_paid:,.0f} د.ع")
+            self.update_stat_card(self.additional_fees_unpaid_card, f"{additional_fees_unpaid:,.0f} د.ع")
             
-            # إحصائيات الرسوم الإضافية
-            additional_fees = self.get_additional_fees_total()
-            self.update_stat_card(self.additional_fees_card, f"{additional_fees:,.0f} د.ع")
+            # تحديث معلومات النظام
+            self.update_system_info()
+            
+            log_user_action("تم تحديث إحصائيات لوحة التحكم")
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحميل الإحصائيات: {e}")
+    
+    def get_teachers_count(self) -> int:
+        """الحصول على عدد المعلمين"""
+        try:
+            query = "SELECT COUNT(*) as count FROM teachers"
+            result = db_manager.execute_query(query)
+            return result[0]['count'] if result else 0
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على عدد المعلمين: {e}")
+            return 0
+
+    def get_additional_fees_paid(self) -> float:
+        """الحصول على مجموع الرسوم الإضافية المدفوعة فقط"""
+        try:
+            query = "SELECT SUM(amount) as total FROM additional_fees WHERE paid = 1"
+            result = db_manager.execute_query(query)
+            return float(result[0]['total']) if result and result[0]['total'] else 0.0
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على مجموع الرسوم الإضافية المدفوعة: {e}")
+            return 0.0
+
+    def get_additional_fees_unpaid(self) -> float:
+        """الحصول على مجموع الرسوم الإضافية غير المدفوعة فقط"""
+        try:
+            query = "SELECT SUM(amount) as total FROM additional_fees WHERE paid = 0"
+            result = db_manager.execute_query(query)
+            return float(result[0]['total']) if result and result[0]['total'] else 0.0
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على مجموع الرسوم الإضافية غير المدفوعة: {e}")
+            return 0.0
             
             # تحديث معلومات النظام
             self.update_system_info()
@@ -315,9 +372,9 @@ class DashboardPage(QWidget):
             return 0.0, 0.0, 0.0
     
     def get_additional_fees_total(self) -> float:
-        """الحصول على إجمالي الرسوم الإضافية"""
+        """الحصول على إجمالي جميع الرسوم الإضافية"""
         try:
-            query = "SELECT SUM(amount) as total FROM additional_fees WHERE paid = 1"
+            query = "SELECT SUM(amount) as total FROM additional_fees"
             result = db_manager.execute_query(query)
             return float(result[0]['total']) if result and result[0]['total'] else 0.0
             
