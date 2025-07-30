@@ -86,11 +86,15 @@ class AddGroupStudentsDialog(QDialog):
         self.grade_combo.addItem("اختر الصف", None)
         shared_layout.addRow("الصف:", self.grade_combo)
         
-        # الشعبة
-        self.section_input = QLineEdit()
-        self.section_input.setObjectName("inputField")
-        self.section_input.setPlaceholderText("مثل: أ، ب، ج...")
-        shared_layout.addRow("الشعبة:", self.section_input)
+        # الشعبة (قائمة منسدلة)
+        self.section_combo = QComboBox()
+        self.section_combo.setObjectName("inputCombo")
+        # إضافة خيار افتراضي
+        self.section_combo.addItem("اختر الشعبة", None)
+        # الأحرف الأبجدية العشرة
+        for letter in ["أ","ب","ج","د","ه","و","ز","ح","ط","ي"]:
+            self.section_combo.addItem(letter, letter)
+        shared_layout.addRow("الشعبة:", self.section_combo)
         
         # الرسوم الدراسية
         self.total_fee_input = QSpinBox()
@@ -350,8 +354,8 @@ class AddGroupStudentsDialog(QDialog):
             QMessageBox.warning(self, "تحذير", "يرجى اختيار الصف")
             return False
             
-        if not self.section_input.text().strip():
-            QMessageBox.warning(self, "تحذير", "يرجى إدخال الشعبة")
+        if self.section_combo.currentData() is None:
+            QMessageBox.warning(self, "تحذير", "يرجى اختيار الشعبة")
             return False
             
         if self.total_fee_input.value() <= 0:
@@ -398,7 +402,7 @@ class AddGroupStudentsDialog(QDialog):
             shared_data = {
                 'school_id': self.school_combo.currentData()['id'],
                 'grade': self.grade_combo.currentData(),
-                'section': self.section_input.text().strip(),
+                'section': self.section_combo.currentData(),
                 'total_fee': self.total_fee_input.value(),
                 'start_date': self.start_date_input.date().toString('yyyy-MM-dd'),
                 'status': self.status_combo.currentText(),
