@@ -80,14 +80,14 @@ class AcademicYearWidget(QWidget):
                 #academicYearLabel {
                     color: white;
                     font-weight: bold;
-                    font-size: 12px; /* Same font size as the button */
+                    font-size: 18px; /* Same font size as the button */
                     padding-right: 5px;
                 }
                 
                 #academicYearValue {
                     color: white;
                     font-weight: bold;
-                    font-size: 12px; /* Same font size as the button */
+                    font-size: 18px; /* Same font size as the button */
                 }
             """)
             
