@@ -23,6 +23,7 @@ from core.printing.print_manager import print_students_list  # استيراد د
 # استيراد نوافذ إدارة الطلاب
 from .add_student_dialog import AddStudentDialog
 from .edit_student_dialog import EditStudentDialog
+from .add_group_students_dialog import AddGroupStudentsDialog
 
 
 class StudentsPage(QWidget):
@@ -148,6 +149,10 @@ class StudentsPage(QWidget):
             self.add_student_button = QPushButton("إضافة طالب")
             self.add_student_button.setObjectName("primaryButton")
             actions_layout.addWidget(self.add_student_button)
+            
+            self.add_group_students_button = QPushButton("إضافة مجموعة طلاب")
+            self.add_group_students_button.setObjectName("groupButton")
+            actions_layout.addWidget(self.add_group_students_button)
             
             self.print_list_button = QPushButton("طباعة قائمة الطلاب")
             self.print_list_button.setObjectName("primaryButton")
@@ -301,6 +306,7 @@ class StudentsPage(QWidget):
         try:
             # ربط أزرار العمليات
             self.add_student_button.clicked.connect(self.add_student)
+            self.add_group_students_button.clicked.connect(self.add_group_students)
             self.print_list_button.clicked.connect(self.print_student_list)
             self.refresh_button.clicked.connect(self.refresh)
             self.clear_filters_button.clicked.connect(self.clear_filters)
@@ -699,6 +705,21 @@ class StudentsPage(QWidget):
                     background-color: #8E44AD;
                 }
                 
+                #groupButton {
+                    background-color: #27AE60;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    min-width: 150px;
+                    font-size: 18px;
+                }
+                
+                #groupButton:hover {
+                    background-color: #2ECC71;
+                }
+                
                 #secondaryButton { /* Added secondaryButton style */
                     background-color: #3498DB;
                     color: white;
@@ -872,6 +893,18 @@ class StudentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في إضافة طالب: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في فتح نافذة إضافة الطالب:\\n{str(e)}")
+    
+    def add_group_students(self):
+        """إضافة مجموعة طلاب"""
+        try:
+            dialog = AddGroupStudentsDialog(self)
+            dialog.students_added.connect(self.refresh)
+            if dialog.exec_() == QDialog.Accepted:
+                log_user_action("إضافة مجموعة طلاب", "نجح")
+                
+        except Exception as e:
+            logging.error(f"خطأ في إضافة مجموعة طلاب: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في فتح نافذة إضافة مجموعة الطلاب:\\n{str(e)}")
     
     def edit_student(self, row):
         """تعديل بيانات طالب"""
