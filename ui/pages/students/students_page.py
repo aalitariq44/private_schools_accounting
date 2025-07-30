@@ -155,7 +155,7 @@ class StudentsPage(QWidget):
             actions_layout.addWidget(self.add_group_students_button)
             
             self.print_list_button = QPushButton("طباعة قائمة الطلاب")
-            self.print_list_button.setObjectName("primaryButton")
+            self.print_list_button.setObjectName("secondaryButton")  # Use secondary style for different color
             actions_layout.addWidget(self.print_list_button)
             
             self.refresh_button = QPushButton("تحديث")
@@ -706,7 +706,7 @@ class StudentsPage(QWidget):
                 }
                 
                 #groupButton {
-                    background-color: #27AE60;
+                    background-color: #9B59B6;
                     color: white;
                     border: none;
                     padding: 8px 16px;
@@ -717,7 +717,7 @@ class StudentsPage(QWidget):
                 }
                 
                 #groupButton:hover {
-                    background-color: #2ECC71;
+                    background-color: #8E44AD;
                 }
                 
                 #secondaryButton { /* Added secondaryButton style */
