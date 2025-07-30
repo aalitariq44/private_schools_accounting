@@ -9,7 +9,7 @@ import logging
 import json
 from datetime import datetime
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
+    QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QGridLayout,
     QLabel, QLineEdit, QComboBox, QDateEdit, QTextEdit,
     QPushButton, QFrame, QMessageBox, QGroupBox, 
     QScrollArea, QWidget, QSpinBox, QTableWidget,
@@ -71,20 +71,17 @@ class AddGroupStudentsDialog(QDialog):
         shared_frame = QGroupBox("المعلومات المشتركة")
         shared_frame.setObjectName("sharedFrame")
         
-        shared_layout = QFormLayout()
+        shared_layout = QGridLayout()
         shared_layout.setSpacing(15)
-        shared_layout.setLabelAlignment(Qt.AlignRight)
         
         # اسم المدرسة
         self.school_combo = QComboBox()
         self.school_combo.setObjectName("inputCombo")
-        shared_layout.addRow("المدرسة:", self.school_combo)
         
         # الصف
         self.grade_combo = QComboBox()
         self.grade_combo.setObjectName("inputCombo")
         self.grade_combo.addItem("اختر الصف", None)
-        shared_layout.addRow("الصف:", self.grade_combo)
         
         # الشعبة (قائمة منسدلة)
         self.section_combo = QComboBox()
@@ -94,33 +91,46 @@ class AddGroupStudentsDialog(QDialog):
         # الأحرف الأبجدية العشرة
         for letter in ["أ","ب","ج","د","ه","و","ز","ح","ط","ي"]:
             self.section_combo.addItem(letter, letter)
-        shared_layout.addRow("الشعبة:", self.section_combo)
         
         # الرسوم الدراسية
         self.total_fee_input = QSpinBox()
         self.total_fee_input.setObjectName("inputField")
         self.total_fee_input.setRange(0, 10000000)
         self.total_fee_input.setSuffix(" د.ع")
-        shared_layout.addRow("الرسوم الدراسية:", self.total_fee_input)
         
         # تاريخ المباشرة
         self.start_date_input = QDateEdit()
         self.start_date_input.setObjectName("inputField")
         self.start_date_input.setDate(QDate.currentDate())
         self.start_date_input.setCalendarPopup(True)
-        shared_layout.addRow("تاريخ المباشرة:", self.start_date_input)
         
         # الحالة
         self.status_combo = QComboBox()
         self.status_combo.setObjectName("inputCombo")
         self.status_combo.addItems(["نشط", "منقطع", "متخرج", "محول"])
-        shared_layout.addRow("الحالة:", self.status_combo)
         
         # الجنس
         self.gender_combo = QComboBox()
         self.gender_combo.setObjectName("inputCombo")
         self.gender_combo.addItems(["ذكر", "أنثى"])
-        shared_layout.addRow("الجنس:", self.gender_combo)
+
+        # توزيع الحقول في صفين أفقيين
+        # الصف الأول: المدرسة، الصف، الشعبة، الرسوم الدراسية
+        shared_layout.addWidget(QLabel("المدرسة:"), 0, 0)
+        shared_layout.addWidget(self.school_combo, 0, 1)
+        shared_layout.addWidget(QLabel("الصف:"), 0, 2)
+        shared_layout.addWidget(self.grade_combo, 0, 3)
+        shared_layout.addWidget(QLabel("الشعبة:"), 0, 4)
+        shared_layout.addWidget(self.section_combo, 0, 5)
+        shared_layout.addWidget(QLabel("الرسوم الدراسية:"), 0, 6)
+        shared_layout.addWidget(self.total_fee_input, 0, 7)
+        # الصف الثاني: تاريخ المباشرة، الحالة، الجنس
+        shared_layout.addWidget(QLabel("تاريخ المباشرة:"), 1, 0)
+        shared_layout.addWidget(self.start_date_input, 1, 1)
+        shared_layout.addWidget(QLabel("الحالة:"), 1, 2)
+        shared_layout.addWidget(self.status_combo, 1, 3)
+        shared_layout.addWidget(QLabel("الجنس:"), 1, 4)
+        shared_layout.addWidget(self.gender_combo, 1, 5)
         
         shared_frame.setLayout(shared_layout)
         layout.addWidget(shared_frame)
