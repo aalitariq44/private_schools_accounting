@@ -193,7 +193,8 @@ class AddGroupStudentsDialog(QDialog):
     def load_schools(self):
         """تحميل المدارس"""
         try:
-            query = "SELECT id, name FROM schools ORDER BY name"
+            # use Arabic name column for schools
+            query = "SELECT id, name_ar AS name FROM schools ORDER BY name_ar"
             schools = db_manager.execute_query(query)
             
             self.school_combo.clear()
