@@ -192,7 +192,7 @@ class DashboardPage(QWidget):
             buttons_layout.addWidget(add_student_btn)
             
             # زر إضافة قسط
-            add_payment_btn = QPushButton("تسجيل دفعة")
+            add_payment_btn = QPushButton("إدارة الاقساط")
             add_payment_btn.setObjectName("actionButton")
             add_payment_btn.clicked.connect(self.add_payment_action)
             buttons_layout.addWidget(add_payment_btn)
