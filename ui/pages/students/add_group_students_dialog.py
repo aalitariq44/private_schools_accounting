@@ -438,7 +438,7 @@ class AddGroupStudentsDialog(QDialog):
                 try:
                     query = """
                         INSERT INTO students (
-                            full_name, school_id, grade, section, phone, 
+                            name, school_id, grade, section, phone, 
                             total_fee, start_date, status, gender
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
@@ -464,7 +464,7 @@ class AddGroupStudentsDialog(QDialog):
             if success_count > 0:
                 school_name = self.school_combo.currentData()['name']
                 grade = self.grade_combo.currentData()
-                section = self.section_input.text().strip()
+                section = self.section_combo.currentData()
                 
                 success_message = f"""تم إضافة {success_count} طالب بنجاح
                 
