@@ -214,7 +214,7 @@ class AddStudentDialog(QDialog):
         
         # الحالة
         self.status_combo = QComboBox()
-        self.status_combo.addItems(["نشط", "منقطع", "متخرج", "محول"])
+        self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
         academic_layout.addRow("الحالة:", self.status_combo)
         
         content_layout.addWidget(academic_info_group)

@@ -107,7 +107,7 @@ class AddGroupStudentsDialog(QDialog):
         # الحالة
         self.status_combo = QComboBox()
         self.status_combo.setObjectName("inputCombo")
-        self.status_combo.addItems(["نشط", "منقطع", "متخرج", "محول"])
+        self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
         
         # الجنس
         self.gender_combo = QComboBox()

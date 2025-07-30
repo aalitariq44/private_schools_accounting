@@ -113,7 +113,7 @@ class StudentsPage(QWidget):
             
             self.status_combo = QComboBox()
             self.status_combo.setObjectName("filterCombo")
-            self.status_combo.addItems(["جميع الحالات", "نشط", "منقطع", "متخرج", "محول"])
+            self.status_combo.addItems(["جميع الحالات", "نشط", "منقطع", "متخرج", "منتقل"])
             filters_layout.addWidget(self.status_combo)
             
             # فلتر الجنس
@@ -259,7 +259,7 @@ class StudentsPage(QWidget):
             active_layout.addWidget(self.active_students_value)
             numbers_grid.addLayout(active_layout)
             
-            # الطلاب غير النشطين (منقطع، متخرج، محول)
+            # الطلاب غير النشطين (منقطع، متخرج، منتقل)
             inactive_layout = QVBoxLayout()
             self.inactive_students_label = QLabel("غير النشطين")
             self.inactive_students_label.setObjectName("summaryLabel")
