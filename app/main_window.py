@@ -211,7 +211,7 @@ class MainWindow(QMainWindow):
                 {"name": "separator2", "text": "---", "icon": None, "active": False},
                 {"name": "backup", "text": "النسخ الاحتياطية", "icon": "backup.png", "active": True},
                 
-                {"name": "settings", "text": "الإعدادات", "icon": "settings.png", "active": False},
+                {"name": "settings", "text": "الإعدادات", "icon": "settings.png", "active": True},
                 {"name": "logout", "text": "تسجيل خروج", "icon": "logout.png", "active": True},
             ]
             
@@ -375,6 +375,9 @@ class MainWindow(QMainWindow):
             
             # صفحة النسخ الاحتياطية
             self.load_backup_page()
+            
+            # صفحة الإعدادات
+            self.load_settings_page()
             
             
             
@@ -546,6 +549,20 @@ class MainWindow(QMainWindow):
             # إنشاء صفحة بديلة
             placeholder = self.create_placeholder_page("النسخ الاحتياطية", "صفحة إدارة النسخ الاحتياطية")
             self.pages["backup"] = placeholder
+            self.pages_stack.addWidget(placeholder)
+    
+    def load_settings_page(self):
+        """تحميل صفحة الإعدادات"""
+        try:
+            from ui.pages.settings.settings_page import SettingsPage
+            settings = SettingsPage()
+            self.pages["settings"] = settings
+            self.pages_stack.addWidget(settings)
+        except Exception as e:
+            logging.error(f"خطأ في تحميل صفحة الإعدادات: {e}")
+            # إنشاء صفحة بديلة
+            placeholder = self.create_placeholder_page("الإعدادات", "صفحة إعدادات التطبيق")
+            self.pages["settings"] = placeholder
             self.pages_stack.addWidget(placeholder)
     
     

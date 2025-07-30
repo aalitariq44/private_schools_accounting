@@ -38,6 +38,9 @@ class DashboardPage(QWidget):
             main_layout.setContentsMargins(10, 10, 10, 10)
             main_layout.setSpacing(10)
             
+            # العنوان والعام الدراسي
+            self.create_header_section(main_layout)
+            
             # إحصائيات سريعة
             self.create_statistics_section(main_layout)
             
@@ -56,6 +59,39 @@ class DashboardPage(QWidget):
             logging.error(f"خطأ في إعداد واجهة لوحة التحكم: {e}")
             raise
     
+    
+    def create_header_section(self, layout):
+        """إنشاء قسم الرأس مع العام الدراسي"""
+        try:
+            header_frame = QFrame()
+            header_frame.setObjectName("dashboardHeader")
+            header_layout = QHBoxLayout()
+            header_layout.setContentsMargins(10, 10, 10, 10)
+            
+            # عنوان لوحة التحكم
+            title_label = QLabel("لوحة التحكم")
+            title_label.setObjectName("dashboardTitle")
+            title_font = QFont()
+            title_font.setPointSize(20)
+            title_font.setBold(True)
+            title_label.setFont(title_font)
+            
+            header_layout.addWidget(title_label)
+            header_layout.addStretch()
+            
+            # ويدجت العام الدراسي
+            try:
+                from ui.widgets.academic_year_widget import AcademicYearWidget
+                self.academic_year_widget = AcademicYearWidget(show_label=True)
+                header_layout.addWidget(self.academic_year_widget)
+            except ImportError as e:
+                logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
+            
+            header_frame.setLayout(header_layout)
+            layout.addWidget(header_frame)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء قسم الرأس: {e}")
     
     def create_statistics_section(self, layout):
         """إنشاء قسم الإحصائيات السريعة"""
@@ -480,6 +516,20 @@ class DashboardPage(QWidget):
         """إعداد تنسيقات الصفحة"""
         try:
             style = """
+                #dashboardHeader {
+                    background-color: white;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    padding: 5px;
+                }
+                
+                #dashboardTitle {
+                    color: #2C3E50;
+                    font-size: 20px;
+                    font-weight: bold;
+                }
+                
                 #statsFrame, #actionsFrame, #infoFrame {
                     background-color: white;
                     border: 1px solid #E9ECEF;
