@@ -277,6 +277,7 @@ class SchoolsPage(QWidget):
             edit_btn = QPushButton("تعديل")
             edit_btn.setObjectName("editButton")
             edit_btn.setMaximumSize(60, 25)
+            edit_btn.setStyleSheet("font-size:14px; padding:0px;")
             edit_btn.clicked.connect(lambda: self.edit_school_by_id(school_id))
             layout.addWidget(edit_btn)
             
@@ -284,6 +285,7 @@ class SchoolsPage(QWidget):
             delete_btn = QPushButton("حذف")
             delete_btn.setObjectName("deleteButton")
             delete_btn.setMaximumSize(60, 25)
+            delete_btn.setStyleSheet("font-size:14px; padding:0px;")
             delete_btn.clicked.connect(lambda: self.delete_school_by_id(school_id))
             layout.addWidget(delete_btn)
             
