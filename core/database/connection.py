@@ -191,6 +191,62 @@ class DatabaseManager:
                     )
                 """)
                 
+                # جدول الإيرادات الخارجية
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS external_income (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        school_id INTEGER NOT NULL,
+                        income_type TEXT NOT NULL,
+                        amount DECIMAL(10,2) NOT NULL,
+                        income_date DATE NOT NULL,
+                        description TEXT,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                    )
+                """)
+                
+                # جدول المصروفات
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS expenses (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        school_id INTEGER NOT NULL,
+                        expense_type TEXT NOT NULL,
+                        amount DECIMAL(10,2) NOT NULL,
+                        expense_date DATE NOT NULL,
+                        description TEXT,
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                    )
+                """)
+                
+                # جدول الرواتب
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS salaries (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        employee_id INTEGER,
+                        teacher_id INTEGER,
+                        employee_type TEXT NOT NULL CHECK (employee_type IN ('teacher', 'employee')),
+                        salary_month TEXT NOT NULL,
+                        salary_year INTEGER NOT NULL,
+                        base_salary DECIMAL(10,2) NOT NULL,
+                        bonuses DECIMAL(10,2) DEFAULT 0,
+                        deductions DECIMAL(10,2) DEFAULT 0,
+                        final_salary DECIMAL(10,2) NOT NULL,
+                        payment_date DATE,
+                        payment_status TEXT DEFAULT 'غير مدفوع' CHECK (payment_status IN ('مدفوع', 'غير مدفوع')),
+                        notes TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+                        FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
+                        CHECK ((employee_id IS NOT NULL AND teacher_id IS NULL) OR (employee_id IS NULL AND teacher_id IS NOT NULL))
+                    )
+                """)
+                
                 # جدول إعدادات التطبيق
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS app_settings (
@@ -236,6 +292,22 @@ class DatabaseManager:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_employees_school_id ON employees(school_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_employees_name ON employees(name)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_employees_job_type ON employees(job_type)")
+            
+            # فهارس الإيرادات الخارجية
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_school_id ON external_income(school_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_date ON external_income(income_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_type ON external_income(income_type)")
+            
+            # فهارس المصروفات
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_school_id ON expenses(school_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(expense_type)")
+            
+            # فهارس الرواتب
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_employee_id ON salaries(employee_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_teacher_id ON salaries(teacher_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_month_year ON salaries(salary_month, salary_year)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_payment_status ON salaries(payment_status)")
             
             logging.info("تم إنشاء فهارس قاعدة البيانات بنجاح")
             
