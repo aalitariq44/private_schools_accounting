@@ -454,21 +454,24 @@ class StudentsPage(QWidget):
             # زر التعديل
             edit_btn = QPushButton("تعديل")
             edit_btn.setObjectName("editButton")
-            edit_btn.setFixedSize(120, 40)  # ضبط حجم الزر بشكل ثابت
+            edit_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
+            edit_btn.setStyleSheet("font-size:14px; padding:0px;")
             edit_btn.clicked.connect(lambda: self.edit_student_by_id(student_id))
             layout.addWidget(edit_btn)
 
             # زر الحذف
             delete_btn = QPushButton("حذف")
             delete_btn.setObjectName("deleteButton")
-            delete_btn.setFixedSize(120, 40)  # ضبط حجم الزر بشكل ثابت
+            delete_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
+            delete_btn.setStyleSheet("font-size:14px; padding:0px;")
             delete_btn.clicked.connect(lambda: self.delete_student(student_id))
             layout.addWidget(delete_btn)
 
             # زر التفاصيل
             details_btn = QPushButton("تفاصيل")
             details_btn.setObjectName("detailsButton")
-            details_btn.setFixedSize(120, 40)  # ضبط حجم الزر بشكل ثابت
+            details_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
+            details_btn.setStyleSheet("font-size:14px; padding:0px;")
             details_btn.clicked.connect(lambda: self.show_student_details(student_id))
             layout.addWidget(details_btn)
 
