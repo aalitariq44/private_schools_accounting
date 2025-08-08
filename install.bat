@@ -43,7 +43,20 @@ python -m pip install bcrypt
 if errorlevel 1 (
     echo تحذير: فشل في تثبيت bcrypt
 )
-
+echo.
+# تثبيت مكتبة supabase
+echo تثبيت supabase...
+python -m pip install supabase
+if errorlevel 1 (
+    echo تحذير: فشل في تثبيت supabase
+)
+echo.
+# تثبيت مكتبة storage3
+echo تثبيت storage3...
+python -m pip install storage3
+if errorlevel 1 (
+    echo تحذير: فشل في تثبيت storage3
+)
 echo.
 echo تم الانتهاء من التثبيت!
 echo يمكنك الآن تشغيل التطبيق باستخدام run.bat
