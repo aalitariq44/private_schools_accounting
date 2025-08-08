@@ -430,17 +430,11 @@ class MainWindow(QMainWindow):
     
     def load_students_page(self):
         """تحميل صفحة الطلاب"""
-        try:
-            from ui.pages.students.students_page import StudentsPage
-            students = StudentsPage()
-            self.pages["students"] = students
-            self.pages_stack.addWidget(students)
-        except Exception as e:
-            logging.error(f"خطأ في تحميل صفحة الطلاب: {e}")
-            # إنشاء صفحة بديلة
-            placeholder = self.create_placeholder_page("الطلاب", "صفحة إدارة الطلاب")
-            self.pages["students"] = placeholder
-            self.pages_stack.addWidget(placeholder)
+        # Always load StudentsPage; let errors surface rather than showing generic placeholder
+        from ui.pages.students.students_page import StudentsPage
+        students = StudentsPage()
+        self.pages["students"] = students
+        self.pages_stack.addWidget(students)
     
     def load_teachers_page(self):
         """تحميل صفحة المعلمين"""

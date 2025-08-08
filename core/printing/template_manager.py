@@ -8,7 +8,13 @@ import os
 import json
 import logging
 from typing import Dict, Any, Optional, List
-from jinja2 import Template, Environment, FileSystemLoader, TemplateNotFound
+import logging
+try:
+    from jinja2 import Template, Environment, FileSystemLoader, TemplateNotFound
+    JINJA2_AVAILABLE = True
+except ImportError:
+    JINJA2_AVAILABLE = False
+    logging.warning("jinja2 module not found; printing templates will fallback to error template")
 from datetime import datetime
 
 from .print_config import TemplateType, PrintConfig
@@ -21,21 +27,20 @@ class TemplateManager:
         self.config = PrintConfig()
         self.templates_path = self.config.templates_path
         
-        # إعداد Jinja2 environment
-        # The loader now points to the single, centralized templates directory
-        self.env = Environment(
-            loader=FileSystemLoader(self.templates_path),
-            autoescape=True
-        )
-        
-        # إضافة فلاتر مخصصة
-        self.env.filters['currency'] = self.format_currency
-        self.env.filters['date_ar'] = self.format_date_arabic
-        self.env.filters['arabic_date'] = self.arabic_date
-        
-        # إنشاء القوالب الأساسية إذا لم تكن موجودة (تعطيل لمنع الكتابة فوق القوالب اليدوية)
-        # إنشاء القوالب الأساسية إذا لم تكن موجودة
-        self.create_default_templates()
+        # إعداد Jinja2 environment if available
+        if JINJA2_AVAILABLE:
+            self.env = Environment(
+                loader=FileSystemLoader(self.templates_path),
+                autoescape=True
+            )
+            # إضافة فلاتر مخصصة
+            self.env.filters['currency'] = self.format_currency
+            self.env.filters['date_ar'] = self.format_date_arabic
+            self.env.filters['arabic_date'] = self.arabic_date
+            # إنشاء القوالب الأساسية إذا لم تكن موجودة
+            self.create_default_templates()
+        else:
+            self.env = None
     
     def format_currency(self, value: float) -> str:
         """تنسيق العملة بدون أصفار زائدة"""
@@ -72,6 +77,9 @@ class TemplateManager:
     
     def get_template(self, template_type: TemplateType) -> Optional[Template]:
         """الحصول على قالب"""
+        # if jinja2 unavailable always fall back to error template
+        if not JINJA2_AVAILABLE or not self.env:
+            return None
         # support both singular and plural alias for student list
         name = template_type.value
         if template_type.name == 'STUDENTS_LIST':

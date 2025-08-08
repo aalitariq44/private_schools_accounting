@@ -18,7 +18,7 @@ from PyQt5.QtGui import QFont, QPixmap, QIcon
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
-from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة
+# from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة (moved inside method)
 
 # استيراد نوافذ إدارة الطلاب
 from .add_student_dialog import AddStudentDialog
@@ -345,6 +345,7 @@ class StudentsPage(QWidget):
         """تحميل قائمة الطلاب"""
         try:
             # بناء الاستعلام مع الفلاتر
+            # استخدام العمود name كما هو موجود في جدول students
             query = """
                 SELECT s.id, s.name, sc.name_ar as school_name,
                        s.grade, s.section, s.gender,
@@ -561,6 +562,13 @@ class StudentsPage(QWidget):
         """طباعة قائمة الطلاب مع المعاينة والفلترة"""
         try:
             log_user_action("طباعة قائمة الطلاب")
+            # استيراد دالة الطباعة داخل الدالة لتفادي أخطاء import
+            try:
+                from core.printing.print_manager import print_students_list
+            except ImportError as ie:
+                logging.error(f"تعذر استيراد وحدة الطباعة: {ie}")
+                QMessageBox.critical(self, "خطأ", "تعذر استيراد وحدة الطباعة. تأكد من تثبيت jinja2.")
+                return
             # إعداد معلومات الفلاتر
             filters = []
             school = self.school_combo.currentText()
