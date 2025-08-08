@@ -473,7 +473,7 @@ class AdditionalFeesPage(QWidget):
             query = """
                 SELECT 
                     af.id, 
-                    COALESCE(s.full_name, s.name) as student_name, 
+                    s.name as student_name, 
                     sc.name_ar as school_name,
                     af.fee_type, 
                     af.amount, 
@@ -523,16 +523,7 @@ class AdditionalFeesPage(QWidget):
             query += " ORDER BY af.created_at DESC"
             
             # تنفيذ الاستعلام
-            # تنفيذ الاستعلام مع معالجة غياب العمود full_name
-            try:
-                fees = db_manager.execute_query(query, params)
-            except Exception as e:
-                # في حال عمود full_name غير موجود، استخدم اسم الطالب العادي
-                if 'no such column' in str(e) and 's.full_name' in str(e):
-                    fallback_query = query.replace('COALESCE(s.full_name, s.name)', 's.name')
-                    fees = db_manager.execute_query(fallback_query, params)
-                else:
-                    raise
+            fees = db_manager.execute_query(query, params)
             
             self.current_fees = fees or []
             self.populate_fees_table()

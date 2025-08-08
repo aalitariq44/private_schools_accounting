@@ -219,7 +219,7 @@ class EditIncomeDialog(QDialog):
         try:
             # جلب بيانات الوارد
             query = """
-                SELECT ei.id, ei.title, ei.amount, ei.category,
+                SELECT ei.id, ei.income_type, ei.amount, ei.description,
                        ei.income_date, ei.notes, ei.school_id, s.name_ar as school_name
                 FROM external_income ei
                 LEFT JOIN schools s ON ei.school_id = s.id

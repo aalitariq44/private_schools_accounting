@@ -164,15 +164,15 @@ class ExpensesPage(QWidget):
             self.school_combo.setObjectName("filterCombo")
             filters_layout.addWidget(self.school_combo)
             
-            # فلتر الفئة
-            category_label = QLabel("الفئة:")
+            # فلتر النوع
+            category_label = QLabel("النوع:")
             category_label.setObjectName("filterLabel")
             filters_layout.addWidget(category_label)
             
             self.category_combo = QComboBox()
             self.category_combo.setObjectName("filterCombo")
             self.category_combo.addItems([
-                "جميع الفئات", "الرواتب", "المواد التعليمية", "الخدمات", 
+                "جميع الأنواع", "الرواتب", "المواد التعليمية", "الخدمات", 
                 "الصيانة", "الكهرباء والماء", "النظافة", "المكتبية", 
                 "النقل", "التأمين", "أخرى"
             ])
@@ -256,7 +256,7 @@ class ExpensesPage(QWidget):
             self.expenses_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "العنوان", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            columns = ["المعرف", "النوع", "المبلغ", "الوصف", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
             self.expenses_table.setColumnCount(len(columns))
             self.expenses_table.setHorizontalHeaderLabels(columns)
 
@@ -361,7 +361,7 @@ class ExpensesPage(QWidget):
         try:
             # بناء الاستعلام مع الفلاتر
             query = """
-                SELECT e.id, e.title, e.amount, e.category, e.expense_date,
+                SELECT e.id, e.expense_type, e.amount, e.description, e.expense_date,
                        e.notes, s.name_ar as school_name, e.created_at
                 FROM expenses e
                 LEFT JOIN schools s ON e.school_id = s.id
@@ -375,10 +375,10 @@ class ExpensesPage(QWidget):
                 query += " AND e.school_id = ?"
                 params.append(selected_school_id)
             
-            # فلتر الفئة
+            # فلتر النوع
             selected_category = self.category_combo.currentText()
-            if selected_category and selected_category != "جميع الفئات":
-                query += " AND e.category = ?"
+            if selected_category and selected_category != "جميع الأنواع":
+                query += " AND e.expense_type = ?"
                 params.append(selected_category)
             
             
@@ -391,7 +391,7 @@ class ExpensesPage(QWidget):
             # فلتر البحث
             search_text = self.search_input.text().strip()
             if search_text:
-                query += " AND (e.title LIKE ? OR e.notes LIKE ?)"
+                query += " AND (e.expense_type LIKE ? OR e.notes LIKE ?)"
                 params.extend([f"%{search_text}%", f"%{search_text}%"])
             
             query += " ORDER BY e.expense_date DESC, e.created_at DESC"
@@ -426,9 +426,9 @@ class ExpensesPage(QWidget):
                 # البيانات الأساسية
                 items = [
                     str(expense['id']),
-                    expense['title'] or "",
+                    expense['expense_type'] or "",
                     f"{expense['amount']:,.2f} د.ع",
-                    expense['category'] or "",
+                    expense['description'] or "",
                     expense['expense_date'] or "",
                     expense['school_name'] or "",
                     (expense['notes'] or "")[:50] + ("..." if len(expense['notes'] or "") > 50 else "")
@@ -638,13 +638,12 @@ class ExpensesPage(QWidget):
             # إنشاء التقرير
             with open(filename, 'w', encoding='utf-8-sig') as f:
                 # كتابة الرأس
-                f.write("المعرف,العنوان,المبلغ,الفئة,المورد,طريقة الدفع,التاريخ,المدرسة,الملاحظات\n")
+                f.write("المعرف,النوع,المبلغ,الوصف,التاريخ,المدرسة,الملاحظات\n")
                 
                 # كتابة البيانات
                 for expense in self.current_expenses:
-                    f.write(f"{expense['id']},{expense['title']},{expense['amount']},{expense['category']},"
-                           f"{expense['supplier']},{expense['payment_method']},{expense['expense_date']},"
-                           f"{expense['school_name']},\"{expense['notes'] or ''}\"\n")
+                    f.write(f"{expense['id']},{expense['expense_type']},{expense['amount']},{expense['description']},"
+                           f"{expense['expense_date']},{expense['school_name']},\"{expense['notes'] or ''}\"\n")
             
             QMessageBox.information(self, "نجح", f"تم تصدير التقرير بنجاح:\n{filename}")
             log_user_action("تصدير تقرير المصروفات", "نجح")

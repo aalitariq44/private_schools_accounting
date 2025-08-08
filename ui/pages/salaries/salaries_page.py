@@ -420,10 +420,10 @@ class SalariesPage(QWidget):
         try:
             query = """
                 SELECT s.*, 
-                       CASE s.staff_type 
+                       CASE s.employee_type 
                            WHEN 'teacher' THEN 'معلم'
                            WHEN 'employee' THEN 'موظف'
-                           ELSE s.staff_type
+                           ELSE s.employee_type
                        END as staff_type_ar
                 FROM salaries s
                 ORDER BY s.payment_date DESC, s.created_at DESC

@@ -293,7 +293,7 @@ class ExternalIncomePage(QWidget):
             self.income_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "العنوان", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            columns = ["المعرف", "النوع", "المبلغ", "الوصف", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
             self.income_table.setColumnCount(len(columns))
             self.income_table.setHorizontalHeaderLabels(columns)
 
@@ -401,7 +401,7 @@ class ExternalIncomePage(QWidget):
         try:
             # بناء الاستعلام مع الفلاتر
             query = """
-                SELECT ei.id, ei.title, ei.amount, ei.category,
+                SELECT ei.id, ei.income_type, ei.amount, ei.description,
                        ei.income_date, ei.notes, s.name_ar as school_name,
                        ei.created_at
                 FROM external_income ei
@@ -431,7 +431,7 @@ class ExternalIncomePage(QWidget):
             # فلتر البحث
             search_text = self.search_input.text().strip()
             if search_text:
-                query += " AND (ei.title LIKE ? OR ei.notes LIKE ?)"
+                query += " AND (ei.income_type LIKE ? OR ei.notes LIKE ?)"
                 params.extend([f"%{search_text}%", f"%{search_text}%"])
             
             query += " ORDER BY ei.income_date DESC, ei.created_at DESC"
@@ -466,9 +466,9 @@ class ExternalIncomePage(QWidget):
                 # البيانات الأساسية
                 items = [
                     str(income['id']),
-                    income['title'] or "",
+                    income['income_type'] or "",
                     f"{income['amount']:,.2f} د.ع",
-                    income['category'] or "",
+                    income['description'] or "",
                     income['income_date'] or "",
                     income['school_name'] or "",
                     (income['notes'] or "")[:50] + ("..." if len(income['notes'] or "") > 50 else "")
@@ -682,8 +682,8 @@ class ExternalIncomePage(QWidget):
                 
                 # كتابة البيانات
                 for income in self.current_incomes:
-                    f.write(f"{income['id']},{income['title']},{income['amount']},"
-                           f"{income['category']},{income['income_date']},{income['school_name']},"
+                    f.write(f"{income['id']},{income['income_type']},{income['amount']},"
+                           f"{income['description']},{income['income_date']},{income['school_name']},"
                            f"\"{income['notes'] or ''}\"\n")
             
             QMessageBox.information(self, "نجح", f"تم تصدير التقرير بنجاح:\n{filename}")
