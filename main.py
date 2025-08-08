@@ -25,6 +25,27 @@ from core.auth.login_manager import AuthManager
 from ui.auth.login_window import LoginWindow
 from app.main_window import MainWindow
 
+# Monkey-patch hashlib to ignore deprecated 'usedforsecurity' keyword
+import hashlib
+# Patch hashlib.new to remove 'usedforsecurity' if present
+_orig_hashlib_new = hashlib.new
+def _patched_hashlib_new(name, data=b'', **kwargs):
+    kwargs.pop('usedforsecurity', None)
+    return _orig_hashlib_new(name, data, **kwargs)
+hashlib.new = _patched_hashlib_new
+# Patch md5 constructor to ignore 'usedforsecurity'
+_orig_md5 = hashlib.md5
+def _patched_md5(data=b'', **kwargs):
+    kwargs.pop('usedforsecurity', None)
+    return _orig_md5(data)
+hashlib.md5 = _patched_md5
+# Patch openssl_md5 if available
+if hasattr(hashlib, 'openssl_md5'):
+    _orig_openssl_md5 = hashlib.openssl_md5
+    def _patched_openssl_md5(data=b'', **kwargs):
+        return _orig_openssl_md5(data)
+    hashlib.openssl_md5 = _patched_openssl_md5
+
 
 class SchoolAccountingApp:
     """الفئة الرئيسية للتطبيق"""

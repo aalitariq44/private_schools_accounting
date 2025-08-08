@@ -102,8 +102,8 @@ class ReportLabPrintManager:
         try:
             # إعادة تشكيل النص العربي
             reshaped_text = arabic_reshaper.reshape(text)
-            # تطبيق خوارزمية BiDi
-            bidi_text = bidi.algorithm.get_display(reshaped_text)
+            # تطبيق خوارزمية BiDi مع اتجاه RTL
+            bidi_text = bidi.algorithm.get_display(reshaped_text, base_dir='R')
             return bidi_text
         except Exception as e:
             logging.error(f"خطأ في إعادة تشكيل النص العربي: {e}")
