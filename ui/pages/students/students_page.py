@@ -239,33 +239,42 @@ class StudentsPage(QWidget):
             
             # إجمالي الطلاب
             total_layout = QVBoxLayout()
+            total_layout.setAlignment(Qt.AlignCenter)
             self.total_students_label = QLabel("إجمالي الطلاب")
+            self.total_students_label.setAlignment(Qt.AlignCenter)
             self.total_students_label.setObjectName("summaryLabel")
             total_layout.addWidget(self.total_students_label)
             
             self.total_students_value = QLabel("0")
+            self.total_students_value.setAlignment(Qt.AlignCenter)
             self.total_students_value.setObjectName("summaryValue")
             total_layout.addWidget(self.total_students_value)
             numbers_grid.addLayout(total_layout)
             
             # الطلاب النشطون
             active_layout = QVBoxLayout()
+            active_layout.setAlignment(Qt.AlignCenter)
             self.active_students_label = QLabel("النشطون")
+            self.active_students_label.setAlignment(Qt.AlignCenter)
             self.active_students_label.setObjectName("summaryLabel")
             active_layout.addWidget(self.active_students_label)
             
             self.active_students_value = QLabel("0")
+            self.active_students_value.setAlignment(Qt.AlignCenter)
             self.active_students_value.setObjectName("summaryValueSuccess")
             active_layout.addWidget(self.active_students_value)
             numbers_grid.addLayout(active_layout)
             
             # الطلاب غير النشطين (منقطع، متخرج، منتقل)
             inactive_layout = QVBoxLayout()
+            inactive_layout.setAlignment(Qt.AlignCenter)
             self.inactive_students_label = QLabel("غير النشطين")
+            self.inactive_students_label.setAlignment(Qt.AlignCenter)
             self.inactive_students_label.setObjectName("summaryLabel")
             inactive_layout.addWidget(self.inactive_students_label)
             
             self.inactive_students_value = QLabel("0")
+            self.inactive_students_value.setAlignment(Qt.AlignCenter)
             self.inactive_students_value.setObjectName("summaryValueWarning")
             inactive_layout.addWidget(self.inactive_students_value)
             numbers_grid.addLayout(inactive_layout)
