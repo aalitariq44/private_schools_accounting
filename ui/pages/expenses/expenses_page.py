@@ -6,6 +6,7 @@
 
 import logging
 import json
+import os
 from datetime import datetime, date
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
@@ -15,8 +16,9 @@ from PyQt5.QtWidgets import (
     QSpinBox, QTextEdit, QFormLayout, QGroupBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
 
+import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 
@@ -35,6 +37,7 @@ class ExpensesPage(QWidget):
         self.current_expenses = []
         self.selected_school_id = None
         
+        self.setup_cairo_font()
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
@@ -696,8 +699,8 @@ class ExpensesPage(QWidget):
                 /* الإطار الرئيسي */
                 QWidget {
                     background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 16px;
+                    font-family: 'Cairo', Arial, sans-serif;
+                    font-size: 18px;
                 }
                 
                 /* رأس الصفحة */
@@ -890,3 +893,27 @@ class ExpensesPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
+
+    def setup_cairo_font(self):
+        """إعداد خط Cairo"""
+        try:
+            font_path = os.path.join(config.FONTS_DIR, "Cairo-Medium.ttf")
+            if os.path.exists(font_path):
+                font_id = QFontDatabase.addApplicationFont(font_path)
+                if font_id != -1:
+                    font_families = QFontDatabase.applicationFontFamilies(font_id)
+                    if font_families:
+                        cairo_font = QFont(font_families[0], 18)
+                        self.setFont(cairo_font)
+                        logging.info("تم تحميل خط Cairo بنجاح في صفحة المصروفات")
+                        return
+                        
+            # استخدام خط بديل
+            fallback_font = QFont("Arial", 18)
+            self.setFont(fallback_font)
+            logging.warning("تم استخدام خط Arial كبديل لخط Cairo في صفحة المصروفات")
+            
+        except Exception as e:
+            logging.error(f"خطأ في إعداد خط Cairo في صفحة المصروفات: {e}")
+            fallback_font = QFont("Arial", 18)
+            self.setFont(fallback_font)

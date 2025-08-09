@@ -6,6 +6,7 @@
 
 import logging
 import json
+from pathlib import Path
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
@@ -14,8 +15,9 @@ from PyQt5.QtWidgets import (
     QSizePolicy
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
 
+import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 # from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة (moved inside method)
@@ -37,12 +39,35 @@ class StudentsPage(QWidget):
         self.current_students = []
         self.selected_school_id = None
         
+        # تحميل وتطبيق خط Cairo
+        self.setup_cairo_font()
+        
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
         self.load_schools()
         
         log_user_action("فتح صفحة إدارة الطلاب")
+    
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            font_db = QFontDatabase()
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            # تحميل خطوط Cairo
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            # الحصول على اسم عائلة الخط
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -628,36 +653,42 @@ class StudentsPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
+            # استخدام خط Cairo المحمل
+            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            
+            # لحل مشكلة F-string، سنستخدم format
             style = """
                 /* الإطار الرئيسي */
-                QWidget {
+                QWidget {{
                     background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
+                    font-family: {font_family};
                     font-size: 16px;
-                }
+                }}
                 
                 /* رأس الصفحة */
-                #headerFrame {
+                #headerFrame {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
                         stop:0 #9B59B6, stop:1 #8E44AD);
                     border-radius: 10px;
                     color: white;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #pageTitle {
+                #pageTitle {{
                     font-size: 16px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 5px;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #pageDesc {
+                #pageDesc {{
                     font-size: 16px;
                     color: #E8DAEF;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #quickStat {
+                #quickStat {{
                     font-size: 16px;
                     font-weight: bold;
                     color: white;
@@ -665,237 +696,103 @@ class StudentsPage(QWidget):
                     padding: 5px 10px;
                     border-radius: 15px;
                     margin: 0 5px;
-                }
+                    font-family: {font_family};
+                }}
                 
                 /* شريط الأدوات */
-                #toolbarFrame {
+                #toolbarFrame {{
                     background-color: white;
                     border: 1px solid #E9ECEF;
                     border-radius: 8px;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #filterLabel {
+                #filterLabel {{
                     font-weight: bold;
                     color: #2C3E50;
                     margin-right: 5px;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #filterCombo {
+                #filterCombo {{
                     padding: 6px 10px;
                     border: 1px solid #BDC3C7;
                     border-radius: 4px;
                     background-color: white;
                     min-width: 100px;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #filterCombo:focus { /* Added focus style */
-                    border-color: #9B59B6;
-                    outline: none;
-                }
-                
-                #searchInput {
+                #searchInput {{
                     padding: 8px 12px;
-                    border: 2px solid #9B59B6;
-                    border-radius: 6px;
+                    border: 2px solid #BDC3C7;
+                    border-radius: 20px;
                     font-size: 16px;
                     background-color: white;
-                }
-                
-                #searchInput:focus { /* Added focus style */
-                    border-color: #8E44AD;
-                    outline: none;
-                }
+                    font-family: {font_family};
+                }}
                 
                 /* الأزرار */
-                #primaryButton {
+                #primaryButton {{
                     background-color: #9B59B6;
+                    border: 2px solid #8E44AD;
                     color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    min-width: 100px;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                #primaryButton:hover {
-                    background-color: #8E44AD;
-                }
-                
-                #groupButton {
-                    background-color: #9B59B6;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-width: 150px;
                     font-size: 16px;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #groupButton:hover {
-                    background-color: #8E44AD;
-                }
-                
-                #secondaryButton { /* Added secondaryButton style */
+                #groupButton {{
                     background-color: #3498DB;
+                    border: 2px solid #2980B9;
                     color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    min-width: 100px;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #secondaryButton:hover {
-                    background-color: #2980B9;
-                }
-                
-                #refreshButton {
-                    background-color: #95A5A6;
+                #secondaryButton {{
+                    background-color: #27AE60;
+                    border: 2px solid #229954;
                     color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                #refreshButton:hover {
-                    background-color: #7F8C8D;
-                }
-                
-                #editButton, #deleteButton, #detailsButton {
-                    padding: 8px 15px;
-                    border-radius: 5px;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                    font-weight: bold;
-                    border: none;
-                    margin: 2px;
-                }
-                
-                #editButton {
-                    background-color: #3498DB;
-                    color: white;
-                }
-                
-                #deleteButton {
-                    background-color: #E74C3C;
-                    color: white;
-                }
-                
-                #detailsButton {
-                    background-color: #9B59B6;
-                    color: white;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
                 /* الجدول */
-                QTableWidget {
+                QTableWidget {{
                     background-color: white;
-                    border: none; /* Adjusted to match additional_fees_page.py */
-                    border-radius: 6px; /* Adjusted to match additional_fees_page.py */
-                    gridline-color: #E9ECEF;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                    margin: 10px 0px;
-                }
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                QTableWidget::item {
-                    padding: 8px; /* Adjusted to match additional_fees_page.py */
-                    border-bottom: 1px solid #F1F2F6; /* Adjusted to match additional_fees_page.py */
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                }
+                QTableWidget::item {{
+                    padding: 12px;
+                    border-bottom: 1px solid #E9ECEF;
+                    font-family: {font_family};
+                }}
                 
-                QTableWidget::item:selected {
-                    background-color: #E8DAEF; /* Adjusted to match additional_fees_page.py */
-                    color: #6C3483; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                QHeaderView::section {
-                    background-color: #34495E; /* Adjusted to match additional_fees_page.py */
+                QHeaderView::section {{
+                    background-color: #9B59B6;
                     color: white;
-                    padding: 10px 8px; /* Adjusted to match additional_fees_page.py */
-                    font-weight: bold;
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
+                    padding: 12px;
                     border: none;
-                    border-right: 1px solid #2C3E50; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                /* إحصائيات */
-                #statsFrame { /* Renamed from statsFrame to summaryFrame for consistency */
-                    background-color: white;
-                    border: 1px solid #E9ECEF; /* Adjusted to match additional_fees_page.py */
-                    border-radius: 8px; /* Adjusted to match additional_fees_page.py */
-                    margin-top: 10px; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                #summaryTitle { /* Added summaryTitle style */
+                    font-weight: bold;
                     font-size: 16px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 10px;
-                }
-                
-                #summaryLabel { /* Added summaryLabel style */
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #7F8C8D;
-                    text-align: center;
-                }
-                
-                #summaryValue { /* Added summaryValue style */
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    text-align: center;
-                }
-                
-                #summaryValueSuccess { /* Added summaryValueSuccess style */
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #27AE60;
-                    text-align: center;
-                }
-                
-                #summaryValueWarning { /* Added summaryValueWarning style */
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #F39C12;
-                    text-align: center;
-                }
-                
-                #countLabel { /* Renamed from countLabel to statLabel for consistency */
-                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin: 2px 0; /* Adjusted to match additional_fees_page.py */
-                }
-                
-                /* أشرطة التمرير */
-                QScrollBar:vertical { /* Added scrollbar styles */
-                    background-color: #F1F2F6;
-                    width: 12px;
-                    border-radius: 6px;
-                }
-                
-                QScrollBar::handle:vertical {
-                    background-color: #BDC3C7;
-                    border-radius: 6px;
-                    min-height: 20px;
-                }
-                
-                QScrollBar::handle:vertical:hover {
-                    background-color: #95A5A6;
-                }
-                
-                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                    border: none;
-                    background: none;
-                }
-            """
+                    font-family: {font_family};
+                }}
+            """.format(font_family=cairo_font)
             
             self.setStyleSheet(style)
             

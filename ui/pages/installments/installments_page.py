@@ -7,6 +7,7 @@
 import logging
 import json
 from datetime import datetime, date
+from pathlib import Path
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
@@ -15,8 +16,9 @@ from PyQt5.QtWidgets import (
     QCheckBox, QProgressBar, QAction
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
 
+import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 
@@ -35,12 +37,35 @@ class InstallmentsPage(QWidget):
         self.selected_school_id = None
         self.selected_student_id = None
         
+        # تحميل وتطبيق خط Cairo
+        self.setup_cairo_font()
+        
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
         self.load_initial_data()
         
         log_user_action("فتح صفحة إدارة الأقساط")
+    
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            font_db = QFontDatabase()
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            # تحميل خطوط Cairo
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            # الحصول على اسم عائلة الخط
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -565,265 +590,124 @@ class InstallmentsPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
+            # استخدام خط Cairo المحمل
+            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            
             style = """
                 /* الإطار الرئيسي */
-                QWidget {
+                QWidget {{
                     background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
+                    font-family: {font_family};
                     font-size: 16px;
-                }
+                }}
                 
                 /* رأس الصفحة */
-                #headerFrame {
+                #headerFrame {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #E74C3C, stop:1 #C0392B);
+                        stop:0 #2E86AB, stop:1 #A23B72);
                     border-radius: 10px;
                     color: white;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #pageTitle {
-                    font-size: 24px;
+                #pageTitle {{
+                    font-size: 18px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 5px;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #pageDesc {
+                #pageDesc {{
                     font-size: 16px;
-                    color: #FADBD8;
-                }
-                
-                #quickStat {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: white;
-                    background-color: rgba(255, 255, 255, 0.2);
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    margin: 0 5px;
-                }
+                    color: #E8DAEF;
+                    font-family: {font_family};
+                }}
                 
                 /* شريط الأدوات */
-                #toolbarFrame {
+                #toolbarFrame {{
                     background-color: white;
                     border: 1px solid #E9ECEF;
                     border-radius: 8px;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #filterLabel {
+                #filterLabel {{
                     font-weight: bold;
                     color: #2C3E50;
                     margin-right: 5px;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #filterCombo, #dateInput {
+                #filterCombo {{
                     padding: 6px 10px;
                     border: 1px solid #BDC3C7;
                     border-radius: 4px;
                     background-color: white;
                     min-width: 100px;
-                }
-                
-                #filterCombo:focus, #dateInput:focus {
-                    border-color: #E74C3C;
-                    outline: none;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
                 /* الأزرار */
-                #primaryButton {
-                    background-color: #E74C3C;
+                #primaryButton {{
+                    background-color: #2E86AB;
+                    border: 2px solid #1F5F8B;
                     color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    min-width: 100px;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #primaryButton:hover {
-                    background-color: #C0392B;
-                }
-                
-                #successButton {
+                #secondaryButton {{
                     background-color: #27AE60;
+                    border: 2px solid #229954;
                     color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    padding: 10px 20px;
+                    border-radius: 6px;
                     font-weight: bold;
-                    min-width: 100px;
-                }
-                
-                #successButton:hover {
-                    background-color: #229954;
-                }
-                
-                #secondaryButton {
-                    background-color: #3498DB;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                    min-width: 100px;
-                }
-                
-                #secondaryButton:hover {
-                    background-color: #2980B9;
-                }
-                
-                #refreshButton {
-                    background-color: #95A5A6;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                }
-                
-                #refreshButton:hover {
-                    background-color: #7F8C8D;
-                }
-                
-                /* إطار الجدول */
-                #tableFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
                 /* الجدول */
-                #dataTable {
-                    background-color: white;
-                    border: none;
-                    border-radius: 6px;
-                    gridline-color: #E9ECEF;
-                }
-                
-                #dataTable::item {
-                    padding: 8px;
-                    border-bottom: 1px solid #F1F2F6;
-                }
-                
-                #dataTable::item:selected {
-                    background-color: #FADBD8;
-                    color: #C0392B;
-                }
-                
-                #dataTable::item:alternate {
-                    background-color: #FAFAFA;
-                }
-                
-                QHeaderView::section {
-                    background-color: #34495E;
-                    color: white;
-                    padding: 10px 8px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                }
-                
-                QHeaderView::section:hover {
-                    background-color: #2C3E50;
-                }
-                
-                /* إطار الملخص المالي */
-                #summaryFrame {
+                QTableWidget {{
                     background-color: white;
                     border: 1px solid #E9ECEF;
                     border-radius: 8px;
-                    margin-top: 10px;
-                }
-                
-                #summaryTitle {
                     font-size: 16px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 10px;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #summaryLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #7F8C8D;
-                    text-align: center;
-                }
+                QTableWidget::item {{
+                    padding: 12px;
+                    border-bottom: 1px solid #E9ECEF;
+                    font-family: {font_family};
+                }}
                 
-                #summaryValue {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    text-align: center;
-                }
-                
-                #summaryValueSuccess {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #27AE60;
-                    text-align: center;
-                }
-                
-                #summaryValueWarning {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #F39C12;
-                    text-align: center;
-                }
-                
-                #summaryValueDanger {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #E74C3C;
-                    text-align: center;
-                }
-                
-                #statLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin: 2px 0;
-                }
-                
-                /* شريط التقدم */
-                #progressBar {
-                    border: 2px solid #BDC3C7;
-                    border-radius: 8px;
-                    text-align: center;
-                    font-weight: bold;
+                QHeaderView::section {{
+                    background-color: #2E86AB;
                     color: white;
-                }
-                
-                #progressBar::chunk {
-                    background-color: #27AE60;
-                    border-radius: 6px;
-                }
-                
-                /* أشرطة التمرير */
-                QScrollBar:vertical {
-                    background-color: #F1F2F6;
-                    width: 12px;
-                    border-radius: 6px;
-                }
-                
-                QScrollBar::handle:vertical {
-                    background-color: #BDC3C7;
-                    border-radius: 6px;
-                    min-height: 20px;
-                }
-                
-                QScrollBar::handle:vertical:hover {
-                    background-color: #95A5A6;
-                }
-                
-                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    padding: 12px;
                     border: none;
-                    background: none;
-                }
-            """
+                    font-weight: bold;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
+            """.format(font_family=cairo_font)
             
             self.setStyleSheet(style)
             
         except Exception as e:
-            logging.error(f"خطأ في إعداد تنسيقات صفحة الأقساط: {e}")
+            logging.error(f"خطأ في إعداد الستايل: {e}")
+    
+    def add_installment(self):
+        """إضافة قسط جديد"""
+        try:
+            log_user_action("إضافة قسط جديد")
+            
+        except Exception as e:
+            logging.error(f"خطأ في إضافة قسط: {e}")

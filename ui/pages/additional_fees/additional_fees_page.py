@@ -6,19 +6,27 @@
 
 import logging
 import json
+import os
+import sqlite3
 from datetime import datetime, date
+from pathlib import Path
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QTextEdit, QAction
+    QCheckBox, QTextEdit, QAction, QDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
 
+import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
+from .add_additional_fee_dialog import AddAdditionalFeeDialog
+
+# استخدام مسار قاعدة البيانات من الإعدادات
+db_path = str(config.DATABASE_PATH)
 
 
 
@@ -35,12 +43,35 @@ class AdditionalFeesPage(QWidget):
         self.selected_school_id = None
         self.selected_student_id = None
         
+        # تحميل وتطبيق خط Cairo
+        self.setup_cairo_font()
+        
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
         self.load_initial_data()
         
         log_user_action("فتح صفحة إدارة الرسوم الإضافية")
+    
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            font_db = QFontDatabase()
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            # تحميل خطوط Cairo
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            # الحصول على اسم عائلة الخط
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -726,83 +757,309 @@ class AdditionalFeesPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
+            # استخدام خط Cairo المحمل
+            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            
             style = """
                 /* الإطار الرئيسي */
-                QWidget {
+                QWidget {{
                     background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 18px;
-                }
+                    font-family: {font_family};
+                    font-size: 16px;
+                }}
                 
                 /* رأس الصفحة */
-                #headerFrame {
+                #headerFrame {{
                     background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
                         stop:0 #9B59B6, stop:1 #8E44AD);
                     border-radius: 10px;
                     color: white;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #pageTitle {
+                #pageTitle {{
                     font-size: 18px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 5px;
-                }
+                    font-family: {font_family};
+                }}
                 
-                #pageDesc {
-                    font-size: 18px;
+                #pageDesc {{
+                    font-size: 16px;
                     color: #E8DAEF;
-                }
-                
-                #quickStat {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: white;
-                    background-color: rgba(255, 255, 255, 0.2);
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    margin: 0 5px;
-                }
+                    font-family: {font_family};
+                }}
                 
                 /* شريط الأدوات */
-                #toolbarFrame {
+                #toolbarFrame {{
                     background-color: white;
                     border: 1px solid #E9ECEF;
                     border-radius: 8px;
                     margin-bottom: 10px;
-                }
+                }}
                 
-                #filterLabel {
+                #filterLabel {{
                     font-weight: bold;
                     color: #2C3E50;
                     margin-right: 5px;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #filterCombo {
+                #filterCombo {{
                     padding: 6px 10px;
                     border: 1px solid #BDC3C7;
                     border-radius: 4px;
                     background-color: white;
                     min-width: 100px;
-                }
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
                 
-                #filterCombo:focus {
-                    border-color: #9B59B6;
-                    outline: none;
-                }
-                
-                #searchInput {
-                    padding: 8px 12px;
-                    border: 2px solid #9B59B6;
+                /* الأزرار */
+                #primaryButton {{
+                    background-color: #9B59B6;
+                    border: 2px solid #8E44AD;
+                    color: white;
+                    padding: 10px 20px;
                     border-radius: 6px;
-                    font-size: 18px;
+                    font-weight: bold;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
+                
+                #secondaryButton {{
+                    background-color: #3498DB;
+                    border: 2px solid #2980B9;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
+                
+                /* الجدول */
+                QTableWidget {{
                     background-color: white;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
+                
+                QTableWidget::item {{
+                    padding: 12px;
+                    border-bottom: 1px solid #E9ECEF;
+                    font-family: {font_family};
+                }}
+                
+                QHeaderView::section {{
+                    background-color: #9B59B6;
+                    color: white;
+                    padding: 12px;
+                    border: none;
+                    font-weight: bold;
+                    font-size: 16px;
+                    font-family: {font_family};
+                }}
+            """.format(font_family=cairo_font)
+            
+            self.setStyleSheet(style)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إعداد الستايل: {e}")
+    
+    def add_fee(self):
+        """إضافة رسم إضافي جديد"""
+        try:
+            log_user_action("إضافة رسم إضافي جديد")
+            dialog = AddAdditionalFeeDialog(self)
+            if dialog.exec_() == QDialog.Accepted:
+                fee_type = dialog.fee_name_edit.text().strip()
+                default_amount = dialog.amount_spin.value()
+                description = dialog.description_edit.toPlainText().strip()
+                
+                if not fee_type:
+                    QMessageBox.warning(self, "تحذير", "يرجى إدخال نوع الرسم")
+                    return
+                
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                try:
+                    cursor.execute("""
+                        INSERT INTO additional_fees (fee_type, default_amount, description)
+                        VALUES (?, ?, ?)
+                    """, (fee_type, default_amount, description))
+                    
+                    conn.commit()
+                    QMessageBox.information(self, "نجح", "تم إضافة الرسم بنجاح")
+                    self.load_fees()
+                    
+                except sqlite3.Error as e:
+                    QMessageBox.critical(self, "خطأ", f"فشل في إضافة الرسم: {e}")
+                finally:
+                    conn.close()
+                    
+        except Exception as e:
+            logging.error(f"خطأ في إضافة رسم إضافي: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ: {e}")
+
+    def edit_fee(self):
+        """تعديل رسم إضافي"""
+        current_row = self.fees_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "تحذير", "يرجى اختيار رسم للتعديل")
+            return
+            
+        try:
+            log_user_action("تعديل رسم إضافي")
+            fee_id = int(self.fees_table.item(current_row, 0).text())
+            
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("SELECT * FROM additional_fees WHERE id = ?", (fee_id,))
+            fee_data = cursor.fetchone()
+            
+            if not fee_data:
+                QMessageBox.warning(self, "تحذير", "لم يتم العثور على الرسم")
+                return
+                
+            dialog = AddAdditionalFeeDialog(self)
+            dialog.setWindowTitle("تعديل رسم إضافي")
+            dialog.fee_name_edit.setText(fee_data[1])
+            dialog.amount_spin.setValue(fee_data[2])
+            dialog.description_edit.setPlainText(fee_data[3] or "")
+            
+            if dialog.exec_() == QDialog.Accepted:
+                fee_type = dialog.fee_name_edit.text().strip()
+                default_amount = dialog.amount_spin.value()
+                description = dialog.description_edit.toPlainText().strip()
+                
+                if not fee_type:
+                    QMessageBox.warning(self, "تحذير", "يرجى إدخال نوع الرسم")
+                    return
+                
+                try:
+                    cursor.execute("""
+                        UPDATE additional_fees 
+                        SET fee_type = ?, default_amount = ?, description = ?
+                        WHERE id = ?
+                    """, (fee_type, default_amount, description, fee_id))
+                    
+                    conn.commit()
+                    QMessageBox.information(self, "نجح", "تم تعديل الرسم بنجاح")
+                    self.load_fees()
+                    
+                except sqlite3.Error as e:
+                    QMessageBox.critical(self, "خطأ", f"فشل في تعديل الرسم: {e}")
+                finally:
+                    conn.close()
+                    
+        except Exception as e:
+            logging.error(f"خطأ في تعديل رسم إضافي: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ: {e}")
+
+    def delete_fee(self):
+        """حذف رسم إضافي"""
+        current_row = self.fees_table.currentRow()
+        if current_row < 0:
+            QMessageBox.warning(self, "تحذير", "يرجى اختيار رسم للحذف")
+            return
+            
+        try:
+            log_user_action("حذف رسم إضافي")
+            fee_id = int(self.fees_table.item(current_row, 0).text())
+            fee_type = self.fees_table.item(current_row, 1).text()
+            
+            reply = QMessageBox.question(
+                self, "تأكيد الحذف",
+                f"هل أنت متأكد من حذف الرسم '{fee_type}'؟",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                try:
+                    cursor.execute("DELETE FROM additional_fees WHERE id = ?", (fee_id,))
+                    conn.commit()
+                    QMessageBox.information(self, "نجح", "تم حذف الرسم بنجاح")
+                    self.load_fees()
+                    
+                except sqlite3.Error as e:
+                    QMessageBox.critical(self, "خطأ", f"فشل في حذف الرسم: {e}")
+                finally:
+                    conn.close()
+                    
+        except Exception as e:
+            logging.error(f"خطأ في حذف رسم إضافي: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ: {e}")
+
+    def assign_fees_to_students(self):
+        """تعيين رسوم للطلاب"""
+        try:
+            log_user_action("تعيين رسوم للطلاب")
+            # dialog = AssignFeesDialog(self)  # هذا سيتم إضافته لاحقاً
+            # dialog.exec_()
+            QMessageBox.information(self, "معلومات", "ميزة تعيين الرسوم للطلاب ستكون متاحة قريباً")
+            
+        except Exception as e:
+            logging.error(f"خطأ في تعيين رسوم للطلاب: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ: {e}")
+
+    def refresh_data(self):
+        """تحديث البيانات"""
+        try:
+            log_user_action("تحديث بيانات الرسوم الإضافية")
+            self.load_fees()
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحديث بيانات الرسوم الإضافية: {e}")
+
+    def setup_styles(self):
+        """إعداد تنسيقات الصفحة"""
+        try:
+            style = """
+                /* تنسيق عام */
+                QWidget {
+                    font-family: 'Cairo', Arial, sans-serif;
+                    font-size: 18px;
                 }
                 
-                #searchInput:focus {
-                    border-color: #8E44AD;
-                    outline: none;
+                /* الإطار الرئيسي */
+                #mainFrame {
+                    background-color: #F8F9FA;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 12px;
+                    padding: 10px;
+                }
+                
+                /* إطار الأدوات */
+                #toolsFrame {
+                    background-color: white;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    padding: 10px;
+                    margin-bottom: 10px;
+                }
+                
+                /* العنوان الرئيسي */
+                #mainTitle {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #2C3E50;
+                    text-align: center;
+                    padding: 10px;
+                    background-color: #9B59B6;
+                    color: white;
+                    border-radius: 6px;
+                    margin-bottom: 20px;
                 }
                 
                 /* الأزرار */
@@ -861,13 +1118,6 @@ class AdditionalFeesPage(QWidget):
                     background-color: #7F8C8D;
                 }
                 
-                /* إطار الجدول */
-                #tableFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                }
-                
                 /* الجدول */
                 #dataTable {
                     background-color: white;
@@ -902,81 +1152,33 @@ class AdditionalFeesPage(QWidget):
                 QHeaderView::section:hover {
                     background-color: #2C3E50;
                 }
-                
-                /* إطار الملخص */
-                #summaryFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin-top: 10px;
-                }
-                
-                #summaryTitle {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 10px;
-                }
-                
-                #summaryLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #7F8C8D;
-                    text-align: center;
-                }
-                
-                #summaryValue {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    text-align: center;
-                }
-                
-                #summaryValueSuccess {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #27AE60;
-                    text-align: center;
-                }
-                
-                #summaryValueWarning {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #F39C12;
-                    text-align: center;
-                }
-                
-                #statLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin: 2px 0;
-                }
-                
-                /* أشرطة التمرير */
-                QScrollBar:vertical {
-                    background-color: #F1F2F6;
-                    width: 12px;
-                    border-radius: 6px;
-                }
-                
-                QScrollBar::handle:vertical {
-                    background-color: #BDC3C7;
-                    border-radius: 6px;
-                    min-height: 20px;
-                }
-                
-                QScrollBar::handle:vertical:hover {
-                    background-color: #95A5A6;
-                }
-                
-                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                    border: none;
-                    background: none;
-                }
             """
             
             self.setStyleSheet(style)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد تنسيقات صفحة الرسوم الإضافية: {e}")
+
+    def setup_cairo_font(self):
+        """إعداد خط Cairo"""
+        try:
+            font_path = os.path.join(config.FONTS_DIR, "Cairo-Medium.ttf")
+            if os.path.exists(font_path):
+                font_id = QFontDatabase.addApplicationFont(font_path)
+                if font_id != -1:
+                    font_families = QFontDatabase.applicationFontFamilies(font_id)
+                    if font_families:
+                        cairo_font = QFont(font_families[0], 18)
+                        self.setFont(cairo_font)
+                        logging.info("تم تحميل خط Cairo بنجاح")
+                        return
+                        
+            # استخدام خط بديل
+            fallback_font = QFont("Arial", 18)
+            self.setFont(fallback_font)
+            logging.warning("تم استخدام خط Arial كبديل لخط Cairo")
+            
+        except Exception as e:
+            logging.error(f"خطأ في إعداد خط Cairo: {e}")
+            fallback_font = QFont("Arial", 18)
+            self.setFont(fallback_font)
