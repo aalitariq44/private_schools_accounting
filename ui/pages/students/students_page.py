@@ -624,7 +624,7 @@ class StudentsPage(QWidget):
                 QWidget {
                     background-color: #F8F9FA;
                     font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 /* رأس الصفحة */
@@ -637,19 +637,19 @@ class StudentsPage(QWidget):
                 }
                 
                 #pageTitle {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 5px;
                 }
                 
                 #pageDesc {
-                    font-size: 18px;
+                    font-size: 16px;
                     color: #E8DAEF;
                 }
                 
                 #quickStat {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: white;
                     background-color: rgba(255, 255, 255, 0.2);
@@ -670,7 +670,7 @@ class StudentsPage(QWidget):
                     font-weight: bold;
                     color: #2C3E50;
                     margin-right: 5px;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #filterCombo {
@@ -679,7 +679,7 @@ class StudentsPage(QWidget):
                     border-radius: 4px;
                     background-color: white;
                     min-width: 100px;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #filterCombo:focus { /* Added focus style */
@@ -691,7 +691,7 @@ class StudentsPage(QWidget):
                     padding: 8px 12px;
                     border: 2px solid #9B59B6;
                     border-radius: 6px;
-                    font-size: 18px;
+                    font-size: 16px;
                     background-color: white;
                 }
                 
@@ -709,7 +709,7 @@ class StudentsPage(QWidget):
                     border-radius: 4px;
                     font-weight: bold;
                     min-width: 100px;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #primaryButton:hover {
@@ -724,7 +724,7 @@ class StudentsPage(QWidget):
                     border-radius: 4px;
                     font-weight: bold;
                     min-width: 150px;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 #groupButton:hover {
@@ -739,7 +739,7 @@ class StudentsPage(QWidget):
                     border-radius: 4px;
                     font-weight: bold;
                     min-width: 100px;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #secondaryButton:hover {
@@ -753,7 +753,7 @@ class StudentsPage(QWidget):
                     padding: 8px 16px;
                     border-radius: 4px;
                     font-weight: bold;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 #refreshButton:hover {
@@ -763,7 +763,7 @@ class StudentsPage(QWidget):
                 #editButton, #deleteButton, #detailsButton {
                     padding: 8px 15px;
                     border-radius: 5px;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                     font-weight: bold;
                     border: none;
                     margin: 2px;
@@ -790,14 +790,14 @@ class StudentsPage(QWidget):
                     border: none; /* Adjusted to match additional_fees_page.py */
                     border-radius: 6px; /* Adjusted to match additional_fees_page.py */
                     gridline-color: #E9ECEF;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                     margin: 10px 0px;
                 }
                 
                 QTableWidget::item {
                     padding: 8px; /* Adjusted to match additional_fees_page.py */
                     border-bottom: 1px solid #F1F2F6; /* Adjusted to match additional_fees_page.py */
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                 }
                 
                 QTableWidget::item:selected {
@@ -810,7 +810,7 @@ class StudentsPage(QWidget):
                     color: white;
                     padding: 10px 8px; /* Adjusted to match additional_fees_page.py */
                     font-weight: bold;
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                     border: none;
                     border-right: 1px solid #2C3E50; /* Adjusted to match additional_fees_page.py */
                 }
@@ -824,42 +824,42 @@ class StudentsPage(QWidget):
                 }
                 
                 #summaryTitle { /* Added summaryTitle style */
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     margin-bottom: 10px;
                 }
                 
                 #summaryLabel { /* Added summaryLabel style */
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #7F8C8D;
                     text-align: center;
                 }
                 
                 #summaryValue { /* Added summaryValue style */
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     text-align: center;
                 }
                 
                 #summaryValueSuccess { /* Added summaryValueSuccess style */
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #27AE60;
                     text-align: center;
                 }
                 
                 #summaryValueWarning { /* Added summaryValueWarning style */
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #F39C12;
                     text-align: center;
                 }
                 
                 #countLabel { /* Renamed from countLabel to statLabel for consistency */
-                    font-size: 18px; /* Adjusted to match additional_fees_page.py */
+                    font-size: 16px; /* Adjusted to match additional_fees_page.py */
                     font-weight: bold;
                     color: #2C3E50;
                     margin: 2px 0; /* Adjusted to match additional_fees_page.py */

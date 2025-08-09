@@ -570,7 +570,7 @@ class InstallmentsPage(QWidget):
                 QWidget {
                     background-color: #F8F9FA;
                     font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 /* رأس الصفحة */
@@ -590,12 +590,12 @@ class InstallmentsPage(QWidget):
                 }
                 
                 #pageDesc {
-                    font-size: 18px;
+                    font-size: 16px;
                     color: #FADBD8;
                 }
                 
                 #quickStat {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: white;
                     background-color: rgba(255, 255, 255, 0.2);
@@ -722,7 +722,7 @@ class InstallmentsPage(QWidget):
                     padding: 10px 8px;
                     border: none;
                     font-weight: bold;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 QHeaderView::section:hover {
@@ -738,49 +738,49 @@ class InstallmentsPage(QWidget):
                 }
                 
                 #summaryTitle {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     margin-bottom: 10px;
                 }
                 
                 #summaryLabel {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #7F8C8D;
                     text-align: center;
                 }
                 
                 #summaryValue {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     text-align: center;
                 }
                 
                 #summaryValueSuccess {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #27AE60;
                     text-align: center;
                 }
                 
                 #summaryValueWarning {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #F39C12;
                     text-align: center;
                 }
                 
                 #summaryValueDanger {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #E74C3C;
                     text-align: center;
                 }
                 
                 #statLabel {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #2C3E50;
                     margin: 2px 0;
