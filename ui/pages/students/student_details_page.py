@@ -1132,7 +1132,7 @@ class StudentDetailsPage(QWidget):
                     background-color: #2980B9;
                     border: 2px solid #2471A3;
                     color: white;
-                    padding: 10px 18px;
+                    padding: 10px 16px;
                     border-radius: 8px;
                     font-weight: bold;
                     font-size: 16px;
@@ -1155,7 +1155,7 @@ class StudentDetailsPage(QWidget):
                     background-color: #2980B9;
                     border: 2px solid #2471A3;
                     color: white;
-                    padding: 10px 18px;
+                    padding: 10px 16px;
                     border-radius: 8px;
                     font-weight: bold;
                     font-size: 16px;
@@ -1348,7 +1348,7 @@ class StudentDetailsPage(QWidget):
                         stop:0 #27AE60, stop:1 #229954);
                     color: white;
                     border: none;
-                    padding: 10px 18px;
+                    padding: 10px 16px;
                     border-radius: 8px;
                     font-weight: bold;
                     font-size: 16px;
