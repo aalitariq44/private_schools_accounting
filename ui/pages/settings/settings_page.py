@@ -5,13 +5,15 @@
 """
 
 import logging
+import os
+import config
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFrame, QLabel, QPushButton, QComboBox, QGroupBox,
     QMessageBox, QScrollArea, QSpacerItem, QSizePolicy
 )
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QFont, QIcon, QFontDatabase
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
@@ -27,11 +29,32 @@ class SettingsPage(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # إعداد خط Cairo
+        self.setup_cairo_font()
         self.setup_ui()
         self.setup_styles()
         self.load_settings()
         
         log_user_action("دخول صفحة الإعدادات")
+    
+    def setup_cairo_font(self):
+        """إعداد خط Cairo"""
+        try:
+            font_path = os.path.join(config.FONTS_DIR, "Cairo-Medium.ttf")
+            if os.path.exists(font_path):
+                font_id = QFontDatabase.addApplicationFont(font_path)
+                if font_id != -1:
+                    families = QFontDatabase.applicationFontFamilies(font_id)
+                    if families:
+                        self.setFont(QFont(families[0], 18))
+                        logging.info("تم تحميل خط Cairo بنجاح في صفحة الإعدادات")
+                        return
+            # بديل
+            self.setFont(QFont("Arial", 18))
+            logging.warning("تم استخدام خط Arial كبديل لخط Cairo في صفحة الإعدادات")
+        except Exception as e:
+            logging.error(f"خطأ في إعداد خط Cairo في صفحة الإعدادات: {e}")
+            self.setFont(QFont("Arial", 18))
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -253,7 +276,8 @@ class SettingsPage(QWidget):
             self.setStyleSheet("""
                 QWidget {
                     background-color: #f8f9fa;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-family: 'Cairo', Arial, sans-serif;
+                    font-size: 18px;
                 }
                 
                 #pageTitle {
