@@ -738,7 +738,7 @@ class ExternalIncomePage(QWidget):
                 QWidget {
                     background-color: #F8F9FA;
                     font-family: 'Segoe UI', Tahoma, Arial;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 /* رأس الصفحة */
@@ -752,14 +752,14 @@ class ExternalIncomePage(QWidget):
                 }
                 
                 #pageTitle {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: white;
                     margin-bottom: 8px;
                 }
                 
                 #pageDesc {
-                    font-size: 18px;
+                    font-size: 16px;
                     color: #E8F5E8;
                 }
                 
@@ -776,7 +776,7 @@ class ExternalIncomePage(QWidget):
                     font-weight: bold;
                     color: #2C3E50;
                     margin-right: 8px;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 #filterCombo, #filterDate {
@@ -785,7 +785,7 @@ class ExternalIncomePage(QWidget):
                     border-radius: 6px;
                     background-color: white;
                     min-width: 120px;
-                    font-size: 18px;
+                    font-size: 16px;
                     margin: 3px;
                 }
                 
@@ -793,7 +793,7 @@ class ExternalIncomePage(QWidget):
                     padding: 8px 15px;
                     border: 2px solid #28A745;
                     border-radius: 8px;
-                    font-size: 18px;
+                    font-size: 16px;
                     background-color: white;
                     margin: 3px;
                     min-width: 250px; /* Increased min-width for search input */
@@ -808,7 +808,7 @@ class ExternalIncomePage(QWidget):
                     border-radius: 8px;
                     font-weight: bold;
                     min-width: 140px;
-                    font-size: 18px;
+                    font-size: 16px;
                     margin: 3px;
                 }
                 
@@ -824,7 +824,7 @@ class ExternalIncomePage(QWidget):
                     border-radius: 8px;
                     font-weight: bold;
                     min-width: 140px;
-                    font-size: 18px;
+                    font-size: 16px;
                     margin: 3px;
                 }
                 
@@ -836,14 +836,14 @@ class ExternalIncomePage(QWidget):
                     border-radius: 8px;
                     font-weight: bold;
                     min-width: 100px;
-                    font-size: 18px;
+                    font-size: 16px;
                     margin: 3px;
                 }
                 
                 #editButton, #deleteButton {
                     padding: 6px 12px;
                     border-radius: 4px;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     border: none;
                     margin: 1px;
@@ -865,14 +865,14 @@ class ExternalIncomePage(QWidget):
                     border: 2px solid #E9ECEF;
                     border-radius: 12px;
                     gridline-color: #E9ECEF;
-                    font-size: 18px;
+                    font-size: 16px;
                     margin: 10px 0px;
                 }
                 
                 QTableWidget::item {
                     padding: 12px 8px;
                     border-bottom: 1px solid #E9ECEF;
-                    font-size: 18px;
+                    font-size: 16px;
                 }
                 
                 QTableWidget::item:selected {
@@ -885,7 +885,7 @@ class ExternalIncomePage(QWidget):
                     color: white;
                     padding: 12px 8px;
                     font-weight: bold;
-                    font-size: 18px;
+                    font-size: 16px;
                     border: none;
                     border-right: 1px solid #20924C;
                 }
@@ -901,7 +901,7 @@ class ExternalIncomePage(QWidget):
                 }
                 
                 #summaryStatLabel {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #28A745;
                     background-color: white;
@@ -920,7 +920,7 @@ class ExternalIncomePage(QWidget):
                 }
                 
                 #detailStatLabel {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
                     color: #495057;
                     margin: 5px;
