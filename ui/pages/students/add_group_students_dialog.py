@@ -303,6 +303,8 @@ class AddGroupStudentsDialog(QDialog):
             # زر الحذف
             delete_btn = QPushButton("حذف")
             delete_btn.setObjectName("deleteButton")
+            delete_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
+            delete_btn.setStyleSheet("font-size:14px; padding:0px;")
             delete_btn.clicked.connect(lambda: self.delete_student_row(row_count))
             self.students_table.setCellWidget(row_count, 2, delete_btn)
             
