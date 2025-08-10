@@ -31,8 +31,8 @@ class AddIncomeDialog(QDialog):
         self.setup_styles()
         self.load_schools()
         
-        # تركيز على حقل العنوان
-        self.title_input.setFocus()
+        # تركيز على حقل نوع الوارد
+        self.income_type_input.setFocus()
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -94,10 +94,16 @@ class AddIncomeDialog(QDialog):
             form_layout.setSpacing(12)
             
             # عنوان الوارد
-            self.title_input = QLineEdit()
-            self.title_input.setObjectName("requiredInput")
-            self.title_input.setPlaceholderText("أدخل عنوان الوارد...")
-            form_layout.addRow("العنوان *:", self.title_input)
+            self.income_type_input = QLineEdit()
+            self.income_type_input.setObjectName("requiredInput")
+            self.income_type_input.setPlaceholderText("أدخل نوع الوارد...")
+            form_layout.addRow("نوع الوارد *:", self.income_type_input)
+            
+            # وصف الوارد
+            self.description_input = QLineEdit()
+            self.description_input.setObjectName("optionalInput")
+            self.description_input.setPlaceholderText("أدخل وصف الوارد...")
+            form_layout.addRow("الوصف:", self.description_input)
             
             # المبلغ
             self.amount_input = QDoubleSpinBox()
@@ -209,9 +215,9 @@ class AddIncomeDialog(QDialog):
         try:
             errors = []
             
-            # التحقق من العنوان
-            if not self.title_input.text().strip():
-                errors.append("يجب إدخال عنوان الوارد")
+            # التحقق من نوع الوارد
+            if not self.income_type_input.text().strip():
+                errors.append("يجب إدخال نوع الوارد")
             
             # التحقق من المبلغ
             if self.amount_input.value() <= 0:
@@ -239,9 +245,10 @@ class AddIncomeDialog(QDialog):
             # تحضير البيانات
             income_data = {
                 'school_id': self.school_combo.currentData(),
-                'title': self.title_input.text().strip(),
+                'income_type': self.income_type_input.text().strip(),
+                'description': self.description_input.text().strip() or None,
                 'amount': self.amount_input.value(),
-                'category': self.category_combo.currentText() if self.category_combo.currentIndex() > 0 else None,
+                'category': self.category_combo.currentText() if self.category_combo.currentIndex() > 0 else 'أخرى',
                 'income_date': self.income_date.date().toPyDate(),
                 'notes': self.notes_input.toPlainText().strip() or None
             }
@@ -249,13 +256,14 @@ class AddIncomeDialog(QDialog):
             # إدراج البيانات في قاعدة البيانات
             insert_query = """
                 INSERT INTO external_income 
-                (school_id, title, amount, category, income_date, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (school_id, income_type, description, amount, category, income_date, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             
             params = (
                 income_data['school_id'],
-                income_data['title'],
+                income_data['income_type'],
+                income_data['description'],
                 income_data['amount'],
                 income_data['category'],
                 income_data['income_date'],

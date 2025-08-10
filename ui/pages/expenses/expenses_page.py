@@ -53,14 +53,14 @@ class ExpensesPage(QWidget):
                 CREATE TABLE IF NOT EXISTS expenses (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     school_id INTEGER NOT NULL,
-                    title VARCHAR(255) NOT NULL,
+                    expense_type TEXT NOT NULL,
                     amount DECIMAL(10,2) NOT NULL,
-                    category VARCHAR(100),
                     expense_date DATE NOT NULL,
+                    description TEXT,
                     notes TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (school_id) REFERENCES schools(id)
+                    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
                 )
             """
             db_manager.execute_update(create_table_query)

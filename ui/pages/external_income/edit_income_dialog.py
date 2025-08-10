@@ -35,8 +35,8 @@ class EditIncomeDialog(QDialog):
         self.load_schools()
         self.load_income_data()
         
-        # تركيز على حقل العنوان
-        self.title_input.setFocus()
+        # تركيز على حقل نوع الوارد
+        self.income_type_input.setFocus()
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -97,11 +97,17 @@ class EditIncomeDialog(QDialog):
             form_layout.setContentsMargins(15, 20, 15, 15)
             form_layout.setSpacing(12)
             
-            # عنوان الوارد
-            self.title_input = QLineEdit()
-            self.title_input.setObjectName("requiredInput")
-            self.title_input.setPlaceholderText("أدخل عنوان الوارد...")
-            form_layout.addRow("العنوان *:", self.title_input)
+            # نوع الوارد
+            self.income_type_input = QLineEdit()
+            self.income_type_input.setObjectName("requiredInput")
+            self.income_type_input.setPlaceholderText("أدخل نوع الوارد...")
+            form_layout.addRow("نوع الوارد *:", self.income_type_input)
+            
+            # وصف الوارد
+            self.description_input = QLineEdit()
+            self.description_input.setObjectName("optionalInput")
+            self.description_input.setPlaceholderText("أدخل وصف الوارد...")
+            form_layout.addRow("الوصف:", self.description_input)
             
             # المبلغ
             self.amount_input = QDoubleSpinBox()
@@ -235,7 +241,8 @@ class EditIncomeDialog(QDialog):
             self.income_data = result[0]
             
             # ملء الحقول بالبيانات الحالية
-            self.title_input.setText(self.income_data['title'] or "")
+            self.income_type_input.setText(self.income_data['income_type'] or "")
+            self.description_input.setText(self.income_data['description'] or "")
             self.amount_input.setValue(float(self.income_data['amount'] or 0))
             self.notes_input.setPlainText(self.income_data['notes'] or "")
             
@@ -265,9 +272,9 @@ class EditIncomeDialog(QDialog):
         try:
             errors = []
             
-            # التحقق من العنوان
-            if not self.title_input.text().strip():
-                errors.append("يجب إدخال عنوان الوارد")
+            # التحقق من نوع الوارد
+            if not self.income_type_input.text().strip():
+                errors.append("يجب إدخال نوع الوارد")
             
             # التحقق من المبلغ
             if self.amount_input.value() <= 0:
@@ -294,9 +301,10 @@ class EditIncomeDialog(QDialog):
             
             # تحضير البيانات المحدثة
             updated_data = {
-                'title': self.title_input.text().strip(),
+                'income_type': self.income_type_input.text().strip(),
+                'description': self.description_input.text().strip() or None,
                 'amount': self.amount_input.value(),
-                'category': self.category_combo.currentText() if self.category_combo.currentIndex() > 0 else None,
+                'category': self.category_combo.currentText() if self.category_combo.currentIndex() > 0 else 'أخرى',
                 'income_date': self.income_date.date().toPyDate(),
                 'notes': self.notes_input.toPlainText().strip() or None,
                 'school_id': self.school_combo.currentData()
@@ -305,14 +313,15 @@ class EditIncomeDialog(QDialog):
             # تحديث البيانات في قاعدة البيانات
             update_query = """
                 UPDATE external_income 
-                SET title = ?, amount = ?, category = ?, 
+                SET income_type = ?, description = ?, amount = ?, category = ?, 
                     income_date = ?, notes = ?, school_id = ?, 
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """
             
             params = (
-                updated_data['title'],
+                updated_data['income_type'],
+                updated_data['description'],
                 updated_data['amount'],
                 updated_data['category'],
                 updated_data['income_date'],

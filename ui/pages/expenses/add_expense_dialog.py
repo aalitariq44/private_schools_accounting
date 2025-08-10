@@ -31,7 +31,7 @@ class AddExpenseDialog(QDialog):
         self.setup_styles()
         self.load_schools()
         
-        # تركيز على حقل العنوان
+        # تركيز على حقل الوصف
         self.title_input.setFocus()
     
     def setup_ui(self):
@@ -88,11 +88,11 @@ class AddExpenseDialog(QDialog):
             form_layout.setContentsMargins(15, 20, 15, 15)
             form_layout.setSpacing(12)
             
-            # عنوان المصروف
+            # وصف المصروف
             self.title_input = QLineEdit()
             self.title_input.setObjectName("requiredInput")
-            self.title_input.setPlaceholderText("أدخل عنوان المصروف...")
-            form_layout.addRow("العنوان *:", self.title_input)
+            self.title_input.setPlaceholderText("أدخل وصف المصروف...")
+            form_layout.addRow("الوصف *:", self.title_input)
             
             # المبلغ
             self.amount_input = QDoubleSpinBox()
@@ -206,9 +206,9 @@ class AddExpenseDialog(QDialog):
         try:
             errors = []
             
-            # التحقق من العنوان
+            # التحقق من الوصف
             if not self.title_input.text().strip():
-                errors.append("يجب إدخال عنوان المصروف")
+                errors.append("يجب إدخال وصف المصروف")
             
             # التحقق من المبلغ
             if self.amount_input.value() <= 0:
@@ -240,26 +240,26 @@ class AddExpenseDialog(QDialog):
             # تحضير البيانات
             expense_data = {
                 'school_id': self.school_combo.currentData(),
-                'title': self.title_input.text().strip(),
+                'expense_type': self.category_combo.currentText(),
                 'amount': self.amount_input.value(),
-                'category': self.category_combo.currentText(),
                 'expense_date': self.expense_date.date().toPyDate(),
+                'description': self.title_input.text().strip(),
                 'notes': self.notes_input.toPlainText().strip() or None
             }
             
             # إدراج البيانات في قاعدة البيانات
             insert_query = """
                 INSERT INTO expenses 
-                (school_id, title, amount, category, expense_date, notes)
+                (school_id, expense_type, amount, expense_date, description, notes)
                 VALUES (?, ?, ?, ?, ?, ?)
             """
             
             params = (
                 expense_data['school_id'],
-                expense_data['title'],
+                expense_data['expense_type'],
                 expense_data['amount'],
-                expense_data['category'],
                 expense_data['expense_date'],
+                expense_data['description'],
                 expense_data['notes']
             )
             

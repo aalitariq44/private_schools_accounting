@@ -196,7 +196,7 @@ class DatabaseManager:
                     CREATE TABLE IF NOT EXISTS external_income (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         school_id INTEGER NOT NULL,
-                        title TEXT NOT NULL,
+                        title TEXT,
                         amount DECIMAL(10,2) NOT NULL,
                         category TEXT NOT NULL,
                         income_type TEXT NOT NULL,

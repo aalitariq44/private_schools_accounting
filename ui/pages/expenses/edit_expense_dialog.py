@@ -98,11 +98,11 @@ class EditExpenseDialog(QDialog):
             form_layout.setContentsMargins(15, 20, 15, 15)
             form_layout.setSpacing(12)
             
-            # عنوان المصروف
+            # وصف المصروف
             self.title_input = QLineEdit()
             self.title_input.setObjectName("requiredInput")
-            self.title_input.setPlaceholderText("أدخل عنوان المصروف...")
-            form_layout.addRow("العنوان *:", self.title_input)
+            self.title_input.setPlaceholderText("أدخل وصف المصروف...")
+            form_layout.addRow("الوصف *:", self.title_input)
             
             # المبلغ
             self.amount_input = QDoubleSpinBox()
@@ -235,27 +235,20 @@ class EditExpenseDialog(QDialog):
                 return
             
             self.expense_data = result[0]
-            
+
             # ملء الحقول بالبيانات الحالية
-            self.title_input.setText(self.expense_data['title'] or "")
+            # إعداد نوع المصروف والوصف
+            self.category_combo.setCurrentText(self.expense_data['expense_type'] or "")
+            self.title_input.setText(self.expense_data['description'] or "")
+            # المبلغ والتواريخ والملاحظات
             self.amount_input.setValue(float(self.expense_data['amount'] or 0))
+            self.expense_date.setDate(QDate(datetime.strptime(
+                self.expense_data['expense_date'], '%Y-%m-%d').date()))
             self.notes_input.setPlainText(self.expense_data['notes'] or "")
-            
-            # تعيين تاريخ المصروف
-            if self.expense_data['expense_date']:
-                expense_date = datetime.strptime(self.expense_data['expense_date'], '%Y-%m-%d').date()
-                self.expense_date.setDate(QDate(expense_date))
-            
-            # تعيين المدرسة
+            # المدرسة
             school_index = self.school_combo.findData(self.expense_data['school_id'])
             if school_index >= 0:
                 self.school_combo.setCurrentIndex(school_index)
-            
-            # تعيين الفئة
-            if self.expense_data['category']:
-                category_index = self.category_combo.findText(self.expense_data['category'])
-                if category_index >= 0:
-                    self.category_combo.setCurrentIndex(category_index)
             
             
         except Exception as e:
@@ -268,9 +261,9 @@ class EditExpenseDialog(QDialog):
         try:
             errors = []
             
-            # التحقق من العنوان
+            # التحقق من الوصف
             if not self.title_input.text().strip():
-                errors.append("يجب إدخال عنوان المصروف")
+                errors.append("يجب إدخال وصف المصروف")
             
             # التحقق من المبلغ
             if self.amount_input.value() <= 0:
@@ -301,9 +294,9 @@ class EditExpenseDialog(QDialog):
             
             # تحضير البيانات المحدثة
             updated_data = {
-                'title': self.title_input.text().strip(),
+                'expense_type': self.category_combo.currentText(),
                 'amount': self.amount_input.value(),
-                'category': self.category_combo.currentText(),
+                'description': self.title_input.text().strip(),
                 'expense_date': self.expense_date.date().toPyDate(),
                 'notes': self.notes_input.toPlainText().strip() or None,
                 'school_id': self.school_combo.currentData()
@@ -312,15 +305,15 @@ class EditExpenseDialog(QDialog):
             # تحديث البيانات في قاعدة البيانات
             update_query = """
                 UPDATE expenses 
-                SET title = ?, amount = ?, category = ?, expense_date = ?, 
+                SET expense_type = ?, amount = ?, description = ?, expense_date = ?, 
                     notes = ?, school_id = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             """
             
             params = (
-                updated_data['title'],
+                updated_data['expense_type'],
                 updated_data['amount'],
-                updated_data['category'],
+                updated_data['description'],
                 updated_data['expense_date'],
                 updated_data['notes'],
                 updated_data['school_id'],
