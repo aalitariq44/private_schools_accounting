@@ -196,10 +196,12 @@ class DatabaseManager:
                     CREATE TABLE IF NOT EXISTS external_income (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         school_id INTEGER NOT NULL,
-                        income_type TEXT NOT NULL,
+                        title TEXT NOT NULL,
                         amount DECIMAL(10,2) NOT NULL,
-                        income_date DATE NOT NULL,
+                        category TEXT NOT NULL,
+                        income_type TEXT NOT NULL,
                         description TEXT,
+                        income_date DATE NOT NULL,
                         notes TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -296,7 +298,7 @@ class DatabaseManager:
             # فهارس الإيرادات الخارجية
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_school_id ON external_income(school_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_date ON external_income(income_date)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_type ON external_income(income_type)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_external_income_category ON external_income(category)")
             
             # فهارس المصروفات
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_school_id ON expenses(school_id)")
