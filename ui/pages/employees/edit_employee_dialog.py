@@ -86,6 +86,14 @@ class EditEmployeeDialog(QDialog):
             self.job_combo.addItem("كاتب", "كاتب")
             self.job_combo.addItem("مخصص", "مخصص")
             form_layout.addRow("المهنة *:", self.job_combo)
+
+            # المهنة المخصصة
+            self.custom_job_label = QLabel("المهنة المخصصة *:")
+            self.custom_job_input = QLineEdit()
+            self.custom_job_input.setPlaceholderText("أدخل نوع المهنة")
+            form_layout.addRow("المهنة المخصصة *:", self.custom_job_input)
+            self.custom_job_label.setVisible(False)
+            self.custom_job_input.setVisible(False)
             
             # الراتب الشهري
             self.salary_input = QDoubleSpinBox()
@@ -137,6 +145,8 @@ class EditEmployeeDialog(QDialog):
             # ربط الأحداث
             self.save_btn.clicked.connect(self.save_changes)
             self.cancel_btn.clicked.connect(self.reject)
+            # إظهار/إخفاء حقل المهنة المخصصة عند التغيير
+            self.job_combo.currentTextChanged.connect(self.on_job_changed)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء الأزرار: {e}")
@@ -202,6 +212,12 @@ class EditEmployeeDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في إعداد الأنماط: {e}")
     
+    def on_job_changed(self, text):
+        """إظهار/إخفاء حقل المهنة المخصصة"""
+        is_custom = (text == "مخصص")
+        self.custom_job_label.setVisible(is_custom)
+        self.custom_job_input.setVisible(is_custom)
+    
     def load_schools(self):
         """تحميل قائمة المدارس"""
         try:
@@ -240,11 +256,23 @@ class EditEmployeeDialog(QDialog):
                         self.school_combo.setCurrentIndex(i)
                         break
                 
-                # تحديد المهنة
-                for i in range(self.job_combo.count()):
-                    if self.job_combo.itemData(i) == employee['job_type']:
-                        self.job_combo.setCurrentIndex(i)
-                        break
+                # تحديد المهنة أو المهنة المخصصة
+                job = employee['job_type']
+                default_jobs = ["عامل", "حارس", "كاتب"]
+                if job in default_jobs:
+                    for i in range(self.job_combo.count()):
+                        if self.job_combo.itemData(i) == job:
+                            self.job_combo.setCurrentIndex(i)
+                            break
+                else:
+                    # مهنة مخصصة
+                    for i in range(self.job_combo.count()):
+                        if self.job_combo.itemData(i) == "مخصص":
+                            self.job_combo.setCurrentIndex(i)
+                            break
+                    self.custom_job_input.setText(job)
+                    self.custom_job_label.setVisible(True)
+                    self.custom_job_input.setVisible(True)
                 
                 self.salary_input.setValue(employee['monthly_salary'] or 0)
                 self.phone_input.setText(employee['phone'] or '')
@@ -274,6 +302,11 @@ class EditEmployeeDialog(QDialog):
                 self.salary_input.setFocus()
                 return False
             
+            # التحقق من المهنة المخصصة
+            if self.job_combo.currentText() == "مخصص" and not self.custom_job_input.text().strip():
+                QMessageBox.warning(self, "خطأ", "يرجى إدخال المهنة المخصصة")
+                self.custom_job_input.setFocus()
+                return False
             # التحقق من رقم الهاتف إذا تم إدخاله
             phone = self.phone_input.text().strip()
             if phone and not phone.replace(' ', '').replace('-', '').isdigit():
@@ -294,10 +327,13 @@ class EditEmployeeDialog(QDialog):
                 return
                 
             # جمع البيانات
+            job_type = self.job_combo.currentData()
+            if self.job_combo.currentText() == "مخصص":
+                job_type = self.custom_job_input.text().strip()
             employee_data = {
                 'name': self.name_input.text().strip(),
                 'school_id': self.school_combo.currentData(),
-                'job_type': self.job_combo.currentData(),
+                'job_type': job_type,
                 'monthly_salary': self.salary_input.value(),
                 'phone': self.phone_input.text().strip() or None,
                 'notes': self.notes_input.toPlainText().strip() or None

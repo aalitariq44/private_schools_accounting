@@ -379,8 +379,12 @@ class EmployeesPage(QWidget):
             
             selected_job = self.job_filter.currentData()
             if selected_job:
-                conditions.append("e.job_type = ?")
-                params.append(selected_job)
+                if selected_job == 'مخصص':
+                    conditions.append("e.job_type NOT IN (?, ?, ?)")
+                    params.extend(['عامل', 'حارس', 'كاتب'])
+                else:
+                    conditions.append("e.job_type = ?")
+                    params.append(selected_job)
             
             if conditions:
                 query = query.replace("ORDER BY", f"WHERE {' AND '.join(conditions)} ORDER BY")

@@ -84,6 +84,14 @@ class AddEmployeeDialog(QDialog):
             self.job_combo.addItem("كاتب", "كاتب")
             self.job_combo.addItem("مخصص", "مخصص")
             form_layout.addRow("المهنة *:", self.job_combo)
+
+            # المهنة المخصصة
+            self.custom_job_label = QLabel("المهنة المخصصة *:")
+            self.custom_job_input = QLineEdit()
+            self.custom_job_input.setPlaceholderText("أدخل نوع المهنة")
+            self.custom_job_row = form_layout.addRow("المهنة المخصصة *:", self.custom_job_input)
+            self.custom_job_label.setVisible(False)
+            self.custom_job_input.setVisible(False)
             
             # الراتب الشهري
             self.salary_input = QDoubleSpinBox()
@@ -135,11 +143,18 @@ class AddEmployeeDialog(QDialog):
             # ربط الأحداث
             self.add_btn.clicked.connect(self.add_employee)
             self.cancel_btn.clicked.connect(self.reject)
+            self.job_combo.currentTextChanged.connect(self.on_job_changed)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء الأزرار: {e}")
             raise
     
+    def on_job_changed(self, text):
+        """إظهار/إخفاء حقل المهنة المخصصة"""
+        is_custom = (text == "مخصص")
+        self.custom_job_label.setVisible(is_custom)
+        self.custom_job_input.setVisible(is_custom)
+
     def setup_styles(self):
         """إعداد أنماط العرض"""
         try:
@@ -229,6 +244,11 @@ class AddEmployeeDialog(QDialog):
                 self.school_combo.setFocus()
                 return False
                 
+            if self.job_combo.currentText() == "مخصص" and not self.custom_job_input.text().strip():
+                QMessageBox.warning(self, "خطأ", "يرجى إدخال المهنة المخصصة")
+                self.custom_job_input.setFocus()
+                return False
+
             if self.salary_input.value() <= 0:
                 QMessageBox.warning(self, "خطأ", "يرجى إدخال راتب شهري صحيح")
                 self.salary_input.setFocus()
@@ -252,12 +272,16 @@ class AddEmployeeDialog(QDialog):
         try:
             if not self.validate_data():
                 return
-                
+            
+            job_type = self.job_combo.currentData()
+            if self.job_combo.currentText() == "مخصص":
+                job_type = self.custom_job_input.text().strip()
+
             # جمع البيانات
             employee_data = {
                 'name': self.name_input.text().strip(),
                 'school_id': self.school_combo.currentData(),
-                'job_type': self.job_combo.currentData(),
+                'job_type': job_type,
                 'monthly_salary': self.salary_input.value(),
                 'phone': self.phone_input.text().strip() or None,
                 'notes': self.notes_input.toPlainText().strip() or None

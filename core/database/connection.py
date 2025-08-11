@@ -181,7 +181,7 @@ class DatabaseManager:
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL,
                         school_id INTEGER NOT NULL,
-                        job_type TEXT NOT NULL CHECK (job_type IN ('عامل', 'حارس', 'كاتب', 'مخصص')),
+                        job_type TEXT NOT NULL,
                         monthly_salary DECIMAL(10,2) NOT NULL,
                         phone TEXT,
                         notes TEXT,
