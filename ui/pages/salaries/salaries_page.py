@@ -105,17 +105,19 @@ class SalariesPage(QWidget):
             self.type_filter.addItem("الموظفين", "employee")
             self.type_filter.setMinimumWidth(120)
             
-            # فلتر التاريخ - من
+            # فلتر التاريخ - من (افتراضي من 2025-01-01)
             from_label = QLabel("من تاريخ:")
             self.from_date_filter = QDateEdit()
-            self.from_date_filter.setDate(QDate.currentDate().addMonths(-1))
+            # تعيين افتراضيًا إلى 1 يناير 2025
+            self.from_date_filter.setDate(QDate(2025, 1, 1))
             self.from_date_filter.setCalendarPopup(True)
             self.from_date_filter.setMinimumWidth(120)
             
-            # فلتر التاريخ - إلى
+            # فلتر التاريخ - إلى (افتراضي حتى 31 ديسمبر 2040)
             to_label = QLabel("إلى تاريخ:")
             self.to_date_filter = QDateEdit()
-            self.to_date_filter.setDate(QDate.currentDate())
+            # تعيين افتراضيًا إلى 31 ديسمبر 2040
+            self.to_date_filter.setDate(QDate(2040, 12, 31))
             self.to_date_filter.setCalendarPopup(True)
             self.to_date_filter.setMinimumWidth(120)
             
@@ -589,8 +591,9 @@ class SalariesPage(QWidget):
         try:
             self.search_input.clear()
             self.type_filter.setCurrentIndex(0)
-            self.from_date_filter.setDate(QDate.currentDate().addMonths(-1))
-            self.to_date_filter.setDate(QDate.currentDate())
+            # إعادة تعيين النطاق إلى 1 يناير 2025 حتى 31 ديسمبر 2040
+            self.from_date_filter.setDate(QDate(2025, 1, 1))
+            self.to_date_filter.setDate(QDate(2040, 12, 31))
             self.apply_filters()
             
         except Exception as e:
