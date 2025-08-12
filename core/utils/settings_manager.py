@@ -68,6 +68,14 @@ class SettingsManager:
         """تعيين العام الدراسي الحالي"""
         return self.set_setting('academic_year', year)
     
+    def get_organization_name(self) -> str:
+        """الحصول على اسم المؤسسة"""
+        return self.get_setting('organization_name', '')
+    
+    def set_organization_name(self, name: str) -> bool:
+        """تعيين اسم المؤسسة (للاستخدام في الإعداد الأولي فقط)"""
+        return self.set_setting('organization_name', name)
+    
     def get_all_settings(self) -> Dict[str, Any]:
         """الحصول على جميع الإعدادات"""
         try:
@@ -119,7 +127,8 @@ class SettingsManager:
                 'backup_interval': '7',
                 'print_school_logo': 'true',
                 'currency_symbol': 'ر.س',
-                'date_format': 'dd/MM/yyyy'
+                'date_format': 'dd/MM/yyyy',
+                'organization_name': ''  # سيتم تعيينه في الإعداد الأولي
             }
             
             for key, value in defaults.items():
@@ -142,6 +151,11 @@ settings_manager = SettingsManager()
 def get_academic_year() -> str:
     """دالة مساعدة للحصول على العام الدراسي الحالي"""
     return settings_manager.get_academic_year()
+
+
+def get_organization_name() -> str:
+    """دالة مساعدة للحصول على اسم المؤسسة"""
+    return settings_manager.get_organization_name()
 
 
 def get_app_setting(key: str, default_value: Any = None) -> Any:

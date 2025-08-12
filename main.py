@@ -151,19 +151,48 @@ class SchoolAccountingApp:
             
             # التحقق من وجود مستخدم في النظام
             if not auth_manager.has_users():
-                # إعداد كلمة مرور أولى
+                # إعداد كلمة مرور أولى واسم المؤسسة
                 from ui.auth.first_setup_dialog import FirstSetupDialog
                 setup_dialog = FirstSetupDialog()
                 
                 if setup_dialog.exec_() == setup_dialog.Accepted:
                     password = setup_dialog.get_password()
+                    organization_name = setup_dialog.get_organization_name()
+                    
+                    # إنشاء المستخدم الأول
                     if auth_manager.create_first_user(password):
                         logging.info("تم إنشاء المستخدم الأول بنجاح")
+                        
+                        # حفظ اسم المؤسسة إذا لم يكن محفوظاً بالفعل
+                        from core.utils.settings_manager import settings_manager
+                        if not settings_manager.get_organization_name() and organization_name:
+                            settings_manager.set_organization_name(organization_name)
+                            logging.info(f"تم حفظ اسم المؤسسة: {organization_name}")
+                        
                     else:
                         self.show_error_dialog("خطأ", "فشل في إنشاء المستخدم الأول")
                         return False
                 else:
                     return False
+            else:
+                # التحقق من وجود اسم المؤسسة للمستخدمين الحاليين
+                from core.utils.settings_manager import settings_manager
+                if not settings_manager.get_organization_name():
+                    # إذا لم يكن اسم المؤسسة محفوظاً، اطلب من المستخدم إدخاله
+                    from PyQt5.QtWidgets import QInputDialog
+                    organization_name, ok = QInputDialog.getText(
+                        None, 
+                        "اسم المؤسسة", 
+                        "يرجى إدخال اسم المؤسسة:",
+                        text=""
+                    )
+                    
+                    if ok and organization_name.strip():
+                        settings_manager.set_organization_name(organization_name.strip())
+                        logging.info(f"تم تحديث اسم المؤسسة: {organization_name.strip()}")
+                    else:
+                        self.show_error_dialog("خطأ", "يجب إدخال اسم المؤسسة للمتابعة")
+                        return False
             
             # عرض نافذة تسجيل الدخول
             self.login_window = LoginWindow()

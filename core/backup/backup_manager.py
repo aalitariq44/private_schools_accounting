@@ -60,6 +60,29 @@ class BackupManager:
             self.logger.warning(f"تحذير في إعداد التخزين: {type(e).__name__}: {e}")
             # لا نرمي خطأ هنا، فقط تحذير
     
+    def _get_safe_organization_folder_name(self, organization_name: str) -> str:
+        """إنشاء اسم مجلد آمن من اسم المؤسسة"""
+        if not organization_name:
+            return "organization"
+        
+        import hashlib
+        import re
+        
+        # تحويل الأحرف العربية إلى أحرف لاتينية آمنة
+        # إزالة الأحرف الخاصة أولاً
+        cleaned_name = re.sub(r'[<>:"/\\|?*\s]', '_', organization_name)
+        
+        # إنشاء hash قصير للاسم العربي لضمان الفرادة
+        name_hash = hashlib.md5(organization_name.encode('utf-8')).hexdigest()[:8]
+        
+        # دمج الاسم المنظف مع الـ hash
+        safe_org_name = f"org_{name_hash}"
+        
+        # التأكد من أن الاسم لا يحتوي على أحرف غير مدعومة
+        safe_org_name = re.sub(r'[^\w\-_]', '_', safe_org_name)
+        
+        return safe_org_name
+    
     def create_backup(self, description: str = "") -> Tuple[bool, str]:
         """
         إنشاء نسخة احتياطية جديدة ورفعها على Supabase
@@ -108,7 +131,16 @@ class BackupManager:
                 
                 # رفع على Supabase - طريقة مبسطة مثل المثال الناجح
                 self.logger.info("محاولة رفع النسخة الاحتياطية على Supabase...")
-                folder_path = f"backups/{datetime.now().strftime('%Y/%m')}"
+                
+                # الحصول على اسم المؤسسة من الإعدادات
+                from core.utils.settings_manager import settings_manager
+                organization_name = settings_manager.get_organization_name()
+                
+                # الحصول على اسم مجلد آمن
+                safe_org_name = self._get_safe_organization_folder_name(organization_name)
+                
+                # مسار المجلد الجديد: اسم المؤسسة مباشرة
+                folder_path = f"backups/{safe_org_name}"
                 file_path = f"{folder_path}/{backup_filename}"
                 
                 # قراءة الملف كما في المثال الناجح
@@ -125,6 +157,10 @@ class BackupManager:
                     return False, error_msg
                 
                 self.logger.info(f"تم إنشاء النسخة الاحتياطية على Supabase: {file_path}, النتيجة: {upload_result}")
+                
+                # حفظ اسم آخر نسخة تم رفعها لاستخدامها في list_backups
+                self._last_uploaded_backup = backup_filename
+                
                 return True, f"تم إنشاء النسخة الاحتياطية بنجاح على Supabase\nالملف: {backup_filename}"
                     
             finally:
@@ -152,34 +188,88 @@ class BackupManager:
         try:
             backups = []
             
-            # جلب قائمة الملفات من Supabase
-            result = self.supabase.storage.from_(self.bucket_name).list("backups", {
-                "limit": 100,
-                "sortBy": {"column": "created_at", "order": "desc"}
-            })
+            # الحصول على اسم المؤسسة من الإعدادات
+            from core.utils.settings_manager import settings_manager
+            organization_name = settings_manager.get_organization_name()
             
-            for item in result:
-                if self._is_backup_folder(item):
-                    # جلب الملفات من هذا المجلد
-                    folder_files = self.supabase.storage.from_(self.bucket_name).list(
-                        f"backups/{item['name']}", {"limit": 100}
-                    )
+            if not organization_name:
+                self.logger.warning("لم يتم العثور على اسم المؤسسة في الإعدادات")
+                return []
+            
+            # الحصول على اسم مجلد آمن
+            safe_org_name = self._get_safe_organization_folder_name(organization_name)
+            
+            # جلب قائمة الملفات من مجلد المؤسسة
+            organization_folder = f"backups/{safe_org_name}"
+            
+            try:
+                self.logger.info(f"البحث عن النسخ في المجلد: {organization_folder}")
+                
+                # البحث في جميع الملفات مباشرة بدلاً من محاولة المجلد أولاً
+                try:
+                    # البحث في جميع ملفات التخزين
+                    all_files = self.supabase.storage.from_(self.bucket_name).list("")
                     
-                    for folder_item in folder_files:
-                        if self._is_backup_folder(folder_item):
-                            # مجلد شهر، جلب الملفات منه
-                            month_files = self.supabase.storage.from_(self.bucket_name).list(
-                                f"backups/{item['name']}/{folder_item['name']}", {"limit": 100}
+                    prefix = f"backups/{safe_org_name}/"
+                    self.logger.info(f"البحث عن الملفات التي تبدأ بـ: {prefix}")
+                    self.logger.info(f"عدد الملفات الكلي: {len(all_files)}")
+                    
+                    for file_item in all_files:
+                        file_path = file_item.get('name', '')
+                        self.logger.info(f"فحص الملف: {file_path}")
+                        if file_path.startswith(prefix) and file_path.endswith('.zip'):
+                            self.logger.info(f"ملف مطابق: {file_path}")
+                            backup_info = self._parse_backup_info(
+                                file_path,
+                                file_item
+                            )
+                            if backup_info:
+                                backups.append(backup_info)
+                                    
+                except Exception as search_error:
+                    self.logger.error(f"فشل في البحث العام: {search_error}")
+                            
+            except Exception as e:
+                self.logger.warning(f"لم يتم العثور على مجلد النسخ الاحتياطية للمؤسسة: {e}")
+                # محاولة البحث في المجلدات القديمة للتوافق مع النظام السابق
+                try:
+                    result = self.supabase.storage.from_(self.bucket_name).list("backups", {
+                        "limit": 100,
+                        "sortBy": {"column": "created_at", "order": "desc"}
+                    })
+                    
+                    for item in result:
+                        if self._is_backup_folder(item):
+                            # جلب الملفات من هذا المجلد
+                            folder_files = self.supabase.storage.from_(self.bucket_name).list(
+                                f"backups/{item['name']}", {"limit": 100}
                             )
                             
-                            for file_item in month_files:
-                                if file_item['name'].endswith('.zip'):
+                            for folder_item in folder_files:
+                                if self._is_backup_folder(folder_item):
+                                    # مجلد شهر، جلب الملفات منه
+                                    month_files = self.supabase.storage.from_(self.bucket_name).list(
+                                        f"backups/{item['name']}/{folder_item['name']}", {"limit": 100}
+                                    )
+                                    
+                                    for file_item in month_files:
+                                        if file_item['name'].endswith('.zip'):
+                                            backup_info = self._parse_backup_info(
+                                                f"backups/{item['name']}/{folder_item['name']}/{file_item['name']}",
+                                                file_item
+                                            )
+                                            if backup_info:
+                                                backups.append(backup_info)
+                                elif folder_item['name'].endswith('.zip'):
+                                    # ملف مباشر في المجلد
                                     backup_info = self._parse_backup_info(
-                                        f"backups/{item['name']}/{folder_item['name']}/{file_item['name']}",
-                                        file_item
+                                        f"backups/{item['name']}/{folder_item['name']}",
+                                        folder_item
                                     )
                                     if backup_info:
                                         backups.append(backup_info)
+                except Exception as fallback_e:
+                    self.logger.error(f"خطأ في البحث عن النسخ الاحتياطية القديمة: {fallback_e}")
             
             # ترتيب النسخ حسب التاريخ (الأحدث أولاً)
             backups.sort(key=lambda x: x['created_at'], reverse=True)

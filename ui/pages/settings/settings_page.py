@@ -76,6 +76,9 @@ class SettingsPage(QWidget):
             scroll_layout = QVBoxLayout()
             scroll_layout.setSpacing(20)
             
+            # إعدادات المؤسسة
+            self.create_organization_section(scroll_layout)
+            
             # إعدادات العام الدراسي
             self.create_academic_year_section(scroll_layout)
             
@@ -121,6 +124,52 @@ class SettingsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء رأس الصفحة: {e}")
+    
+    def create_organization_section(self, layout):
+        """إنشاء قسم إعدادات المؤسسة"""
+        try:
+            # إطار المؤسسة
+            organization_group = QGroupBox("معلومات المؤسسة")
+            organization_group.setObjectName("settingsGroup")
+            organization_layout = QGridLayout()
+            organization_layout.setSpacing(15)
+            
+            # تسمية اسم المؤسسة
+            org_label = QLabel("اسم المؤسسة:")
+            org_label.setFont(QFont("Arial", 11))
+            
+            # حقل عرض اسم المؤسسة (غير قابل للتعديل)
+            self.organization_display = QLabel()
+            self.organization_display.setObjectName("organizationName")
+            self.organization_display.setFont(QFont("Arial", 11, QFont.Bold))
+            self.organization_display.setStyleSheet("""
+                QLabel#organizationName {
+                    background-color: #F8F9FA;
+                    border: 1px solid #DEE2E6;
+                    border-radius: 5px;
+                    padding: 8px;
+                    color: #495057;
+                }
+            """)
+            
+            # نص توضيحي
+            info_label = QLabel("* اسم المؤسسة لا يمكن تغييره بعد الإعداد الأولي")
+            info_label.setFont(QFont("Arial", 9))
+            info_label.setStyleSheet("color: #6C757D; font-style: italic;")
+            
+            # إضافة العناصر للتخطيط
+            organization_layout.addWidget(org_label, 0, 0)
+            organization_layout.addWidget(self.organization_display, 0, 1)
+            organization_layout.addWidget(info_label, 1, 1)
+            
+            # إضافة مساحة مرنة
+            organization_layout.setColumnStretch(2, 1)
+            
+            organization_group.setLayout(organization_layout)
+            layout.addWidget(organization_group)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء قسم المؤسسة: {e}")
     
     def create_academic_year_section(self, layout):
         """إنشاء قسم إعدادات العام الدراسي"""
@@ -260,6 +309,13 @@ class SettingsPage(QWidget):
     def load_settings(self):
         """تحميل الإعدادات من قاعدة البيانات"""
         try:
+            # تحميل اسم المؤسسة
+            organization_name = settings_manager.get_organization_name()
+            if organization_name:
+                self.organization_display.setText(organization_name)
+            else:
+                self.organization_display.setText("لم يتم تعيين اسم المؤسسة")
+            
             # تحميل العام الدراسي الحالي
             current_year = self.get_current_academic_year()
             if current_year:
