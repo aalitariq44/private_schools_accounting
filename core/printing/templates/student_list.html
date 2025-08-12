@@ -61,6 +61,7 @@
     <table>
         <thead>
             <tr>
+                <th>ت</th>
                 <th>المعرف</th>
                 <th>الاسم</th>
                 <th>المدرسة</th>
@@ -74,6 +75,7 @@
         <tbody>
             {% for student in students %}
             <tr>
+                <td>{{ loop.index }}</td>
                 <td>{{ student.id }}</td>
                 <td>{{ student.name }}</td>
                 <td>{{ student.school_name }}</td>
