@@ -461,10 +461,15 @@ class SalariesPage(QWidget):
                 if staff_type and salary['staff_type'] != staff_type:
                     continue
                 
-                # فلتر التاريخ
+                # فلتر التاريخ (يُطبق فقط إذا تم تغيير النطاق عن القيم القصوى)
                 payment_date = datetime.strptime(salary['payment_date'], '%Y-%m-%d').date()
-                if payment_date < from_date or payment_date > to_date:
-                    continue
+                # الحصول على القيم القصوى للفلتر
+                min_date = self.from_date_filter.minimumDate().toPyDate()
+                max_date = self.to_date_filter.maximumDate().toPyDate()
+                # إذا لم تكن التواريخ في القيمة الافتراضية القصوى، طبق الفلتر
+                if not (from_date == min_date and to_date == max_date):
+                    if payment_date < from_date or payment_date > to_date:
+                        continue
                 
                 filtered_salaries.append(salary)
             

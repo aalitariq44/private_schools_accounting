@@ -189,7 +189,8 @@ class ExpensesPage(QWidget):
             
             self.start_date = QDateEdit()
             self.start_date.setObjectName("filterDate")
-            self.start_date.setDate(QDate.currentDate().addMonths(-1))
+            # افتراضيًا إلى أقل تاريخ ممكن لعرض جميع السجلات
+            self.start_date.setDate(self.start_date.minimumDate())
             self.start_date.setCalendarPopup(True)
             filters_layout.addWidget(self.start_date)
             
@@ -199,7 +200,8 @@ class ExpensesPage(QWidget):
             
             self.end_date = QDateEdit()
             self.end_date.setObjectName("filterDate")
-            self.end_date.setDate(QDate.currentDate())
+            # افتراضيًا إلى أعلى تاريخ ممكن لعرض جميع السجلات
+            self.end_date.setDate(self.end_date.maximumDate())
             self.end_date.setCalendarPopup(True)
             filters_layout.addWidget(self.end_date)
             
@@ -385,11 +387,14 @@ class ExpensesPage(QWidget):
                 params.append(selected_category)
             
             
-            # فلتر التاريخ
+            # فلتر التاريخ (يُطبق فقط إذا تم تغيير النطاق عن القيمة الافتراضية)
             start_date = self.start_date.date().toPyDate()
             end_date = self.end_date.date().toPyDate()
-            query += " AND e.expense_date BETWEEN ? AND ?"
-            params.extend([start_date, end_date])
+            min_date = self.start_date.minimumDate().toPyDate()
+            max_date = self.end_date.maximumDate().toPyDate()
+            if not (start_date == min_date and end_date == max_date):
+                query += " AND e.expense_date BETWEEN ? AND ?"
+                params.extend([start_date, end_date])
             
             # فلتر البحث
             search_text = self.search_input.text().strip()
@@ -539,8 +544,9 @@ class ExpensesPage(QWidget):
             # إعادة تعيين الفلاتر للقيم الافتراضية
             self.school_combo.setCurrentIndex(0)
             self.category_combo.setCurrentIndex(0)
-            self.start_date.setDate(QDate.currentDate().addMonths(-1))
-            self.end_date.setDate(QDate.currentDate())
+            # إعادة تعيين لتغطية كامل النطاق الزمني
+            self.start_date.setDate(self.start_date.minimumDate())
+            self.end_date.setDate(self.end_date.maximumDate())
             self.search_input.clear()
             # إعادة تحميل البيانات
             self.load_expenses()
