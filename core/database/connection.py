@@ -229,23 +229,19 @@ class DatabaseManager:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS salaries (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        employee_id INTEGER,
-                        teacher_id INTEGER,
-                        employee_type TEXT NOT NULL CHECK (employee_type IN ('teacher', 'employee')),
-                        salary_month TEXT NOT NULL,
-                        salary_year INTEGER NOT NULL,
+                        staff_type TEXT NOT NULL CHECK (staff_type IN ('teacher', 'employee')),
+                        staff_id INTEGER NOT NULL,
+                        staff_name TEXT NOT NULL,
                         base_salary DECIMAL(10,2) NOT NULL,
-                        bonuses DECIMAL(10,2) DEFAULT 0,
-                        deductions DECIMAL(10,2) DEFAULT 0,
-                        final_salary DECIMAL(10,2) NOT NULL,
-                        payment_date DATE,
-                        payment_status TEXT DEFAULT 'غير مدفوع' CHECK (payment_status IN ('مدفوع', 'غير مدفوع')),
+                        paid_amount DECIMAL(10,2) NOT NULL,
+                        from_date DATE NOT NULL,
+                        to_date DATE NOT NULL,
+                        days_count INTEGER NOT NULL,
+                        payment_date DATE NOT NULL,
+                        payment_time TIME NOT NULL,
                         notes TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
-                        FOREIGN KEY (teacher_id) REFERENCES teachers(id) ON DELETE CASCADE,
-                        CHECK ((employee_id IS NOT NULL AND teacher_id IS NULL) OR (employee_id IS NULL AND teacher_id IS NOT NULL))
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 """)
                 
@@ -306,10 +302,11 @@ class DatabaseManager:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_expenses_type ON expenses(expense_type)")
             
             # فهارس الرواتب
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_employee_id ON salaries(employee_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_teacher_id ON salaries(teacher_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_month_year ON salaries(salary_month, salary_year)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_payment_status ON salaries(payment_status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_staff_type ON salaries(staff_type)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_staff_id ON salaries(staff_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_payment_date ON salaries(payment_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_from_date ON salaries(from_date)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_to_date ON salaries(to_date)")
             
             logging.info("تم إنشاء فهارس قاعدة البيانات بنجاح")
             
