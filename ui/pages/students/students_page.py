@@ -783,6 +783,12 @@ class StudentsPage(QWidget):
                     font-family: {font_family};
                 }}
                 
+                /* Selected item */
+                QTableWidget::item:selected {{
+                    background-color: #3498DB;
+                    color: white;
+                }}
+                
                 QHeaderView::section {{
                     background-color: #9B59B6;
                     color: white;
