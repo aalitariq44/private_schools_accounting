@@ -64,23 +64,11 @@ class BackupManager:
         """إنشاء اسم مجلد آمن من اسم المؤسسة"""
         if not organization_name:
             return "organization"
-        
-        import hashlib
         import re
-        
-        # تحويل الأحرف العربية إلى أحرف لاتينية آمنة
-        # إزالة الأحرف الخاصة أولاً
-        cleaned_name = re.sub(r'[<>:"/\\|?*\s]', '_', organization_name)
-        
-        # إنشاء hash قصير للاسم العربي لضمان الفرادة
-        name_hash = hashlib.md5(organization_name.encode('utf-8')).hexdigest()[:8]
-        
-        # دمج الاسم المنظف مع الـ hash
-        safe_org_name = f"org_{name_hash}"
-        
-        # التأكد من أن الاسم لا يحتوي على أحرف غير مدعومة
-        safe_org_name = re.sub(r'[^\w\-_]', '_', safe_org_name)
-        
+        # إزالة الأحرف غير المسموح بها
+        safe_org_name = re.sub(r'[<>:"/\\|?*]', '', organization_name)
+        # استبدال الفراغات ب underscore
+        safe_org_name = safe_org_name.strip().replace(' ', '_')
         return safe_org_name
     
     def create_backup(self, description: str = "") -> Tuple[bool, str]:
