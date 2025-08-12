@@ -100,11 +100,11 @@ class AddAdditionalFeeDialog(QDialog):
             # مبلغ الرسم
             self.amount_input = QDoubleSpinBox()
             self.amount_input.setObjectName("amountInput")
-            self.amount_input.setMinimum(1.0)
+            self.amount_input.setMinimum(0.0)
             self.amount_input.setMaximum(9999999.0)
             self.amount_input.setDecimals(0)
             self.amount_input.setSuffix(" د.ع")
-            self.amount_input.setValue(50000.0)
+            self.amount_input.setValue(0.0)
             fee_layout.addRow("مبلغ الرسم:", self.amount_input)
             
             # حالة الدفع
