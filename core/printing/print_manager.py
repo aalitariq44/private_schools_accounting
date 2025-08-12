@@ -14,6 +14,7 @@ from PyQt5.QtGui import QTextDocument
 from .print_config import PrintSettings, TemplateType, PrintMethod, TEMPLATE_PRINT_METHODS
 from .template_manager import TemplateManager
 from .simple_print_preview import SimplePrintPreviewDialog
+from ui.widgets.column_selection_dialog import ColumnSelectionDialog
 
 # محاولة استيراد محرك الويب الحديث
 try:
@@ -192,15 +193,37 @@ class PrintManager:
             return True
         return False
 
+from ui.widgets.column_selection_dialog import ColumnSelectionDialog
+
 # Convenience functions for printing different templates
 
 def print_students_list(students, filter_info=None, parent=None, use_web_engine=True):
     """طباعة قائمة الطلاب مع معاينة"""
-    pm = PrintManager(parent, use_web_engine)
-    data = {'students': students}
-    if filter_info:
-        data['filter_info'] = filter_info
-    pm.preview_document(TemplateType.STUDENTS_LIST, data)
+    
+    columns = {
+        'id': 'المعرف',
+        'name': 'الاسم',
+        'school_name': 'المدرسة',
+        'grade': 'الصف',
+        'section': 'الشعبة',
+        'gender': 'الجنس',
+        'status': 'الحالة',
+        'total_fee': 'الرسوم'
+    }
+
+    dialog = ColumnSelectionDialog(columns, parent=parent)
+    if dialog.exec_() == ColumnSelectionDialog.Accepted:
+        selected_columns = dialog.get_selected_columns()
+        
+        pm = PrintManager(parent, use_web_engine)
+        data = {
+            'students': students,
+            'selected_columns': selected_columns,
+            'all_columns': columns
+        }
+        if filter_info:
+            data['filter_info'] = filter_info
+        pm.preview_document(TemplateType.STUDENTS_LIST, data)
 
 
 def print_student_report(data, parent=None, use_web_engine=True):

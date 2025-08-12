@@ -62,28 +62,22 @@
         <thead>
             <tr>
                 <th>ت</th>
-                <th>المعرف</th>
-                <th>الاسم</th>
-                <th>المدرسة</th>
-                <th>الصف</th>
-                <th>الشعبة</th>
-                <th>الجنس</th>
-                <th>الحالة</th>
-                <th>الرسوم</th>
+                {% for col_key, col_display in all_columns.items() %}
+                    {% if col_key in selected_columns %}
+                        <th>{{ col_display }}</th>
+                    {% endif %}
+                {% endfor %}
             </tr>
         </thead>
         <tbody>
             {% for student in students %}
             <tr>
                 <td>{{ loop.index }}</td>
-                <td>{{ student.id }}</td>
-                <td>{{ student.name }}</td>
-                <td>{{ student.school_name }}</td>
-                <td>{{ student.grade }}</td>
-                <td>{{ student.section }}</td>
-                <td>{{ student.gender }}</td>
-                <td>{{ student.status }}</td>
-                <td>{{ student.total_fee | currency }}</td>
+                {% for col_key, col_display in all_columns.items() %}
+                    {% if col_key in selected_columns %}
+                        <td>{{ student[col_key] }}</td>
+                    {% endif %}
+                {% endfor %}
             </tr>
             {% endfor %}
         </tbody>
