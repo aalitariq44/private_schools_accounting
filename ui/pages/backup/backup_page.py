@@ -245,10 +245,12 @@ class BackupPage(QWidget):
                 background-color: #2ecc71;
                 color: white;
                 border: none;
-                border-radius: 3px;
-                padding: 4px 8px;
+                border-radius: 4px;
+                padding: 2px 6px;
                 font-size: 11px;
                 min-width: 60px;
+                min-height: 20px;
+                font-weight: normal;
             }
             
             QPushButton#smallButton:hover {
@@ -259,10 +261,12 @@ class BackupPage(QWidget):
                 background-color: #e74c3c;
                 color: white;
                 border: none;
-                border-radius: 3px;
-                padding: 4px 8px;
+                border-radius: 4px;
+                padding: 2px 6px;
                 font-size: 11px;
                 min-width: 60px;
+                min-height: 20px;
+                font-weight: normal;
             }
             
             QPushButton#smallDangerButton:hover {
@@ -279,8 +283,9 @@ class BackupPage(QWidget):
             }
             
             QTableWidget::item {
-                padding: 8px;
+                padding: 0px;
                 border-bottom: 1px solid #e0e0e0;
+                min-height: 0px;
             }
             
             QTableWidget::item:selected {
@@ -378,6 +383,9 @@ class BackupPage(QWidget):
             self.backups_table.setRowCount(len(backups))
             
             for row, backup in enumerate(backups):
+                # تحديد ارتفاع الصف ليتناسب مع الأزرار الصغيرة
+                self.backups_table.setRowHeight(row, 30)
+                
                 # اسم الملف
                 filename_item = QTableWidgetItem(backup['filename'])
                 filename_item.setFlags(filename_item.flags() & ~Qt.ItemIsEditable)
@@ -416,8 +424,8 @@ class BackupPage(QWidget):
         """إنشاء ويجيت العمليات لكل نسخة احتياطية"""
         widget = QWidget()
         layout = QHBoxLayout(widget)
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.setSpacing(5)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(8)
         
         # زر التحميل
         download_btn = QPushButton("تحميل")
