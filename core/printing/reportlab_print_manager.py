@@ -285,6 +285,49 @@ class ReportLabPrintManager:
         amount_words_text = self.reshape_arabic_text(f"فقط ({self._number_to_arabic_words(amount)}) دينار عراقي لا غير")
         self.draw_centered_text(c, amount_words_text, self.page_width / 2, y_pos + 10, self.arabic_font, 10)
 
+        # Footer section with image and text
+        footer_height = 20 * mm
+        footer_padding = 5 * mm
+        footer_y = bottom_y + footer_padding
+        footer_x = self.margin
+        # Divider line and header above footer
+        divider_y = footer_y + footer_height + 4 * mm
+        c.setLineWidth(0.5)
+        c.line(self.margin, divider_y, self.page_width - self.margin, divider_y)
+        # Two text lines above divider
+        text1 = self.reshape_arabic_text("عنوان المدرسة:")
+        text2 = self.reshape_arabic_text("للتواصل")
+        c.setFont(self.arabic_bold_font, 10)
+        c.drawCentredString(self.page_width / 2, divider_y + 6 * mm, text1)
+        c.setFont(self.arabic_font, 9)
+        c.drawCentredString(self.page_width / 2, divider_y + 3 * mm, text2)
+        # Column widths: left 80%, right 20%
+        left_width = self.content_width * 0.8
+        right_width = self.content_width * 0.2
+        # Draw image in right column
+        image_path = config.RESOURCES_DIR / 'images' / 'new_tech.jpg'
+        if image_path.exists():
+            c.drawImage(
+                str(image_path),
+                footer_x + left_width,
+                footer_y,
+                width=right_width,
+                height=footer_height,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        # Draw text in left column
+        text1 = self.reshape_arabic_text("انشاء شركة الحلول التقنية الجديدة 07710995922")
+        text2 = self.reshape_arabic_text("لانشاء كافة تطبيقات الهاتف وسطح المكتب ومواقع الويب وادارة قواعد البيانات")
+        c.setFont(self.arabic_bold_font, 10)
+        text1_x = footer_x + 5
+        text1_y = footer_y + footer_height - 8
+        c.drawString(text1_x, text1_y, text1)
+        c.setFont(self.arabic_font, 9)
+        text2_x = footer_x + 5
+        text2_y = footer_y + footer_height - 20
+        c.drawString(text2_x, text2_y, text2)
+
     def _number_to_arabic_words(self, number: float) -> str:
         """تحويل الرقم إلى كلمات عربية"""
         # تنفيذ بسيط لتحويل الأرقام إلى كلمات
