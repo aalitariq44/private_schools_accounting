@@ -497,13 +497,13 @@ class AdditionalFeesPopup(QDialog):
                 #popupTitle {{
                     font-size: 24px;
                     font-weight: bold;
-                    color: white;
+                    color: black;
                     font-family: {cairo_font};
                 }}
                 
                 #studentInfo {{
                     font-size: 16px;
-                    color: #ECF0F1;
+                    color: black;
                     font-family: {cairo_font};
                 }}
                 
