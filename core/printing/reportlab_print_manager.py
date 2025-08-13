@@ -208,35 +208,64 @@ class ReportLabPrintManager:
         
         y_pos -= 10
         
-        table_data = [
-            [self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")],
-            [self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")],
-            [self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")],
-            [self.reshape_arabic_text(str(installment_id)), self.reshape_arabic_text("رقم الوصل")],
-            [self.reshape_arabic_text(f"{amount:,.0f} د.ع"), self.reshape_arabic_text("المبلغ المدفوع")],
-            [self.reshape_arabic_text(payment_date), self.reshape_arabic_text("تاريخ الدفع")],
-            [self.reshape_arabic_text(f"{receipt_data.get('total_fee', 0):,.0f} د.ع"), self.reshape_arabic_text("إجمالي الرسوم")],
-            [self.reshape_arabic_text(f"{receipt_data.get('total_paid', 0):,.0f} د.ع"), self.reshape_arabic_text("المدفوع تراكمياً")],
-            [self.reshape_arabic_text(f"{receipt_data.get('remaining', 0):,.0f} د.ع"), self.reshape_arabic_text("المبلغ المتبقي")],
+        # --- جدول بيانات الوصل بشكل عمودين ---
+        # البيانات
+        table_fields = [
+            (self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")),
+            (self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")),
+            (self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")),
+            (self.reshape_arabic_text(str(installment_id)), self.reshape_arabic_text("رقم الوصل")),
+            (self.reshape_arabic_text(f"{amount:,.0f} د.ع"), self.reshape_arabic_text("المبلغ المدفوع")),
+            (self.reshape_arabic_text(payment_date), self.reshape_arabic_text("تاريخ الدفع")),
+            (self.reshape_arabic_text(f"{receipt_data.get('total_fee', 0):,.0f} د.ع"), self.reshape_arabic_text("إجمالي الرسوم")),
+            (self.reshape_arabic_text(f"{receipt_data.get('total_paid', 0):,.0f} د.ع"), self.reshape_arabic_text("المدفوع تراكمياً")),
+        ]
+        remaining_row = [
+            self.reshape_arabic_text(f"{receipt_data.get('remaining', 0):,.0f} د.ع"),
+            self.reshape_arabic_text("المبلغ المتبقي")
         ]
 
-        col_widths = [self.content_width * 0.5, self.content_width * 0.5]
-        tbl = Table(table_data, colWidths=col_widths, hAlign='CENTER')
-        
+        # تقسيم إلى عمودين (يمين ويسار)
+        right_col = table_fields[:4]
+        left_col = table_fields[4:8]
+
+        # بناء الجدول: كل صف يحوي خليتين من اليمين وخليتين من اليسار
+        merged_table_data = []
+        for i in range(4):
+            merged_table_data.append(
+                right_col[i] + left_col[i]
+            )
+        # صف المبلغ المتبقي بعرض كامل (4 أعمدة)
+        merged_table_data.append([
+            '', '', remaining_row[0], remaining_row[1]
+        ])
+
+        col_widths = [
+            self.content_width * 0.25,  # بيانات يمين
+            self.content_width * 0.25,  # عنوان يمين
+            self.content_width * 0.25,  # بيانات يسار
+            self.content_width * 0.25   # عنوان يسار
+        ]
+        tbl = Table(merged_table_data, colWidths=col_widths, hAlign='CENTER')
+
         tbl.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), self.arabic_font),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('ALIGN', (0, 0), (-1, -2), 'RIGHT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (1, 0), (1, -1), self.arabic_bold_font),
+            ('FONTNAME', (1, 0), (1, -2), self.arabic_bold_font),
+            ('FONTNAME', (3, 0), (3, -2), self.arabic_bold_font),
             ('GRID', (0, 0), (-1, -1), 0.5, black),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
             ('TOPPADDING', (0, 0), (-1, -1), 4),
             ('LEFTPADDING', (0, 0), (-1, -1), 5),
             ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-            ('BACKGROUND', (0, -1), (-1, -1), Color(0.92, 0.92, 0.92)),
-            ('TEXTCOLOR', (0, -1), (-1, -1), red),
-            ('FONTNAME', (0, -1), (-1, -1), self.arabic_bold_font),
+            # صف المبلغ المتبقي
+            ('SPAN', (0, 4), (1, 4)),  # دمج أول خليتين
+            ('BACKGROUND', (0, 4), (-1, 4), Color(0.92, 0.92, 0.92)),
+            ('TEXTCOLOR', (0, 4), (-1, 4), red),
+            ('FONTNAME', (2, 4), (3, 4), self.arabic_bold_font),
+            ('ALIGN', (2, 4), (3, 4), 'RIGHT'),
         ]))
         
         table_height = tbl.wrapOn(c, self.content_width, receipt_height)[1]
@@ -397,7 +426,7 @@ class ReportLabPrintManager:
             inst_table.setStyle(TableStyle([
                 ('GRID', (0,0), (-1,-1), 0.5, black),
                 ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
-                ('ALIGN', (0,0), (-1,-1), 'CENTER')
+                ('ALIGN', (0,0), (-1, -1), 'CENTER')
             ]))
             story.append(inst_table)
             story.append(Spacer(1, 12))
@@ -446,7 +475,7 @@ class ReportLabPrintManager:
             sum_table.setStyle(TableStyle([
                 ('GRID', (0,0), (-1,-1), 0.5, black),
                 ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
-                ('ALIGN', (0,0), (-1,-1), 'RIGHT')
+                ('ALIGN', (0,0), (-1, -1), 'RIGHT')
             ]))
             story.append(sum_table)
 
