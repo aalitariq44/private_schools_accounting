@@ -157,29 +157,41 @@ class AdditionalFeesPrintManager:
 
         y_pos = top_y - self.margin - 15
         
-        # عنوان الإيصال
-        title = self.reshape_arabic_text("إيصال الرسوم الإضافية")
-        self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
-        y_pos -= 20
-        
-        # اسم المدرسة
+        # Header similar to installment receipt
+        from reportlab.lib.units import mm  # ensure mm available
+        # Calculate header positions
+        top_padding = 10 * mm
+        header_y = top_y - self.margin - top_padding
+        header_height = 45  # enough for two lines on left
+        header_padding = 10 * mm
+
+        # Right: School Name
+        c.setFont(self.arabic_bold_font, 13)
         school_text = self.reshape_arabic_text(school_name)
-        self.draw_centered_text(c, school_text, self.page_width / 2, y_pos, self.arabic_bold_font, 13)
-        y_pos -= 25
-        
-        # رقم الإيصال وتاريخ الطباعة
-        c.setFont(self.arabic_font, 10)
-        receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
-        c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
-        
-        date_text = self.reshape_arabic_text(f"تاريخ الطباعة: {print_date} - {print_time}")
-        c.drawString(self.margin + 10, y_pos, date_text)
-        
-        y_pos -= 12
-        # خط فاصل
-        c.setLineWidth(0.5)
-        c.line(self.margin + 10, y_pos, self.page_width - self.margin - 10, y_pos)
-        y_pos -= 15
+        c.drawRightString(self.page_width - self.margin - header_padding, header_y, school_text)
+
+        # Center: School Logo
+        circle_x = self.page_width / 2
+        circle_y = header_y - 10
+        logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
+        if logo_path.exists():
+            img_size = 49
+            c.drawImage(str(logo_path), circle_x - img_size / 2, circle_y - img_size / 2, width=img_size, height=img_size, preserveAspectRatio=True, mask='auto')
+        else:
+            c.setLineWidth(1)
+            c.circle(circle_x, circle_y, 18, stroke=1, fill=0)
+
+        # Left: Receipt Title and Academic Year
+        left_x = self.margin + header_padding
+        c.setFont(self.arabic_bold_font, 14)
+        receipt_title = self.reshape_arabic_text("إيصال الرسوم الإضافية")
+        c.drawString(left_x, header_y, receipt_title)
+        c.setFont(self.arabic_font, 11)
+        academic_year = self.reshape_arabic_text("للعام الدراسي 2025 - 2026")
+        c.drawString(left_x, header_y - 18, academic_year)
+
+        # End Header
+        y_pos = header_y - header_height
         
         # معلومات الطالب
         student_info_data = [
