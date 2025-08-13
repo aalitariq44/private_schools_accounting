@@ -104,7 +104,33 @@ class PrintManager:
             return self._preview_html_document(template_type, data, settings)
     
     def _open_pdf_preview(self, pdf_path: str):
-        """فتح معاينة PDF"""
+        """فتح معاينة PDF داخلية محسنة"""
+        try:
+            import os
+            
+            if os.path.exists(pdf_path):
+                # استخدام نافذة المعاينة المحسنة
+                try:
+                    from ui.widgets.enhanced_pdf_preview_dialog import EnhancedPDFPreviewDialog
+                    preview_dialog = EnhancedPDFPreviewDialog(pdf_path, "معاينة الإيصال", self.parent)
+                    preview_dialog.exec_()
+                    logging.info(f"تم فتح معاينة PDF محسنة: {pdf_path}")
+                except ImportError:
+                    # استخدام النافذة العادية كاحتياطي
+                    from ui.widgets.pdf_preview_dialog import PDFPreviewDialog
+                    preview_dialog = PDFPreviewDialog(pdf_path, "معاينة الإيصال", self.parent)
+                    preview_dialog.exec_()
+                    logging.info(f"تم فتح معاينة PDF عادية: {pdf_path}")
+            else:
+                logging.error(f"ملف PDF غير موجود: {pdf_path}")
+                
+        except Exception as e:
+            logging.error(f"خطأ في فتح معاينة PDF: {e}")
+            # في حالة فشل المعاينة الداخلية، استخدم الطريقة الخارجية
+            self._open_pdf_preview_external(pdf_path)
+    
+    def _open_pdf_preview_external(self, pdf_path: str):
+        """فتح معاينة PDF خارجياً (طريقة احتياطية)"""
         try:
             import os
             import subprocess
@@ -116,12 +142,12 @@ class PrintManager:
                 elif os.name == 'posix':  # Linux/Mac
                     subprocess.run(['xdg-open', pdf_path])
                     
-                logging.info(f"تم فتح معاينة PDF: {pdf_path}")
+                logging.info(f"تم فتح معاينة PDF خارجياً: {pdf_path}")
             else:
                 logging.error(f"ملف PDF غير موجود: {pdf_path}")
                 
         except Exception as e:
-            logging.error(f"خطأ في فتح معاينة PDF: {e}")
+            logging.error(f"خطأ في فتح معاينة PDF خارجياً: {e}")
     
     def print_document(self, template_type: TemplateType, data: Dict[str, Any], settings: Optional[PrintSettings] = None):
         """طباعة مستند - يختار المسار المناسب تلقائياً"""

@@ -14,8 +14,12 @@ project_root = Path(__file__).resolve().parent
 sys.path.insert(0, str(project_root))
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
-from PyQt5.QtCore import Qt, QDir, QTranslator, QLocale
+from PyQt5.QtCore import Qt, QDir, QTranslator, QLocale, QCoreApplication
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
+
+# إعداد خصائص التطبيق قبل إنشاء QApplication
+QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
 # استيراد إعدادات المشروع
 import config
