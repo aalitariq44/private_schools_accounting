@@ -298,23 +298,59 @@ class StudentDetailsPage(QWidget):
             # حساب الملخص المالي للأقساط فقط
             installments_total = sum(inst['amount'] for inst in installments)
             school_fee_remaining = student['total_fee'] - installments_total
-            
+
+            # إعداد الملخص المالي الأساسي
             financial_summary = {
                 'installments_count': len(installments),
                 'installments_total': installments_total,
                 'school_fee_remaining': school_fee_remaining,
-                'additional_fees_count': 0,  # سيتم إضافتها لاحقاً إذا لزم الأمر
+                'additional_fees_count': 0,
                 'additional_fees_total': 0,
                 'additional_fees_paid_total': 0,
                 'additional_fees_unpaid_total': 0
             }
-            
+
+            # تحميل وحساب الرسوم الإضافية
+            query_fees = """
+                SELECT id, fee_type, amount, paid, payment_date, created_at, notes
+                FROM additional_fees
+                WHERE student_id = ?
+                ORDER BY created_at DESC
+            """
+            fees_data = db_manager.execute_query(query_fees, (self.student_id,))
+            additional_fees = []
+            total_fees = 0
+            paid_fees = 0
+            for fee in fees_data:
+                fee_amount = float(fee[2]) if fee[2] else 0
+                is_paid = fee[3] if isinstance(fee[3], bool) else (fee[3] == 1 if fee[3] is not None else False)
+                total_fees += fee_amount
+                if is_paid:
+                    paid_fees += fee_amount
+                additional_fees.append({
+                    'id': fee[0],
+                    'fee_type': fee[1],
+                    'amount': fee_amount,
+                    'paid': is_paid,
+                    'payment_date': fee[4],
+                    'created_at': fee[5],
+                    'notes': fee[6]
+                })
+            unpaid_fees = total_fees - paid_fees
+            # تحديث الملخص المالي بالرسوم الإضافية
+            financial_summary.update({
+                'additional_fees_count': len(additional_fees),
+                'additional_fees_total': total_fees,
+                'additional_fees_paid_total': paid_fees,
+                'additional_fees_unpaid_total': unpaid_fees
+            })
+
             # معاينة الطباعة
             pm = PrintManager(self)
             pm.preview_document(TemplateType.STUDENT_REPORT, {
                 'student': student,
                 'installments': installments,
-                'additional_fees': [],  # قائمة فارغة للرسوم الإضافية
+                'additional_fees': additional_fees,
                 'financial_summary': financial_summary
             })
             
