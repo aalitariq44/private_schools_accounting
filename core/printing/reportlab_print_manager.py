@@ -308,15 +308,15 @@ class ReportLabPrintManager:
         c.line(self.margin, divider_y, self.page_width - self.margin, divider_y)
         # Two text lines above divider
         # استخدام عنوان المدرسة الحقيقي أو نص افتراضي
-        school_address_text = school_address if school_address else "عنوان المدرسة:"
-        school_phone_text = school_phone if school_phone else "للتواصل"
+        school_address_text = self.reshape_arabic_text(f"عنوان المدرسة: {school_address}")
+        school_phone_text = self.reshape_arabic_text(f"للاستفسار: {school_phone}")
         
-        text1 = self.reshape_arabic_text(school_address_text)
-        text2 = self.reshape_arabic_text(school_phone_text)
+        right_align_x = self.page_width - self.margin - (2 * mm)
+
         c.setFont(self.arabic_bold_font, 10)
-        c.drawCentredString(self.page_width / 2, divider_y + 6 * mm, text1)
+        c.drawRightString(right_align_x, divider_y + 6 * mm, school_address_text)
         c.setFont(self.arabic_font, 9)
-        c.drawCentredString(self.page_width / 2, divider_y + 3 * mm, text2)
+        c.drawRightString(right_align_x, divider_y + 3 * mm, school_phone_text)
         # Column widths: left 80%, right 20%
         left_width = self.content_width * 0.8
         right_width = self.content_width * 0.2
