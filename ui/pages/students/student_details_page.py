@@ -449,7 +449,7 @@ class StudentDetailsPage(QWidget):
         try:
             # تحميل المعلومات الأساسية
             query = """
-                SELECT s.*, sc.name_ar as school_name
+                SELECT s.*, sc.name_ar as school_name, sc.address as school_address, sc.phone as school_phone
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
                 WHERE s.id = ?
@@ -791,6 +791,8 @@ class StudentDetailsPage(QWidget):
                 'installment_id': inst[0], # Add installment_id here
                 'student_name': self.name_label.text(),
                 'school_name': self.school_label.text(),
+                'school_address': self.student_data[-2] if self.student_data and len(self.student_data) > 2 else '',  # school_address
+                'school_phone': self.student_data[-1] if self.student_data and len(self.student_data) > 1 else '',  # school_phone
                 'grade': self.grade_label.text(),
                 'section': self.section_label.text(),
                 'payment_date': f"{inst[2]} {inst[3] or ''}",
@@ -817,6 +819,8 @@ class StudentDetailsPage(QWidget):
                 'id': self.student_id,
                 'name': self.name_label.text(),
                 'school_name': self.school_label.text(),
+                'school_address': self.student_data[-2] if self.student_data and len(self.student_data) > 2 else '',  # school_address
+                'school_phone': self.student_data[-1] if self.student_data and len(self.student_data) > 1 else '',  # school_phone
                 'grade': self.grade_label.text(),
                 'section': self.section_label.text(),
                 'gender': self.gender_label.text(),

@@ -150,6 +150,8 @@ class ReportLabPrintManager:
         payment_date = receipt_data.get('payment_date', datetime.now().strftime('%Y-%m-%d'))
         installment_number = receipt_data.get('installment_number', 1)
         school_name = receipt_data.get('school_name', 'المدرسة')
+        school_address = receipt_data.get('school_address', '')
+        school_phone = receipt_data.get('school_phone', '')
         receipt_number = receipt_data.get('receipt_number', f'R{datetime.now().strftime("%Y%m%d%H%M%S")}')
         installment_id = receipt_data.get('installment_id', '') # Get installment_id from data
 
@@ -305,8 +307,12 @@ class ReportLabPrintManager:
         c.setLineWidth(0.5)
         c.line(self.margin, divider_y, self.page_width - self.margin, divider_y)
         # Two text lines above divider
-        text1 = self.reshape_arabic_text("عنوان المدرسة:")
-        text2 = self.reshape_arabic_text("للتواصل")
+        # استخدام عنوان المدرسة الحقيقي أو نص افتراضي
+        school_address_text = school_address if school_address else "عنوان المدرسة:"
+        school_phone_text = school_phone if school_phone else "للتواصل"
+        
+        text1 = self.reshape_arabic_text(school_address_text)
+        text2 = self.reshape_arabic_text(school_phone_text)
         c.setFont(self.arabic_bold_font, 10)
         c.drawCentredString(self.page_width / 2, divider_y + 6 * mm, text1)
         c.setFont(self.arabic_font, 9)
