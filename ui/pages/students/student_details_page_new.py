@@ -119,8 +119,8 @@ class StudentDetailsPage(QWidget):
             self.page_title = QLabel("تفاصيل الطالب")
             self.page_title.setObjectName("pageTitle")
             self.page_title.setAlignment(Qt.AlignCenter)
-            self.page_title.setStyleSheet("color: black;")
             toolbar_layout.addWidget(self.page_title)
+            
             # زر الرسوم الإضافية (جديد)
             self.additional_fees_button = QPushButton("الرسوم الإضافية")
             self.additional_fees_button.setObjectName("additionalFeesButton")
