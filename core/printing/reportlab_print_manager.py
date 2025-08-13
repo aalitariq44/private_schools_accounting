@@ -314,9 +314,9 @@ class ReportLabPrintManager:
         right_align_x = self.page_width - self.margin - (2 * mm)
 
         c.setFont(self.arabic_bold_font, 10)
-        c.drawRightString(right_align_x, divider_y + 6 * mm, school_address_text)
+        c.drawRightString(right_align_x, divider_y + 8 * mm, school_address_text)
         c.setFont(self.arabic_font, 9)
-        c.drawRightString(right_align_x, divider_y + 3 * mm, school_phone_text)
+        c.drawRightString(right_align_x, divider_y + 4 * mm, school_phone_text)
         # Column widths: left 80%, right 20%
         left_width = self.content_width * 0.8
         right_width = self.content_width * 0.2
