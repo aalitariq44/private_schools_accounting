@@ -171,6 +171,8 @@ class AdditionalFeesPopup(QDialog):
             
             # جدول الرسوم الإضافية
             self.fees_table = QTableWidget()
+            # إزالة padding في صفوف الجدول لإظهار الأزرار بشكل كامل
+            self.fees_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
             self.fees_table.setObjectName("feesTable")
             
             # إعداد أعمدة الجدول
@@ -319,17 +321,24 @@ class AdditionalFeesPopup(QDialog):
                 
                 # أزرار الإجراءات
                 actions_layout = QHBoxLayout()
+                # ضبط margins و spacing للعرض بدون مساحات زائدة
+                actions_layout.setContentsMargins(0, 0, 0, 0)
+                actions_layout.setSpacing(0)
                 actions_widget = QWidget()
                 
                 # إذا كان غير مدفوع، أضف زر الدفع
                 if not is_paid:
                     pay_btn = QPushButton("دفع")
+                    # إضافة مارجن يمين ويسار للزر
+                    pay_btn.setStyleSheet("margin-left:5px; margin-right:5px;")
                     pay_btn.setObjectName("payButton")
                     pay_btn.setFixedSize(80, 25)
                     pay_btn.clicked.connect(lambda checked, id=fee[0]: self.pay_additional_fee(id))
                     actions_layout.addWidget(pay_btn)
-                
+            
                 delete_btn = QPushButton("حذف")
+                # إضافة مارجن يمين ويسار للزر
+                delete_btn.setStyleSheet("margin-left:5px; margin-right:5px;")
                 delete_btn.setObjectName("deleteButton")
                 delete_btn.setFixedSize(80, 25)
                 delete_btn.clicked.connect(lambda checked, id=fee[0]: self.delete_additional_fee(id))
@@ -337,7 +346,10 @@ class AdditionalFeesPopup(QDialog):
                 
                 actions_widget.setLayout(actions_layout)
                 self.fees_table.setCellWidget(row, 6, actions_widget)
-            
+        
+            # ضبط ارتفاع الصفوف
+            for r in range(self.fees_table.rowCount()):
+                self.fees_table.setRowHeight(r, 40)
         except Exception as e:
             logging.error(f"خطأ في تحديث جدول الرسوم الإضافية: {e}")
     
