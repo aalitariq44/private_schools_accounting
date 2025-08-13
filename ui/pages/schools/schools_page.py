@@ -142,6 +142,8 @@ class SchoolsPage(QWidget):
             header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # المدير
             header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الهاتف
             
+            # زيادة ارتفاع الصفوف لسهولة القراءة
+            self.schools_table.verticalHeader().setDefaultSectionSize(40)
             # ربط إشارات الجدول
             self.schools_table.cellDoubleClicked.connect(self.edit_school)
             self.schools_table.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -654,7 +656,7 @@ class SchoolsPage(QWidget):
                 }
                 
                 #schoolsTable::item {
-                    padding: 12px 8px;
+                    padding: 0px;
                     border-bottom: 1px solid #ECF0F1;
                 }
                 
