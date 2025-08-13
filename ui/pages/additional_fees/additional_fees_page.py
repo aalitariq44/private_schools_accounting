@@ -293,6 +293,8 @@ class AdditionalFeesPage(QWidget):
             # ربط الأحداث
             self.fees_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.fees_table.customContextMenuRequested.connect(self.show_context_menu)
+            # إزالة الحشوات داخل الصفوف لتوحيد ارتفاع الصفوف مع صفحة الطلاب
+            self.fees_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
             
             table_layout.addWidget(self.fees_table)
             layout.addWidget(table_frame)

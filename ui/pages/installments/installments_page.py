@@ -268,6 +268,8 @@ class InstallmentsPage(QWidget):
             
             self.installments_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.installments_table.customContextMenuRequested.connect(self.show_context_menu)
+            # Remove extra padding to match row height of students table
+            self.installments_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
             
             table_layout.addWidget(self.installments_table)
             layout.addWidget(table_frame)
