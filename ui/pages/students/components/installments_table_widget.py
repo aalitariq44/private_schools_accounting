@@ -86,6 +86,8 @@ class InstallmentsTableWidget(QWidget):
             
             # جدول الأقساط
             self.installments_table = QTableWidget()
+            # إزالة padding في الصفوف لتظهر الأزرار بالكامل
+            self.installments_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
             self.installments_table.setObjectName("installmentsTable")
             
             # إعداد أعمدة الجدول
@@ -181,18 +183,25 @@ class InstallmentsTableWidget(QWidget):
                 
                 # أزرار الإجراءات
                 actions_layout = QHBoxLayout()
+                # ضبط padding و spacing لعرض الأزرار بدون مساحة زائدة
+                actions_layout.setContentsMargins(0, 0, 0, 0)
+                actions_layout.setSpacing(0)
                 actions_widget = QWidget()
                 
                 # زر طباعة إيصال القسط
                 print_btn = QPushButton("طباعة")
                 print_btn.setObjectName("printButton")
-                print_btn.setFixedSize(120, 30)
+                print_btn.setFixedSize(100, 30)
+                # إضافة مارجن يمين ويسار للزر
+                print_btn.setStyleSheet("margin-left:5px; margin-right:5px;")
                 print_btn.clicked.connect(lambda checked, id=installment[0]: self.print_installment(id))
                 actions_layout.addWidget(print_btn)
                 
                 delete_btn = QPushButton("حذف")
                 delete_btn.setObjectName("deleteButton")
-                delete_btn.setFixedSize(120, 30)
+                delete_btn.setFixedSize(100, 30)
+                # إضافة مارجن يمين ويسار للزر
+                delete_btn.setStyleSheet("margin-left:5px; margin-right:5px;")
                 delete_btn.clicked.connect(lambda checked, id=installment[0]: self.delete_installment(id))
                 actions_layout.addWidget(delete_btn)
                 
