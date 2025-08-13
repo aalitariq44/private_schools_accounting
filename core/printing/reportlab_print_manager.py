@@ -211,14 +211,15 @@ class ReportLabPrintManager:
         # --- جدول بيانات الوصل بشكل عمودين ---
         # البيانات
         table_fields = [
-            (self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")),
-            (self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")),
-            (self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")),
-            (self.reshape_arabic_text(str(installment_id)), self.reshape_arabic_text("رقم الوصل")),
+           
             (self.reshape_arabic_text(f"{amount:,.0f} د.ع"), self.reshape_arabic_text("المبلغ المدفوع")),
             (self.reshape_arabic_text(payment_date), self.reshape_arabic_text("تاريخ الدفع")),
             (self.reshape_arabic_text(f"{receipt_data.get('total_fee', 0):,.0f} د.ع"), self.reshape_arabic_text("إجمالي الرسوم")),
             (self.reshape_arabic_text(f"{receipt_data.get('total_paid', 0):,.0f} د.ع"), self.reshape_arabic_text("المدفوع تراكمياً")),
+            (self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")),
+            (self.reshape_arabic_text(receipt_data.get('grade', '')), self.reshape_arabic_text("الصف")),
+            (self.reshape_arabic_text(receipt_data.get('section', '')), self.reshape_arabic_text("الشعبة")),
+            (self.reshape_arabic_text(str(installment_id)), self.reshape_arabic_text("رقم الوصل")),
         ]
         remaining_row = [
             self.reshape_arabic_text(f"{receipt_data.get('remaining', 0):,.0f} د.ع"),
