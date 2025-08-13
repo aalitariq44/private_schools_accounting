@@ -19,7 +19,7 @@ DATABASE_PATH = DATABASE_DIR / DATABASE_NAME
 # إعدادات التطبيق
 APP_NAME = "حسابات المدارس الأهلية"
 APP_VERSION = "1.0.0"
-APP_ORGANIZATION = "Private Schools Solutions"
+APP_ORGANIZATION = "Tech Solu Company"
 
 # إعدادات النافذة
 WINDOW_TITLE = f"{APP_NAME} - الإصدار {APP_VERSION}"
