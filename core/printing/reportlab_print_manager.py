@@ -498,10 +498,11 @@ class ReportLabPrintManager:
             fee_header = [self.reshape_arabic_text(h) for h in ["النوع","المبلغ","تاريخ الإضافة","تاريخ الدفع","ملاحظات"]]
             fee_data = [fee_header]
             for fee in fees:
+                # Use created_at field for addition date
                 row = [
                     self.reshape_arabic_text(str(fee.get('fee_type',''))),
                     f"{fee.get('amount',0):,.0f}",
-                    self.reshape_arabic_text(str(fee.get('added_at',''))),
+                    self.reshape_arabic_text(str(fee.get('created_at',''))),
                     self.reshape_arabic_text(str(fee.get('payment_date',''))),
                     self.reshape_arabic_text(fee.get('notes',''))
                 ]

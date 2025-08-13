@@ -215,6 +215,24 @@ class TemplateManager:
             font-size: 12px;
             color: #666;
         }
+        /* Additional Fees Section Styles */
+        .fees-section {
+            margin-top: 20px;
+        }
+        .fees-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .fees-section th, .fees-section td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .fees-section th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -251,6 +269,33 @@ class TemplateManager:
             <strong>الرسوم الدراسية:</strong> {{ student.total_fee | currency }}
         </div>
     </div>
+    {% if additional_fees %}
+    <div class="fees-section">
+        <h3>الرسوم الإضافية</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>نوع الرسم</th>
+                    <th>المبلغ</th>
+                    <th>تاريخ الدفع</th>
+                    <th>تاريخ الإضافة</th>
+                    <th>ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in additional_fees %}
+                <tr>
+                    <td>{{ fee.fee_type }}</td>
+                    <td>{{ fee.amount | currency }}</td>
+                    <td>{{ fee.payment_date | date_ar }}</td>
+                    <td>{{ fee.created_at | date_ar }}</td>
+                    <td>{{ fee.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
     
     <div class="footer">
         <p>{{ company_name }} - {{ system_version }}</p>
