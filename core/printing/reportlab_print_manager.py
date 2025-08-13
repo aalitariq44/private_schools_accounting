@@ -168,16 +168,26 @@ class ReportLabPrintManager:
         school_text = self.reshape_arabic_text(school_name)
         c.drawRightString(self.page_width - self.margin - header_padding, header_y, school_text)
 
-        # Center: School Logo Placeholder (circle)
+        # Center: School Logo
         circle_x = self.page_width / 2
         circle_y = header_y - 10
-        circle_radius = 18
-        c.setLineWidth(1)
-        c.circle(circle_x, circle_y, circle_radius, stroke=1, fill=0)
-        c.setFont(self.arabic_font, 9)
-        logo_placeholder = self.reshape_arabic_text("شعار")
-        text_width = c.stringWidth(logo_placeholder, self.arabic_font, 9)
-        c.drawString(circle_x - text_width / 2, circle_y - 4, logo_placeholder)
+        # Load and draw actual logo image
+        logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
+        if logo_path.exists():
+            img_size = 49  # in points, adjust as needed
+            c.drawImage(
+                str(logo_path),
+                circle_x - img_size / 2,
+                circle_y - img_size / 2,
+                width=img_size,
+                height=img_size,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        else:
+            # Fallback placeholder circle
+            c.setLineWidth(1)
+            c.circle(circle_x, circle_y, 18, stroke=1, fill=0)
 
         # Left: Receipt Title and Academic Year (with padding)
         left_x = self.margin + header_padding
