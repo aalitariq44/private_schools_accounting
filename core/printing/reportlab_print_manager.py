@@ -284,10 +284,6 @@ class ReportLabPrintManager:
         
         amount_words_text = self.reshape_arabic_text(f"فقط ({self._number_to_arabic_words(amount)}) دينار عراقي لا غير")
         self.draw_centered_text(c, amount_words_text, self.page_width / 2, y_pos + 10, self.arabic_font, 10)
-        
-        note_y_pos = bottom_y + 15
-        note_text = self.reshape_arabic_text("هذا الإيصال هو نسخة محاسبية. المستلم: __________ التوقيع: __________")
-        self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
 
     def _number_to_arabic_words(self, number: float) -> str:
         """تحويل الرقم إلى كلمات عربية"""
