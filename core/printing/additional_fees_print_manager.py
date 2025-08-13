@@ -324,19 +324,19 @@ class AdditionalFeesPrintManager:
         summary_table.drawOn(c, self.margin, y_pos)
 
         # Footer section with image and company info
-        footer_height = 20 * mm
+        footer_height = 12 * mm  # reduced footer height
         footer_padding = 5 * mm
         footer_y = bottom_y + footer_padding
         footer_x = self.margin
         # Divider line above footer
-        divider_y = footer_y + footer_height + 4 * mm
+        divider_y = footer_y + footer_height + 2 * mm  # reduced space above footer
         c.setLineWidth(0.5)
         c.line(self.margin, divider_y, self.page_width - self.margin, divider_y)
 
 
         # Image and text columns
         left_width = self.content_width * 0.8
-        right_width = self.content_width * 0.2
+        right_width = self.content_width * 0.15  # smaller logo column width
         # Draw logo in right column
         logo_path = Path(config.RESOURCES_DIR) / 'images' / 'new_tech.jpg'
         if logo_path.exists():
