@@ -192,7 +192,18 @@ class AdditionalFeesPrintManager:
 
         # End Header
         y_pos = header_y - header_height
-        
+
+        # Add receipt number and print date
+        c.setFont(self.arabic_font, 10)
+        receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
+        c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
+        date_text = self.reshape_arabic_text(f"تاريخ الطباعة: {print_date} - {print_time}")
+        c.drawString(self.margin + 10, y_pos, date_text)
+        y_pos -= 12
+        c.setLineWidth(0.5)
+        c.line(self.margin + 10, y_pos, self.page_width - self.margin - 10, y_pos)
+        y_pos -= 15
+
         # معلومات الطالب
         student_info_data = [
             [self.reshape_arabic_text(student_name), self.reshape_arabic_text("اسم الطالب")],
@@ -312,10 +323,39 @@ class AdditionalFeesPrintManager:
         y_pos -= summary_table_height
         summary_table.drawOn(c, self.margin, y_pos)
 
-        # ملاحظة في أسفل الإيصال
-        note_y_pos = bottom_y + 15
-        note_text = self.reshape_arabic_text("هذا إيصال محاسبي للرسوم الإضافية. المستلم: __________ التوقيع: __________")
-        self.draw_centered_text(c, note_text, self.page_width / 2, note_y_pos, self.arabic_font, 9)
+        # Footer section with image and company info
+        footer_height = 20 * mm
+        footer_padding = 5 * mm
+        footer_y = bottom_y + footer_padding
+        footer_x = self.margin
+        # Divider line above footer
+        divider_y = footer_y + footer_height + 4 * mm
+        c.setLineWidth(0.5)
+        c.line(self.margin, divider_y, self.page_width - self.margin, divider_y)
+
+
+        # Image and text columns
+        left_width = self.content_width * 0.8
+        right_width = self.content_width * 0.2
+        # Draw logo in right column
+        logo_path = Path(config.RESOURCES_DIR) / 'images' / 'new_tech.jpg'
+        if logo_path.exists():
+            c.drawImage(
+                str(logo_path),
+                footer_x + left_width,
+                footer_y,
+                width=right_width,
+                height=footer_height,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        # Company info text in left column
+        text1 = self.reshape_arabic_text("شركة الحلول التقنية الجديدة")
+        text2 = self.reshape_arabic_text("لإنشاء تطبيقات الجوال وسطح المكتب والويب")
+        center_x_left = footer_x + (left_width / 2)
+        center_y = footer_y + (footer_height / 2)
+        self.draw_centered_text(c, text1, center_x_left, center_y + 5, self.arabic_bold_font, 10)
+        self.draw_centered_text(c, text2, center_x_left, center_y - 5, self.arabic_font, 9)
 
     def preview_additional_fees_receipt(self, data: Dict[str, Any]) -> str:
         """معاينة إيصال الرسوم الإضافية"""
