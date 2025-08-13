@@ -156,15 +156,47 @@ class ReportLabPrintManager:
         self.arabic_font = 'Amiri'
         self.arabic_bold_font = 'Amiri-Bold'
 
-        y_pos = top_y - self.margin - 20
-        
-        title = self.reshape_arabic_text("إيصال دفع قسط")
-        self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
-        y_pos -= 25
-        
+        # ==== New Header Layout ====
+        top_padding = 10 * mm  # Padding from top
+        header_y = top_y - self.margin - top_padding
+        header_height = 45  # enough for two lines on left
+
+        header_padding = 10 * mm  # Padding from left/right for header content
+
+        # Right: School Name (with padding)
+        c.setFont(self.arabic_bold_font, 13)
         school_text = self.reshape_arabic_text(school_name)
-        self.draw_centered_text(c, school_text, self.page_width / 2, y_pos, self.arabic_bold_font, 13)
-        y_pos -= 30
+        c.drawRightString(self.page_width - self.margin - header_padding, header_y, school_text)
+
+        # Center: School Logo Placeholder (circle)
+        circle_x = self.page_width / 2
+        circle_y = header_y - 10
+        circle_radius = 18
+        c.setLineWidth(1)
+        c.circle(circle_x, circle_y, circle_radius, stroke=1, fill=0)
+        c.setFont(self.arabic_font, 9)
+        logo_placeholder = self.reshape_arabic_text("شعار")
+        text_width = c.stringWidth(logo_placeholder, self.arabic_font, 9)
+        c.drawString(circle_x - text_width / 2, circle_y - 4, logo_placeholder)
+
+        # Left: Receipt Title and Academic Year (with padding)
+        left_x = self.margin + header_padding
+        c.setFont(self.arabic_bold_font, 14)
+        receipt_title = self.reshape_arabic_text("إيصال دفع قسط")
+        c.drawString(left_x, header_y, receipt_title)
+        c.setFont(self.arabic_font, 11)
+        academic_year = self.reshape_arabic_text("للعام الدراسي 2025 - 2026")
+        c.drawString(left_x, header_y - 18, academic_year)
+
+        # ==== End Header ====
+
+        y_pos = header_y - header_height
+        
+        # --- Remove duplicate title under logo ---
+        # (احذف السطر التالي:)
+        # title = self.reshape_arabic_text("إيصال دفع قسط")
+        # self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
+        # y_pos -= 25
         
         c.setFont(self.arabic_font, 11)
         receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
@@ -233,7 +265,7 @@ class ReportLabPrintManager:
         # يمكن توسيعه لاحقاً لدعم أكثر شمولية
         
         units = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة']
-        tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون']
+        tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة']
         hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة']
         
         if number == 0:
@@ -389,7 +421,7 @@ class ReportLabPrintManager:
             fee_table.setStyle(TableStyle([
                 ('GRID', (0,0), (-1,-1), 0.5, black),
                 ('FONTNAME', (0,0), (-1,-1), self.arabic_font),
-                ('ALIGN', (0,0), (-1,-1), 'CENTER')
+                ('ALIGN', (0,0), (-1, -1), 'CENTER')
             ]))
             story.append(fee_table)
             story.append(Spacer(1, 12))
