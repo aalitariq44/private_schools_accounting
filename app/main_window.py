@@ -183,11 +183,6 @@ class MainWindow(QMainWindow):
             title_label.setWordWrap(True)     # السماح بتغليف النص إذا لزم
             header_layout.addWidget(title_label)
           
-            # نسخة التطبيق
-            version_label = QLabel(f"الإصدار {config.APP_VERSION}")
-            version_label.setObjectName("appVersion")
-            version_label.setAlignment(Qt.AlignCenter)
-            header_layout.addWidget(version_label)
             
             layout.addWidget(header_frame)
             
