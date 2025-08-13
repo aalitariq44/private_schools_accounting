@@ -510,7 +510,7 @@ class StudentDetailsPage(QWidget):
             
             # تحديث المعلومات باستخدام المؤشرات الصحيحة
             self.name_label.setText(student_name)
-            self.school_label.setText(str(self.student_data[-1] or "--"))  # school_name هو الحقل الأخير
+            self.school_label.setText(str(self.student_data[-3] or "--"))  # school_name هو الحقل ما قبل الأخير بـ 2
             self.grade_label.setText(str(self.student_data[4]))  # grade - الحقل رقم 4
             self.section_label.setText(str(self.student_data[5]))  # section - الحقل رقم 5
             self.gender_label.setText(str(self.student_data[7]))  # gender - الحقل رقم 7
