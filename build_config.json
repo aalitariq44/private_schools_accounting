@@ -1,0 +1,10 @@
+{
+  "app_name": "Private Schools Accounting",
+  "version": "1.0.0",
+  "author": "Private Schools Team",
+  "description": "نظام محاسبة المدارس الأهلية",
+  "icon": "app/resources/images/icon.ico",
+  "console": false,
+  "onefile": false,
+  "optimize": true
+}
