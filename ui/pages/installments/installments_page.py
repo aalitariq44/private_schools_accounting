@@ -687,6 +687,11 @@ class InstallmentsPage(QWidget):
                     border-bottom: 1px solid #E9ECEF;
                     font-family: {font_family};
                 }}
+
+                QTableWidget::item:selected {{
+                    background-color: #2E86AB;
+                    color: white;
+                }}
                 
                 QHeaderView::section {{
                     background-color: #2E86AB;
