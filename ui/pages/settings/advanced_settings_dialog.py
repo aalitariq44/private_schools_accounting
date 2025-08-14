@@ -348,18 +348,53 @@ class AdvancedSettingsDialog(QDialog):
     def edit_school(self, school_id: int):
         """تعديل مدرسة"""
         try:
-            dialog = EditSchoolDialog(school_id, self)
-            if dialog.exec_() == QDialog.Accepted:
-                school_data = dialog.get_school_data()
-                if school_data:
-                    self.school_updated.emit(school_data)
-                    self.load_schools()
-                    QMessageBox.information(self, "نجح", "تم تحديث المدرسة بنجاح")
-                    log_user_action(f"تم تحديث مدرسة: {school_data.get('name_ar', 'غير محدد')}")
+            # الحصول على بيانات المدرسة أولاً
+            query = """
+                SELECT id, name_ar, name_en, principal_name, phone, address, 
+                       school_types, logo_path, created_at
+                FROM schools WHERE id = ?
+            """
+            
+            with db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(query, (school_id,))
+                result = cursor.fetchone()
+                
+                if not result:
+                    QMessageBox.warning(self, "تحذير", "المدرسة غير موجودة")
+                    return
+                
+                # تحويل النتيجة إلى قاموس
+                school_data = {
+                    'id': result[0],
+                    'name_ar': result[1],
+                    'name_en': result[2],
+                    'principal_name': result[3],
+                    'phone': result[4],
+                    'address': result[5],
+                    'school_types': result[6],
+                    'logo_path': result[7],
+                    'created_at': result[8]
+                }
+                
+                # فتح نافذة التعديل مع البيانات
+                dialog = EditSchoolDialog(school_data, self)
+                dialog.school_updated.connect(self.on_school_updated)
+                dialog.exec_()
                     
         except Exception as e:
             logging.error(f"خطأ في تعديل مدرسة: {e}")
             QMessageBox.critical(self, "خطأ", f"خطأ في تعديل المدرسة: {str(e)}")
+    
+    def on_school_updated(self, school_data):
+        """معالجة تحديث بيانات مدرسة"""
+        try:
+            self.school_updated.emit(school_data)
+            self.load_schools()
+            QMessageBox.information(self, "نجح", "تم تحديث المدرسة بنجاح")
+            log_user_action(f"تم تحديث مدرسة في الإعدادات المتقدمة: {school_data.get('name_ar', 'غير محدد')}")
+        except Exception as e:
+            logging.error(f"خطأ في معالجة تحديث المدرسة: {e}")
     
     def delete_school(self, school_id: int):
         """حذف مدرسة"""
