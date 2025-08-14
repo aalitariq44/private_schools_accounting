@@ -234,8 +234,10 @@ class AdditionalFeesPrintManager:
         # جدول الرسوم الإضافية
         fees_header = [
             self.reshape_arabic_text("المبلغ"),
-            self.reshape_arabic_text("الحالة"),
+            self.reshape_arabic_text("الحالة"), 
             self.reshape_arabic_text("تاريخ الدفع"),
+            self.reshape_arabic_text("تاريخ الإضافة"),
+            self.reshape_arabic_text("الملاحظات"),
             self.reshape_arabic_text("نوع الرسم")
         ]
         
@@ -243,22 +245,58 @@ class AdditionalFeesPrintManager:
         
         for fee in fees:
             status = "مدفوع" if fee.get('paid', False) else "غير مدفوع"
-            payment_date = fee.get('payment_date', '--') if fee.get('paid', False) else '--'
+            
+            # معالجة تاريخ الدفع بشكل صحيح
+            if fee.get('paid', False):
+                payment_date = fee.get('payment_date')
+                if payment_date and payment_date != 'None' and str(payment_date).strip():
+                    # إذا كان هناك تاريخ دفع صحيح
+                    if isinstance(payment_date, str) and payment_date != 'None':
+                        display_payment_date = payment_date
+                    else:
+                        display_payment_date = str(payment_date) if payment_date else '--'
+                else:
+                    # إذا لم يكن هناك تاريخ دفع، استخدم تاريخ الإنشاء
+                    created_date = fee.get('created_at')
+                    if created_date and created_date != 'None' and str(created_date).strip():
+                        display_payment_date = str(created_date)
+                    else:
+                        display_payment_date = '--'
+            else:
+                display_payment_date = '--'
+            
+            # معالجة تاريخ الإضافة
+            created_date = fee.get('created_at')
+            if created_date and created_date != 'None' and str(created_date).strip():
+                display_created_date = str(created_date)
+            else:
+                display_created_date = '--'
+            
+            # معالجة الملاحظات
+            notes = fee.get('notes')
+            if notes and notes != 'None' and str(notes).strip():
+                display_notes = str(notes)
+            else:
+                display_notes = ''
             
             row = [
                 f"{fee.get('amount', 0):,.0f} د.ع",
                 self.reshape_arabic_text(status),
-                self.reshape_arabic_text(str(payment_date)),
-                self.reshape_arabic_text(str(fee.get('fee_type', '')))
+                self.reshape_arabic_text(display_payment_date),
+                self.reshape_arabic_text(display_created_date),
+                self.reshape_arabic_text(display_notes),
+                self.reshape_arabic_text(str(fee.get('fee_type', '') or ''))
             ]
             fees_data.append(row)
 
-        # حساب عرض أعمدة جدول الرسوم
+        # حساب عرض أعمدة جدول الرسوم (6 أعمدة)
         fees_col_widths = [
-            self.content_width * 0.2,  # المبلغ
-            self.content_width * 0.2,  # الحالة
-            self.content_width * 0.25, # تاريخ الدفع
-            self.content_width * 0.35  # نوع الرسم
+            self.content_width * 0.15,  # المبلغ
+            self.content_width * 0.15,  # الحالة
+            self.content_width * 0.18,  # تاريخ الدفع
+            self.content_width * 0.18,  # تاريخ الإضافة
+            self.content_width * 0.14,  # الملاحظات
+            self.content_width * 0.20   # نوع الرسم
         ]
         
         fees_table = Table(fees_data, colWidths=fees_col_widths, hAlign='CENTER')

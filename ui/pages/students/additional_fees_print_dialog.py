@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QFrame, QMessageBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
@@ -270,9 +270,9 @@ class AdditionalFeesPrintDialog(QDialog):
                     status_item = QTableWidgetItem(status)
                     status_item.setTextAlignment(Qt.AlignCenter)
                     if paid:
-                        status_item.setBackground(Qt.lightGreen)
+                        status_item.setBackground(QColor(144, 238, 144))  # لون أخضر فاتح
                     else:
-                        status_item.setBackground(Qt.yellow)
+                        status_item.setBackground(QColor(255, 255, 0))    # لون أصفر
                     self.fees_table.setItem(row, 3, status_item)
                     
                     # تاريخ الإضافة
