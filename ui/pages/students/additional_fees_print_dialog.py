@@ -77,11 +77,11 @@ class AdditionalFeesPrintDialog(QDialog):
         self.filter_group = QButtonGroup()
         
         self.all_fees_radio = QRadioButton("جميع الرسوم")
-        self.all_fees_radio.setChecked(True)
         self.filter_group.addButton(self.all_fees_radio, 0)
         filter_layout.addWidget(self.all_fees_radio)
         
         self.paid_only_radio = QRadioButton("المدفوع فقط")
+        self.paid_only_radio.setChecked(True)
         self.filter_group.addButton(self.paid_only_radio, 1)
         filter_layout.addWidget(self.paid_only_radio)
         
