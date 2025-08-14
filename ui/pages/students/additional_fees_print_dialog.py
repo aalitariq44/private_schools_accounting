@@ -98,7 +98,7 @@ class AdditionalFeesPrintDialog(QDialog):
         selection_group = QGroupBox("اختيار الرسوم")
         selection_layout = QHBoxLayout()
         
-        self.select_all_checkbox = QCheckBox("تحديد الجميع")
+        self.select_all_checkbox = QCheckBox("تحديد آخر 3 رسوم")
         self.select_all_checkbox.setChecked(True)
         selection_layout.addWidget(self.select_all_checkbox)
         
@@ -247,8 +247,12 @@ class AdditionalFeesPrintDialog(QDialog):
                     
                     # خانة الاختيار
                     checkbox = QCheckBox()
-                    checkbox.setChecked(True)  # الافتراضي محدد
-                    checkbox.stateChanged.connect(self.update_selection_info)
+                    # تحديد آخر 3 رسوم مضافة بشكل افتراضي
+                    checkbox.setChecked(row < 3)
+                    # ربط الحدث بالدالة التي تفرض قيد التحديد
+                    checkbox.stateChanged.connect(
+                        lambda state, cb=checkbox: self.on_checkbox_state_changed(cb, state)
+                    )
                     self.fees_table.setCellWidget(row, 0, checkbox)
                     
                     # النوع
@@ -327,13 +331,56 @@ class AdditionalFeesPrintDialog(QDialog):
         self.populate_table()
     
     def toggle_select_all(self, state):
-        """تبديل تحديد جميع الرسوم"""
-        checked = state == Qt.Checked
-        
+        """تحديد أو إلغاء تحديد الرسوم (بحد أقصى 3)"""
+        # إيقاف الإشارات مؤقتاً لتجنب استدعاء on_checkbox_state_changed بشكل متكرر
         for row in range(self.fees_table.rowCount()):
             checkbox = self.fees_table.cellWidget(row, 0)
             if checkbox:
-                checkbox.setChecked(checked)
+                checkbox.blockSignals(True)
+
+        if state == Qt.Checked:
+            # تحديد أول 3 رسوم فقط
+            for row in range(self.fees_table.rowCount()):
+                checkbox = self.fees_table.cellWidget(row, 0)
+                if checkbox:
+                    checkbox.setChecked(row < 3)
+        else:
+            # إلغاء تحديد الجميع
+            for row in range(self.fees_table.rowCount()):
+                checkbox = self.fees_table.cellWidget(row, 0)
+                if checkbox:
+                    checkbox.setChecked(False)
+
+        # إعادة تفعيل الإشارات
+        for row in range(self.fees_table.rowCount()):
+            checkbox = self.fees_table.cellWidget(row, 0)
+            if checkbox:
+                checkbox.blockSignals(False)
+        
+        # تحديث معلومات التحديد يدوياً لأن الإشارات كانت معطلة
+        self.update_selection_info()
+
+    def on_checkbox_state_changed(self, checkbox, state):
+        """
+        يتم استدعاؤه عند تغيير حالة أي خانة اختيار.
+        يفرض قيد عدم تحديد أكثر من 3 رسوم.
+        """
+        if state == Qt.Checked:
+            selected_count = 0
+            for row in range(self.fees_table.rowCount()):
+                cb = self.fees_table.cellWidget(row, 0)
+                if cb and cb.isChecked():
+                    selected_count += 1
+            
+            if selected_count > 3:
+                QMessageBox.warning(self, "تنبيه", "لا يمكن تحديد أكثر من 3 رسوم للطباعة في الوصل الواحد.")
+                # منع التحديد بإلغاء تحديد الخانة مع حظر الإشارات لتجنب التكرار
+                checkbox.blockSignals(True)
+                checkbox.setChecked(False)
+                checkbox.blockSignals(False)
+
+        # تحديث معلومات الملخص بعد أي تغيير
+        self.update_selection_info()
     
     def update_selection_info(self):
         """تحديث معلومات الاختيار"""
