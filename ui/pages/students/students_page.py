@@ -139,6 +139,7 @@ class StudentsPage(QWidget):
             self.status_combo = QComboBox()
             self.status_combo.setObjectName("filterCombo")
             self.status_combo.addItems(["جميع الحالات", "نشط", "منقطع", "متخرج", "منتقل"])
+            self.status_combo.setCurrentIndex(1)  # تعيين "نشط" كقيمة افتراضية
             filters_layout.addWidget(self.status_combo)
             
             # فلتر الجنس
@@ -587,7 +588,7 @@ class StudentsPage(QWidget):
         try:
             self.school_combo.setCurrentIndex(0) # "جميع المدارس"
             self.grade_combo.setCurrentIndex(0) # "جميع الصفوف"
-            self.status_combo.setCurrentIndex(0) # "جميع الحالات"
+            self.status_combo.setCurrentIndex(1) # "نشط"
             self.gender_combo.setCurrentIndex(0) # "جميع الطلاب"
             self.search_input.clear()
             self.apply_filters()
