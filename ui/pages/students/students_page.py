@@ -233,8 +233,8 @@ class StudentsPage(QWidget):
             # إزالة الحشوات داخل الصفوف
             self.students_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
 
-            # ربط الأحداث
-            self.students_table.cellDoubleClicked.connect(self.edit_student)
+            # ربط الأحداث: فتح تفاصيل الطالب عند النقر المزدوج
+            self.students_table.cellDoubleClicked.connect(self.open_student_details)
             self.students_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.students_table.customContextMenuRequested.connect(self.show_context_menu)
 
@@ -901,6 +901,22 @@ class StudentsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في حذف الطالب: {e}")
+    
+    def open_student_details(self, row, column):
+        """فتح صفحة تفاصيل الطالب عند النقر المزدوج"""
+        try:
+            # التحقق من صف صالح
+            if row < 0 or row >= self.students_table.rowCount():
+                return
+            # الحصول على معرف الطالب من العمود الأول
+            student_id_item = self.students_table.item(row, 0)
+            if not student_id_item:
+                return
+            student_id = int(student_id_item.text())
+            # عرض صفحة التفاصيل
+            self.show_student_details(student_id)
+        except Exception as e:
+            logging.error(f"خطأ في فتح تفاصيل الطالب: {e}")
     
     def show_student_details(self, student_id):
         """عرض صفحة تفاصيل الطالب الشاملة"""
