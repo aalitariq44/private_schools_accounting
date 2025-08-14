@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
     QSizePolicy
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
+from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase, QColor
 
 import config
 from core.database.connection import db_manager
@@ -151,6 +151,15 @@ class StudentsPage(QWidget):
             self.gender_combo.addItems(["جميع الطلاب", "ذكر", "أنثى"])
             filters_layout.addWidget(self.gender_combo)
             
+            # فلتر حالة الدفع
+            payment_label = QLabel("حالة الدفع:")
+            payment_label.setObjectName("filterLabel")
+            filters_layout.addWidget(payment_label)
+            self.payment_combo = QComboBox()
+            self.payment_combo.setObjectName("filterCombo")
+            self.payment_combo.addItems(["الجميع", "الذين أكملوا الدفع", "المتبقي عليهم"])
+            filters_layout.addWidget(self.payment_combo)
+            
             filters_layout.addStretch()
             
             toolbar_layout.addLayout(filters_layout)
@@ -214,7 +223,7 @@ class StudentsPage(QWidget):
             self.students_table.setObjectName("dataTable")
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "الإجراءات"]
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
             self.students_table.setColumnCount(len(columns))
             self.students_table.setHorizontalHeaderLabels(columns)
 
@@ -227,7 +236,7 @@ class StudentsPage(QWidget):
             # إعداد حجم الأعمدة
             header = self.students_table.horizontalHeader()
             header.setStretchLastSection(True)
-            for i in range(len(columns) - 1):
+            for i in range(len(columns)):
                 header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
 
             # إزالة الحشوات داخل الصفوف
@@ -351,6 +360,7 @@ class StudentsPage(QWidget):
             self.grade_combo.currentTextChanged.connect(self.apply_filters)
             self.status_combo.currentTextChanged.connect(self.apply_filters)
             self.gender_combo.currentTextChanged.connect(self.apply_filters)
+            self.payment_combo.currentTextChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
             
         except Exception as e:
@@ -384,9 +394,11 @@ class StudentsPage(QWidget):
             query = """
                 SELECT s.id, s.name, sc.name_ar as school_name,
                        s.grade, s.section, s.gender,
-                       s.phone, s.status, s.start_date, s.total_fee
+                       s.phone, s.status, s.start_date, s.total_fee,
+                       COALESCE(SUM(i.amount), 0) as total_paid
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
+                LEFT JOIN installments i ON s.id = i.student_id
                 WHERE 1=1
             """
             params = []
@@ -421,6 +433,15 @@ class StudentsPage(QWidget):
                 query += " AND s.name LIKE ?"
                 params.append(f"%{search_text}%")
             
+            query += " GROUP BY s.id, s.name, sc.name_ar, s.grade, s.section, s.gender, s.phone, s.status, s.start_date, s.total_fee"
+            
+            # فلتر حالة الدفع
+            selected_payment = self.payment_combo.currentText()
+            if selected_payment == "الذين أكملوا الدفع":
+                query += " HAVING total_paid >= s.total_fee"
+            elif selected_payment == "المتبقي عليهم":
+                query += " HAVING total_paid < s.total_fee"
+            
             query += " ORDER BY s.name"
             
             # تنفيذ الاستعلام
@@ -450,6 +471,11 @@ class StudentsPage(QWidget):
             for row_idx, student in enumerate(self.current_students):
                 self.students_table.insertRow(row_idx)
                 
+                # حساب المدفوع والمتبقي
+                total_fee = student['total_fee'] if student['total_fee'] else 0
+                total_paid = student['total_paid'] if student['total_paid'] else 0
+                remaining = total_fee - total_paid
+                
                 # البيانات الأساسية
                 items = [
                     str(student['id']),
@@ -460,61 +486,29 @@ class StudentsPage(QWidget):
                     student['gender'] or "",
                     student['phone'] or "",
                     student['status'] or "",
-                    str(student['total_fee']) if student['total_fee'] else "0"
+                    f"{total_fee:,.0f} د.ع" if total_fee else "0 د.ع",
+                    f"{total_paid:,.0f} د.ع",
+                    f"{remaining:,.0f} د.ع"
                 ]
                 
                 for col_idx, item_text in enumerate(items):
                     item = QTableWidgetItem(item_text)
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    
+                    # تلوين المتبقي
+                    if col_idx == 10:  # عمود المتبقي
+                        if remaining <= 0:
+                            item.setBackground(QColor(144, 238, 144))  # أخضر فاتح للذين أكملوا الدفع
+                        else:
+                            item.setBackground(QColor(255, 255, 0))    # أصفر للذين لم يكملوا
+                    
                     self.students_table.setItem(row_idx, col_idx, item)
-                
-                # أزرار الإجراءات
-                actions_widget = self.create_actions_widget(student['id'])
-                self.students_table.setCellWidget(row_idx, 9, actions_widget)
             
             # تحديث العداد
             self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {len(self.current_students)}")
             
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الطلاب: {e}")
-    
-    def create_actions_widget(self, student_id):
-        """إنشاء ويدجت الإجراءات لكل صف"""
-        try:
-            widget = QWidget()
-            layout = QHBoxLayout(widget)
-            layout.setContentsMargins(0, 0, 0, 0)  # إزالة الهوامش لتحسين استخدام المساحة
-            layout.setSpacing(10)  # تقليل التباعد بين الأزرار
-
-            # زر التعديل
-            edit_btn = QPushButton("تعديل")
-            edit_btn.setObjectName("editButton")
-            edit_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
-            edit_btn.setStyleSheet("font-size:14px; padding:0px;")
-            edit_btn.clicked.connect(lambda: self.edit_student_by_id(student_id))
-            layout.addWidget(edit_btn)
-
-            # زر الحذف
-            delete_btn = QPushButton("حذف")
-            delete_btn.setObjectName("deleteButton")
-            delete_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
-            delete_btn.setStyleSheet("font-size:14px; padding:0px;")
-            delete_btn.clicked.connect(lambda: self.delete_student(student_id))
-            layout.addWidget(delete_btn)
-
-            # زر التفاصيل
-            details_btn = QPushButton("تفاصيل")
-            details_btn.setObjectName("detailsButton")
-            details_btn.setFixedSize(120, 30)  # ضبط حجم الزر بشكل ثابت
-            details_btn.setStyleSheet("font-size:14px; padding:0px;")
-            details_btn.clicked.connect(lambda: self.show_student_details(student_id))
-            layout.addWidget(details_btn)
-
-            return widget
-
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء ويدجت الإجراءات: {e}")
-            return QWidget()
     
     def update_stats(self):
         """تحديث الإحصائيات"""
@@ -590,6 +584,7 @@ class StudentsPage(QWidget):
             self.grade_combo.setCurrentIndex(0) # "جميع الصفوف"
             self.status_combo.setCurrentIndex(1) # "نشط"
             self.gender_combo.setCurrentIndex(0) # "جميع الطلاب"
+            self.payment_combo.setCurrentIndex(0) # "الجميع"
             self.search_input.clear()
             self.apply_filters()
             log_user_action("مسح فلاتر صفحة الطلاب")
@@ -607,6 +602,29 @@ class StudentsPage(QWidget):
                 logging.error(f"تعذر استيراد وحدة الطباعة: {ie}")
                 QMessageBox.critical(self, "خطأ", "تعذر استيراد وحدة الطباعة. تأكد من تثبيت jinja2.")
                 return
+            
+            # تحضير بيانات الطلاب مع الحقول الإضافية
+            students_for_print = []
+            for student in self.current_students:
+                total_fee = student['total_fee'] if student['total_fee'] else 0
+                total_paid = student['total_paid'] if student['total_paid'] else 0
+                remaining = total_fee - total_paid
+                
+                student_data = {
+                    'id': student['id'],
+                    'name': student['name'],
+                    'school_name': student['school_name'],
+                    'grade': student['grade'],
+                    'section': student['section'],
+                    'gender': student['gender'],
+                    'phone': student['phone'],
+                    'status': student['status'],
+                    'total_fee': f"{total_fee:,.0f} د.ع",
+                    'total_paid': f"{total_paid:,.0f} د.ع",
+                    'remaining': f"{remaining:,.0f} د.ع"
+                }
+                students_for_print.append(student_data)
+            
             # إعداد معلومات الفلاتر
             filters = []
             school = self.school_combo.currentText()
@@ -621,12 +639,16 @@ class StudentsPage(QWidget):
             gender = self.gender_combo.currentText()
             if gender and gender != "جميع الطلاب":
                 filters.append(f"الجنس: {gender}")
+            payment = self.payment_combo.currentText()
+            if payment and payment != "الجميع":
+                filters.append(f"حالة الدفع: {payment}")
             search = self.search_input.text().strip()
             if search:
                 filters.append(f"بحث: {search}")
             filter_info = "؛ ".join(filters) if filters else None
+            
             # استدعاء دالة الطباعة مع المعاينة
-            print_students_list(self.current_students, filter_info, parent=self)
+            print_students_list(students_for_print, filter_info, parent=self)
         except Exception as e:
             logging.error(f"خطأ في طباعة قائمة الطلاب: {e}")
     
@@ -636,14 +658,29 @@ class StudentsPage(QWidget):
             if self.students_table.itemAt(position) is None:
                 return
             
+            current_row = self.students_table.currentRow()
+            if current_row < 0:
+                return
+            
+            # الحصول على معرف الطالب
+            student_id_item = self.students_table.item(current_row, 0)
+            if not student_id_item:
+                return
+            
+            student_id = int(student_id_item.text())
+            
             menu = QMenu(self)
             
+            details_action = QAction("عرض التفاصيل", self)
+            details_action.triggered.connect(lambda: self.show_student_details(student_id))
+            menu.addAction(details_action)
+            
             edit_action = QAction("تعديل", self)
-            edit_action.triggered.connect(lambda: self.edit_student(self.students_table.currentRow()))
+            edit_action.triggered.connect(lambda: self.edit_student_by_id(student_id))
             menu.addAction(edit_action)
             
             delete_action = QAction("حذف", self)
-            delete_action.triggered.connect(lambda: self.delete_student_by_row(self.students_table.currentRow()))
+            delete_action.triggered.connect(lambda: self.delete_student(student_id))
             menu.addAction(delete_action)
             
             menu.exec_(self.students_table.mapToGlobal(position))
@@ -830,23 +867,6 @@ class StudentsPage(QWidget):
             logging.error(f"خطأ في إضافة مجموعة طلاب: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في فتح نافذة إضافة مجموعة الطلاب:\\n{str(e)}")
     
-    def edit_student(self, row):
-        """تعديل بيانات طالب"""
-        try:
-            if row < 0 or row >= self.students_table.rowCount():
-                return
-            
-            # الحصول على ID الطالب من الصف المحدد
-            student_id_item = self.students_table.item(row, 0)
-            if not student_id_item:
-                return
-            
-            student_id = int(student_id_item.text())
-            self.edit_student_by_id(student_id)
-                
-        except Exception as e:
-            logging.error(f"خطأ في تعديل الطالب: {e}")
-    
     def edit_student_by_id(self, student_id):
         """تعديل طالب بواسطة المعرف"""
         try:
@@ -885,22 +905,6 @@ class StudentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في حذف الطالب: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في حذف الطالب:\\n{str(e)}")
-    
-    def delete_student_by_row(self, row):
-        """حذف طالب بواسطة رقم الصف"""
-        try:
-            if row < 0 or row >= self.students_table.rowCount():
-                return
-            
-            student_id_item = self.students_table.item(row, 0)
-            if not student_id_item:
-                return
-            
-            student_id = int(student_id_item.text())
-            self.delete_student(student_id)
-            
-        except Exception as e:
-            logging.error(f"خطأ في حذف الطالب: {e}")
     
     def open_student_details(self, row, column):
         """فتح صفحة تفاصيل الطالب عند النقر المزدوج"""

@@ -234,7 +234,9 @@ def print_students_list(students, filter_info=None, parent=None, use_web_engine=
         'section': 'الشعبة',
         'gender': 'الجنس',
         'status': 'الحالة',
-        'total_fee': 'الرسوم'
+        'total_fee': 'الرسوم الدراسية',
+        'total_paid': 'المدفوع',
+        'remaining': 'المتبقي'
     }
 
     dialog = ColumnSelectionDialog(columns, parent=parent)
