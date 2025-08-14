@@ -203,6 +203,13 @@ class DashboardPage(QWidget):
             reports_btn.clicked.connect(self.view_reports_action)
             buttons_layout.addWidget(reports_btn)
             
+            # زر تحديث البيانات
+            refresh_btn = QPushButton("تحديث البيانات")
+            refresh_btn.setObjectName("actionButton")
+            refresh_btn.setToolTip("تحديث إحصائيات لوحة التحكم")
+            refresh_btn.clicked.connect(self.load_statistics)
+            buttons_layout.addWidget(refresh_btn)
+            
             actions_layout.addLayout(buttons_layout)
             layout.addWidget(actions_frame)
             
