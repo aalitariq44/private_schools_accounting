@@ -204,21 +204,21 @@ class ReportLabPrintManager:
 
         y_pos = header_y - header_height
         
-        # --- Remove duplicate title under logo ---
-        # (احذف السطر التالي:)
-        # title = self.reshape_arabic_text("إيصال دفع قسط")
-        # self.draw_centered_text(c, title, self.page_width / 2, y_pos, self.arabic_bold_font, 16)
-        # y_pos -= 25
+        # Add receipt number and print date
+        print_date = datetime.now().strftime('%Y-%m-%d')
+        print_time = datetime.now().strftime('%H:%M:%S')
         
-        c.setFont(self.arabic_font, 11)
+        c.setFont(self.arabic_font, 10)
         receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
         c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
+        date_text = self.reshape_arabic_text(f"تاريخ الطباعة: {print_date} - {print_time}")
+        c.drawString(self.margin + 10, y_pos, date_text)
         
-        y_pos -= 15
+        y_pos -= 12
         c.setLineWidth(0.5)
         c.line(self.margin + 10, y_pos, self.page_width - self.margin - 10, y_pos)
         
-        y_pos -= 10
+        y_pos -= 15
         
         # --- جدول بيانات الوصل بشكل عمودين ---
         # البيانات
