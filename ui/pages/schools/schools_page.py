@@ -90,10 +90,8 @@ class SchoolsPage(QWidget):
             toolbar_layout.addWidget(self.search_input)
             
             # أزرار الإجراءات
-            self.add_button = QPushButton("إضافة مدرسة")
-            self.add_button.setObjectName("addButton")
-            self.add_button.clicked.connect(self.add_school)
-            toolbar_layout.addWidget(self.add_button)
+            # تم إزالة زر إضافة مدرسة للمستخدم العادي
+            # الآن يتوفر فقط في الإعدادات المتقدمة
             
             self.refresh_button = QPushButton("تحديث")
             self.refresh_button.setObjectName("refreshButton")
@@ -268,14 +266,14 @@ class SchoolsPage(QWidget):
             return [types_json] if types_json else []
     
     def create_actions_widget(self, school_id: int):
-        """إنشاء ويدجت الإجراءات لكل صف"""
+        """إنشاء ويدجت الإجراءات لكل صف (للمستخدم العادي - تعديل فقط)"""
         try:
             widget = QWidget()
             layout = QHBoxLayout(widget)
             layout.setContentsMargins(5, 2, 5, 2)
             layout.setSpacing(5)
             
-            # زر التعديل
+            # زر التعديل فقط للمستخدم العادي
             edit_btn = QPushButton("تعديل")
             edit_btn.setObjectName("editButton")
             edit_btn.setMaximumSize(60, 25)
@@ -283,13 +281,8 @@ class SchoolsPage(QWidget):
             edit_btn.clicked.connect(lambda: self.edit_school_by_id(school_id))
             layout.addWidget(edit_btn)
             
-            # زر الحذف
-            delete_btn = QPushButton("حذف")
-            delete_btn.setObjectName("deleteButton")
-            delete_btn.setMaximumSize(60, 25)
-            delete_btn.setStyleSheet("font-size:14px; padding:0px;")
-            delete_btn.clicked.connect(lambda: self.delete_school_by_id(school_id))
-            layout.addWidget(delete_btn)
+            # تم إزالة زر الحذف للمستخدم العادي
+            # الآن متوفر فقط في الإعدادات المتقدمة
             
             return widget
             
@@ -298,7 +291,7 @@ class SchoolsPage(QWidget):
             return QWidget()
     
     def show_context_menu(self, position):
-        """عرض القائمة السياقية"""
+        """عرض القائمة السياقية (للمستخدم العادي - بدون حذف)"""
         try:
             if self.schools_table.itemAt(position) is None:
                 return
@@ -312,12 +305,12 @@ class SchoolsPage(QWidget):
             
             school_id = int(self.schools_table.item(current_row, 0).text())
             
-            # إضافة إجراءات القائمة
+            # إضافة إجراءات القائمة (بدون حذف للمستخدم العادي)
             edit_action = menu.addAction("تعديل المدرسة")
             edit_action.triggered.connect(lambda: self.edit_school_by_id(school_id))
             
-            delete_action = menu.addAction("حذف المدرسة")
-            delete_action.triggered.connect(lambda: self.delete_school_by_id(school_id))
+            # تم إزالة خيار حذف المدرسة للمستخدم العادي
+            # الآن متوفر فقط في الإعدادات المتقدمة
             
             menu.addSeparator()
             

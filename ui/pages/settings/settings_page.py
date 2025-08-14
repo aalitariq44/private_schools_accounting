@@ -85,6 +85,9 @@ class SettingsPage(QWidget):
             # إعدادات الأمان
             self.create_security_section(scroll_layout)
             
+            # الإعدادات المتقدمة
+            self.create_advanced_section(scroll_layout)
+            
             # مساحة مرنة
             scroll_layout.addItem(
                 QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -326,6 +329,53 @@ class SettingsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في تحميل الإعدادات: {e}")
     
+    def create_advanced_section(self, layout):
+        """إنشاء قسم الإعدادات المتقدمة"""
+        try:
+            # إطار الإعدادات المتقدمة
+            advanced_group = QGroupBox("الإعدادات المتقدمة")
+            advanced_group.setObjectName("settingsGroup")
+            advanced_layout = QGridLayout()
+            advanced_layout.setSpacing(15)
+            
+            # تسمية الإعدادات المتقدمة
+            advanced_label = QLabel("إدارة المدارس:")
+            advanced_label.setFont(QFont("Arial", 11))
+            
+            # زر الإعدادات المتقدمة
+            advanced_btn = QPushButton("الإعدادات المتقدمة")
+            advanced_btn.setObjectName("advancedButton")
+            advanced_btn.setMinimumHeight(40)
+            advanced_btn.clicked.connect(self.open_advanced_settings)
+            
+            # نص توضيحي
+            info_label = QLabel("* يتطلب كلمة مرور للوصول إلى إعدادات إدارة المدارس")
+            info_label.setFont(QFont("Arial", 9))
+            info_label.setStyleSheet("color: #6C757D; font-style: italic;")
+            
+            # إضافة العناصر للتخطيط
+            advanced_layout.addWidget(advanced_label, 0, 0)
+            advanced_layout.addWidget(advanced_btn, 0, 1)
+            advanced_layout.addWidget(info_label, 1, 1)
+            
+            # إضافة مساحة مرنة
+            advanced_layout.setColumnStretch(2, 1)
+            
+            advanced_group.setLayout(advanced_layout)
+            layout.addWidget(advanced_group)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء قسم الإعدادات المتقدمة: {e}")
+    
+    def open_advanced_settings(self):
+        """فتح نافذة الإعدادات المتقدمة"""
+        try:
+            from .advanced_settings_dialog import show_advanced_settings
+            show_advanced_settings(self)
+        except Exception as e:
+            logging.error(f"خطأ في فتح الإعدادات المتقدمة: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في فتح الإعدادات المتقدمة: {str(e)}")
+    
     def setup_styles(self):
         """إعداد أنماط الصفحة"""
         try:
@@ -425,6 +475,25 @@ class SettingsPage(QWidget):
                 
                 QPushButton#secondaryButton:pressed {
                     background-color: #a93226;
+                }
+                
+                QPushButton#advancedButton {
+                    background-color: #6f42c1;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    font-weight: bold;
+                    font-size: 12px;
+                    min-width: 150px;
+                }
+                
+                QPushButton#advancedButton:hover {
+                    background-color: #5a2d91;
+                }
+                
+                QPushButton#advancedButton:pressed {
+                    background-color: #4c1d7a;
                 }
                 
                 QScrollArea {
