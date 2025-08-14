@@ -431,7 +431,7 @@ class SchoolsPage(QWidget):
                 }
                 
                 # فتح نافذة التعديل
-                dialog = EditSchoolDialog(school_data, self)
+                dialog = EditSchoolDialog(school_data, self, enable_name_ar_edit=False)
                 dialog.school_updated.connect(self.on_school_updated)
                 dialog.exec_()
             else:

@@ -26,9 +26,10 @@ class EditSchoolDialog(QDialog):
     # إشارة عند تعديل مدرسة بنجاح
     school_updated = pyqtSignal(dict)
     
-    def __init__(self, school_data, parent=None):
+    def __init__(self, school_data, parent=None, enable_name_ar_edit=False):
         super().__init__(parent)
         self.school_data = school_data
+        self.enable_name_ar_edit = enable_name_ar_edit
         self.original_logo_path = school_data.get('logo_path')
         self.new_logo_path = None
         self.logo_changed = False
@@ -347,6 +348,7 @@ class EditSchoolDialog(QDialog):
         try:
             # المعلومات الأساسية
             self.name_ar_input.setText(self.school_data.get('name_ar', ''))
+            self.name_ar_input.setEnabled(self.enable_name_ar_edit)
             self.name_en_input.setText(self.school_data.get('name_en', ''))
             self.principal_input.setText(self.school_data.get('principal_name', ''))
             
