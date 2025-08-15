@@ -375,45 +375,32 @@ class EnhancedPDFPreviewDialog(QDialog):
                 return
             
             if WEB_ENGINE_AVAILABLE and hasattr(self.pdf_viewer, 'page') and hasattr(self.pdf_viewer.page(), 'print'):
-                # طباعة عبر محرك الويب
+                # طباعة عبر محرك الويب مع الحماية من الإغلاق
                 try:
-                    from PyQt5.QtPrintSupport import QPrintDialog, QPrinter
+                    from core.printing.safe_print_manager import SafePrintManager
                     
-                    printer = QPrinter(QPrinter.HighResolution)
-                    printer.setPageSize(QPrinter.A4)
-                    printer.setOrientation(QPrinter.Portrait)
-                    printer.setDocName("إيصال دفع قسط")
-                    printer.setCreator("نظام حسابات المدارس الأهلية")
+                    safe_manager = SafePrintManager(self)
                     
-                    dialog = QPrintDialog(printer, self)
-                    dialog.setWindowTitle("طباعة الإيصال")
+                    def handle_print_success():
+                        """معالجة نجاح الطباعة"""
+                        self.status_label.setText("✅ تم إرسال الطباعة بنجاح")
+                        QMessageBox.information(self, "نجح", "تم إرسال الطباعة بنجاح!")
                     
-                    if dialog.exec_() == QPrintDialog.Accepted:
-                        self.status_label.setText("🖨️ جاري الطباعة...")
-                        
-                        def print_finished(success):
-                            try:
-                                if success:
-                                    self.status_label.setText("✅ تم إرسال الطباعة بنجاح")
-                                    QMessageBox.information(self, "نجح", "تم إرسال الطباعة بنجاح!")
-                                else:
-                                    self.status_label.setText("❌ فشل في الطباعة")
-                                    self.open_system_print()  # محاولة بديلة
-                            except Exception as e:
-                                logging.error(f"خطأ في callback الطباعة: {e}")
-                                self.open_system_print()
-                        
-                        try:
-                            self.pdf_viewer.page().print(printer, print_finished)
-                        except Exception as e:
-                            logging.error(f"خطأ في طباعة الصفحة: {e}")
-                            self.open_system_print()
+                    def handle_print_failure():
+                        """معالجة فشل الطباعة"""
+                        self.status_label.setText("❌ فشل في الطباعة")
+                        self.open_system_print()  # محاولة بديلة
+                    
+                    # استخدام الطباعة الآمنة
+                    success = safe_manager.safe_print_with_dialog(self.pdf_viewer)
+                    if success:
+                        handle_print_success()
                     else:
-                        self.status_label.setText("❌ تم إلغاء الطباعة")
+                        handle_print_failure()
                         
                 except Exception as e:
-                    logging.error(f"خطأ في إعداد الطباعة المحسنة: {e}")
-                    self.open_system_print()
+                    logging.error(f"خطأ في إعداد الطباعة الآمنة: {e}")
+                    self.open_system_print()  # العودة للطريقة التقليدية
             else:
                 # استخدام طباعة النظام
                 self.open_system_print()

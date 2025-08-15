@@ -434,17 +434,68 @@ class AdditionalFeesPopup(QDialog):
                 )
                 return
             
-            print_dialog = AdditionalFeesPrintDialog(self.student_id, self)
-            print_dialog.print_requested.connect(self.handle_fees_print_request)
-            print_dialog.exec_()
+            # استخدام النظام الآمن للطباعة مباشرة
+            from core.printing.additional_fees_safe_print import print_additional_fees_safe
+            
+            # تحضير بيانات الإيصال
+            receipt_data = self.prepare_receipt_data()
+            
+            if receipt_data:
+                print_additional_fees_safe(receipt_data, self)
+            else:
+                QMessageBox.warning(self, "تحذير", "لا توجد بيانات كافية للطباعة")
             
         except Exception as e:
-            logging.error(f"خطأ في فتح نافذة طباعة الرسوم الإضافية: {e}")
+            logging.error(f"خطأ في طباعة الرسوم الإضافية: {e}")
             QMessageBox.critical(
                 self, 
                 "خطأ", 
-                f"فشل في فتح نافذة طباعة الرسوم الإضافية: {str(e)}"
+                f"فشل في طباعة الرسوم الإضافية: {str(e)}"
             )
+    
+    def prepare_receipt_data(self):
+        """تحضير بيانات الإيصال للطباعة"""
+        try:
+            # معلومات الطالب
+            student_name = self.student_data.get('name', '') if self.student_data else ''
+            grade = self.student_data.get('grade', '') if self.student_data else ''
+            section = self.student_data.get('section', '') if self.student_data else ''
+            school_name = self.student_data.get('school_name', '') if self.student_data else ''
+            
+            # تحضير قائمة الرسوم
+            fees_list = []
+            total_amount = 0
+            
+            for fee in self.additional_fees_data:
+                fee_data = {
+                    'fee_type': fee.get('fee_type', ''),
+                    'due_date': fee.get('due_date', ''),
+                    'amount': float(fee.get('amount', 0)),
+                    'is_paid': fee.get('payment_date') is not None
+                }
+                fees_list.append(fee_data)
+                
+                if fee_data['is_paid']:
+                    total_amount += fee_data['amount']
+            
+            receipt_data = {
+                'school_name': school_name,
+                'school_address': '',  # يمكن إضافة معلومات المدرسة لاحقاً
+                'school_phone': '',
+                'student_name': student_name,
+                'grade': grade,
+                'section': section,
+                'fees_list': fees_list,
+                'total_amount': total_amount,
+                'payment_date': datetime.now().strftime('%Y-%m-%d'),
+                'receipt_number': f"FEES-{self.student_id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+            }
+            
+            return receipt_data
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحضير بيانات الإيصال: {e}")
+            return None
     
     def handle_fees_print_request(self, print_data):
         """معالجة طلب طباعة الرسوم الإضافية"""
