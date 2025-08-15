@@ -375,7 +375,9 @@ class MainWindow(QMainWindow):
             self.quick_backup_btn = QPushButton("نسخ احتياطي سريع")
             self.quick_backup_btn.setObjectName("quickBackupButton")
             self.quick_backup_btn.setToolTip("إنشاء نسخة احتياطية فورية من قاعدة البيانات")
-            self.quick_backup_btn.setStyleSheet("font-size: 18px;")
+            # ضبط خصائص الخط والحشوة والارتفاع لزر النسخ الاحتياطي
+            self.quick_backup_btn.setStyleSheet("font-size: 14px; padding: 4px;")
+            self.quick_backup_btn.setFixedHeight(30)
             self.quick_backup_btn.clicked.connect(self.create_quick_backup)
             header_layout.addWidget(self.quick_backup_btn)
             
