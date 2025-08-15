@@ -1038,7 +1038,7 @@ class MainWindow(QMainWindow):
                     border-radius: {style_vars['border_radius']}px;
                     padding: {style_vars['button_padding']}px {style_vars['base_padding'] + 4}px;
                     font-weight: bold;
-                    font-size: {style_vars['small_font_size']}px;
+                    font-size: 14px;
                     min-width: 140px;
                 }}
                 

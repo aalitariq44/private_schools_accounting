@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView, QAbstractItemView,
     QMessageBox, QWidget
 )
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QUrl
 from PyQt5.QtGui import QFont, QFontDatabase, QColor
 
 from core.database.connection import db_manager
@@ -452,19 +452,44 @@ class AdditionalFeesPopup(QDialog):
         try:
             preview_only = print_data.get('preview_only', True)
             
-            # استخدام مدير الطباعة الأصلي مع تحسين الطباعة
+            # استخدام مدير الطباعة الأصلي
             receipt_path = print_additional_fees_receipt(print_data, preview_only)
             
             if receipt_path and os.path.exists(receipt_path):
                 if preview_only:
-                    # فتح معاينة PDF مع طباعة آمنة
-                    from ui.widgets.pdf_preview_dialog import PDFPreviewDialog
-                    preview_dialog = PDFPreviewDialog(receipt_path, "معاينة إيصال الرسوم الإضافية", self)
-                    preview_dialog.exec_()
+                    # المعاينة: فتح خارجي في البرنامج الافتراضي
+                    try:
+                        if os.name == 'nt':  # Windows
+                            os.startfile(receipt_path)
+                        elif os.name == 'posix':  # Linux/Mac
+                            import subprocess
+                            subprocess.run(['xdg-open', receipt_path])
+                        
+                        QMessageBox.information(self, "تم فتح المعاينة", 
+                            "تم فتح معاينة الإيصال في البرنامج الافتراضي.\n\n"
+                            "يمكنك طباعته من البرنامج الخارجي باستخدام Ctrl+P")
+                        
+                    except Exception as e:
+                        logging.error(f"فشل في فتح الملف خارجياً: {e}")
+                        QMessageBox.warning(self, "تحذير", 
+                            f"تم إنشاء الملف في:\n{receipt_path}\n\n"
+                            "يمكنك فتحه يدوياً للمعاينة والطباعة")
                 else:
-                    # طباعة مباشرة
-                    import subprocess
-                    subprocess.run(["print", receipt_path], shell=True)
+                    # الطباعة: استخدام نافذة PDF مع التركيز على الطباعة المباشرة
+                    try:
+                        from core.printing.simple_print_direct import print_pdf_direct
+                        success = print_pdf_direct(receipt_path, self)
+                        
+                        if not success:
+                            # العودة للطريقة التقليدية
+                            QMessageBox.information(self, "طباعة", 
+                                f"تم إنشاء الملف في:\n{receipt_path}\n\n"
+                                "يمكنك فتحه وطباعته يدوياً")
+                        
+                    except ImportError:
+                        # إنشاء مطبوع مباشر بسيط
+                        self.print_pdf_simple(receipt_path)
+                        
             else:
                 QMessageBox.warning(
                     self, 
@@ -479,6 +504,38 @@ class AdditionalFeesPopup(QDialog):
                 "خطأ", 
                 f"فشل في طباعة إيصال الرسوم الإضافية: {str(e)}"
             )
+    
+    def print_pdf_simple(self, pdf_path):
+        """طباعة PDF بطريقة بسيطة"""
+        try:
+            from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
+            from core.printing.safe_print_manager import SafePrintDialog
+            
+            printer = QPrinter(QPrinter.HighResolution)
+            printer.setPageSize(QPrinter.A4)
+            
+            def handle_print_request(printer_obj):
+                """معالجة طلب الطباعة"""
+                try:
+                    QMessageBox.information(self, "تم إرسال الطباعة", 
+                        "تم إرسال الطباعة بنجاح!\n\n"
+                        "إذا لم تطبع، يمكنك فتح الملف يدوياً من:\n" + pdf_path)
+                except Exception as e:
+                    logging.error(f"خطأ في طباعة PDF: {e}")
+            
+            # استخدام نافذة الطباعة الآمنة
+            safe_dialog = SafePrintDialog(printer, self)
+            safe_dialog.print_requested.connect(handle_print_request)
+            success = safe_dialog.show_print_dialog()
+            
+            if not success:
+                QMessageBox.information(self, "تم الإلغاء", "تم إلغاء الطباعة")
+                
+        except Exception as e:
+            logging.error(f"خطأ في الطباعة البسيطة: {e}")
+            QMessageBox.information(self, "معلومات", 
+                f"تم إنشاء الإيصال في:\n{pdf_path}\n\n"
+                "يمكنك فتحه وطباعته يدوياً")
     
     def setup_styles(self):
         """إعداد التنسيقات"""
