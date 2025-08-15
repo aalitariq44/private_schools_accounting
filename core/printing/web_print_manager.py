@@ -88,8 +88,15 @@ class WebPrintPreviewDialog(QDialog):
     def print_document(self):
         """طباعة المستند"""
         try:
-            # استخدام طباعة محرك الويب الحديث
-            self.web_page.print(QPrinter(), self._on_print_finished)
+            # استخدام الطباعة الآمنة
+            from .safe_print_manager import SafePrintManager
+            
+            safe_manager = SafePrintManager(self)
+            success = safe_manager.safe_print_with_dialog(self.web_view)
+            
+            if not success:
+                QMessageBox.information(self, "تم الإلغاء", "تم إلغاء الطباعة")
+                
         except Exception as e:
             logging.error(f"خطأ في الطباعة: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في الطباعة: {e}")

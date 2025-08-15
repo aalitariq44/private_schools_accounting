@@ -472,14 +472,27 @@ class PrintPreviewDialog(QDialog):
             # إعداد الطابعة
             self.configure_printer()
             
-            # فتح نافذة الطباعة
-            print_dialog = QPrintDialog(self.printer, self)
-            if print_dialog.exec_() == QPrintDialog.Accepted:
-                # طباعة المحتوى
-                self.web_view.page().print(self.printer, self.on_print_finished)
-                
-                # إظهار رسالة الانتظار
-                self.show_printing_progress()
+            # استخدام المدير الآمن للطباعة
+            from .safe_print_manager import SafePrintManager
+            
+            safe_manager = SafePrintManager(self)
+            
+            def handle_print_success(printer_obj):
+                """معالجة نجاح طلب الطباعة"""
+                try:
+                    # طباعة المحتوى
+                    self.web_view.page().print(printer_obj, self.on_print_finished)
+                    # إظهار رسالة الانتظار
+                    self.show_printing_progress()
+                except Exception as e:
+                    logging.error(f"خطأ في تنفيذ الطباعة: {e}")
+                    QMessageBox.critical(self, "خطأ", f"حدث خطأ أثناء الطباعة: {str(e)}")
+            
+            # إنشاء نافذة طباعة آمنة
+            from .safe_print_manager import SafePrintDialog
+            safe_dialog = SafePrintDialog(self.printer, self)
+            safe_dialog.print_requested.connect(handle_print_success)
+            safe_dialog.show_print_dialog()
             
         except Exception as e:
             logging.error(f"خطأ في الطباعة: {e}")

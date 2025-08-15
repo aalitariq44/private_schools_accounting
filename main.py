@@ -23,6 +23,9 @@ QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 QCoreApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton, True)
 
+# إعدادات خاصة لحل مشكلة الطباعة وعدم إغلاق التطبيق
+QCoreApplication.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
+
 # تحسينات إضافية لدعم high DPI
 os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 os.environ["QT_SCALE_FACTOR"] = "1"
@@ -46,6 +49,13 @@ from core.database.connection import DatabaseManager
 from core.auth.login_manager import AuthManager
 from ui.auth.login_window import LoginWindow
 from app.main_window import MainWindow
+
+# تطبيق إصلاحات أمان الطباعة
+try:
+    from core.printing.print_safety_patches import apply_print_safety_patches
+    apply_print_safety_patches()
+except ImportError:
+    logging.warning("فشل في تطبيق إصلاحات أمان الطباعة")
 
 # Monkey-patch hashlib to ignore deprecated 'usedforsecurity' keyword
 import hashlib
