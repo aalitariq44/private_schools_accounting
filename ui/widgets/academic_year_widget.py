@@ -41,6 +41,8 @@ class AcademicYearWidget(QWidget):
             # إطار الويدجت
             self.frame = QFrame()
             self.frame.setObjectName("academicYearFrame")
+            # ضبط ارتفاع الويدجت
+            self.frame.setFixedHeight(30)
             frame_layout = QHBoxLayout()
             frame_layout.setContentsMargins(0, 0, 0, 0)
             frame_layout.setSpacing(0)
@@ -69,25 +71,27 @@ class AcademicYearWidget(QWidget):
     def setup_styles(self):
         """إعداد أنماط الويدجت"""
         try:
+            # ضبط خصائص الخط والحشوة لعرض العام الدراسي
             self.setStyleSheet("""
                 #academicYearFrame {
                     background-color: #3498db; /* Blue color */
                     border-radius: 5px; /* Same rounding as the button */
                     border: none;
-                    padding: 8px 16px;
+                    padding: 4px;
                 }
                 
                 #academicYearLabel {
                     color: white;
                     font-weight: bold;
-                    font-size: 18px; /* Same font size as the button */
-                    padding-right: 5px;
+                    font-size: 14px;
+                    padding-right: 0px;
                 }
                 
                 #academicYearValue {
                     color: white;
                     font-weight: bold;
-                    font-size: 18px; /* Same font size as the button */
+                    font-size: 14px;
+                    padding: 0px;
                 }
             """)
             
@@ -175,21 +179,23 @@ class AcademicYearWidget(QWidget):
                         border: 2px solid {colors['border']};
                         border-radius: 8px;
                         min-height: 30px;
+                        padding: 0px;
                     }}
                     
                     #academicYearLabel {{
                         color: white;
                         font-weight: bold;
-                        font-size: 12px;
+                        font-size: 4px;
+                        padding-right: 0px;
                     }}
                     
                     #academicYearValue {{
                         color: white;
                         font-weight: bold;
-                        font-size: 14px;
+                        font-size: 4px;
                         background-color: {colors['value_bg']};
                         border-radius: 4px;
-                        padding: 3px 8px;
+                        padding: 0px;
                         min-width: 100px;
                     }}
                 """
