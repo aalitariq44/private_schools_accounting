@@ -885,7 +885,7 @@ class MainWindow(QMainWindow):
                 }}
                 
                 #appTitle {{
-                    color: #E5E7EB;
+                    color: #FFFFFF;
                     font-size: {style_vars['header_font_size']}px;
                     font-weight: bold;
                     padding: {style_vars['base_padding']}px;
@@ -899,7 +899,7 @@ class MainWindow(QMainWindow):
                 #menuButton {{
                     background-color: transparent;
                     border: none;
-                    color: #E5E7EB;
+                    color: #000000;
                     text-align: center;
                     padding: {style_vars['button_padding']}px;
                     font-size: {style_vars['button_font_size']}px;
@@ -909,17 +909,17 @@ class MainWindow(QMainWindow):
                 
                 #menuButton:hover {{
                     background-color: #374151;
-                    color: white;
+                    color: #000000;
                 }}
                 
                 #menuButton:checked {{
                     background-color: #3B82F6;
-                    color: white;
+                    color: #000000;
                     font-weight: bold;
                 }}
                 
                 #menuButton[coming_soon="true"] {{
-                    color: #6B7280;
+                    color: #000000;
                     font-style: italic;
                 }}
                 
