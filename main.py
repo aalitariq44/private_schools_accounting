@@ -20,6 +20,24 @@ from PyQt5.QtGui import QFont, QIcon, QFontDatabase
 # إعداد خصائص التطبيق قبل إنشاء QApplication
 QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
 QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+QCoreApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton, True)
+
+# تحسينات إضافية لدعم high DPI
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_SCALE_FACTOR"] = "1"
+# إعدادات خاصة لحل مشكلة Windows Scale 150%
+QCoreApplication.setAttribute(Qt.AA_ShareOpenGLContexts, True)
+QCoreApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+QCoreApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+QCoreApplication.setAttribute(Qt.AA_DisableWindowContextHelpButton, True)
+
+# تحسينات خاصة لـ Scale 150%
+os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+os.environ["QT_SCALE_FACTOR"] = "1" 
+os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+os.environ["QT_FONT_DPI"] = "96"  # إجبار DPI للخطوط
+os.environ["QT_DEVICE_PIXEL_RATIO"] = "1"  # تحكم في نسبة البكسل
 
 # استيراد إعدادات المشروع
 import config
@@ -103,15 +121,32 @@ class SchoolAccountingApp:
             font_dir = config.RESOURCES_DIR / "fonts"
             id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
             id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
             # اختيار اسم العائلة بعد التحميل
             families = font_db.applicationFontFamilies(id_medium)
             cairo_family = families[0] if families else "Cairo"
+            
+            # حساب حجم الخط المناسب بناءً على DPI
+            from PyQt5.QtWidgets import QApplication
+            screen = QApplication.primaryScreen()
+            dpi = screen.logicalDotsPerInch()
+            dpi_scale = dpi / 96.0
+            
+            # تحديد حجم الخط الأساسي
+            base_font_size = max(9, int(10 * dpi_scale))
+            
             # ضبط الخط الافتراضي للتطبيق
-            app_font = QFont(cairo_family, 10)
+            app_font = QFont(cairo_family, base_font_size)
+            app_font.setHintingPreference(QFont.PreferDefaultHinting)
             self.app.setFont(app_font)
+            
+            logging.info(f"تم تطبيق الخط العربي: {cairo_family} بحجم {base_font_size}")
             
         except Exception as e:
             logging.warning(f"تحذير: لم يتم تطبيق الخط العربي: {e}")
+            # استخدام خط افتراضي مناسب للعربية
+            fallback_font = QFont("Tahoma", 10)
+            self.app.setFont(fallback_font)
     
     def setup_app_icon(self):
         """إعداد أيقونة التطبيق"""

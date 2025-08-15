@@ -21,10 +21,16 @@ APP_NAME = "حسابات المدارس الأهلية"
 APP_VERSION = "1.0.0"
 APP_ORGANIZATION = "Tech Solu Company"
 
-# إعدادات النافذة
+# إعدادات النافذة - متجاوبة مع حجم الشاشة
 WINDOW_TITLE = f"{APP_NAME} - الإصدار {APP_VERSION}"
-WINDOW_MIN_WIDTH = 1200
-WINDOW_MIN_HEIGHT = 800
+WINDOW_MIN_WIDTH = 1000  # تقليل الحد الأدنى للعرض
+WINDOW_MIN_HEIGHT = 700  # تقليل الحد الأدنى للارتفاع
+
+# إعدادات responsive design
+SIDEBAR_MIN_WIDTH = 250
+SIDEBAR_MAX_WIDTH = 320
+BUTTON_MIN_HEIGHT = 40
+BUTTON_FONT_SIZE = 14
 
 # إعدادات الأمان
 PASSWORD_MIN_LENGTH = 6

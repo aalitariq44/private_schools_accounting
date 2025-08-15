@@ -19,6 +19,7 @@ import config
 from core.auth.login_manager import auth_manager
 from core.utils.logger import log_user_action
 from core.backup.backup_manager import backup_manager
+from core.utils.responsive_design import responsive
 
 
 class MainWindow(QMainWindow):
@@ -36,6 +37,7 @@ class MainWindow(QMainWindow):
         self.setup_window()
         self.create_ui()
         self.setup_styles()
+        self.setup_responsive_ui()
         self.setup_menu_bar()
         self.setup_status_bar()
         self.setup_session_timer()
@@ -51,9 +53,8 @@ class MainWindow(QMainWindow):
             # عنوان النافذة
             self.setWindowTitle(config.WINDOW_TITLE)
             
-            # حجم النافذة
-            self.setMinimumSize(config.WINDOW_MIN_WIDTH, config.WINDOW_MIN_HEIGHT)
-            self.resize(1400, 900)
+            # حجم النافذة المتجاوب مع DPI
+            self.setup_responsive_sizing()
             
             # توسيط النافذة
             self.center_window()
@@ -70,6 +71,49 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.error(f"خطأ في إعداد النافذة الرئيسية: {e}")
             raise
+    
+    def setup_responsive_sizing(self):
+        """إعداد الأحجام المتجاوبة مع DPI الحالي"""
+        try:
+            from PyQt5.QtWidgets import QApplication
+            
+            # الحصول على معلومات الشاشة
+            screen = QApplication.primaryScreen()
+            screen_geometry = screen.geometry()
+            
+            # التحقق من Scale 150% والتعامل معه خصيصاً
+            if responsive.is_windows_scale_150():
+                print("🔧 تم اكتشاف Windows Scale 150% - تطبيق إعدادات خاصة")
+                window_width, window_height = responsive.get_scale_150_window_size(
+                    config.WINDOW_MIN_WIDTH, 
+                    config.WINDOW_MIN_HEIGHT
+                )
+                # تعيين أحجام خاصة لـ Scale 150%
+                self.setMinimumSize(900, 600)
+            else:
+                # حساب الأحجام المناسبة للمقاييس الأخرى
+                window_width, window_height = responsive.get_window_size(
+                    config.WINDOW_MIN_WIDTH, 
+                    config.WINDOW_MIN_HEIGHT
+                )
+                self.setMinimumSize(config.WINDOW_MIN_WIDTH, config.WINDOW_MIN_HEIGHT)
+            
+            # تعيين الحجم المفضل
+            self.resize(window_width, window_height)
+            
+            # حفظ معلومات DPI للاستخدام في باقي المكونات
+            self.dpi_scale = responsive.dpi_scale
+            
+            logging.info(f"DPI Scale: {responsive.dpi_scale:.2f}, Window: {window_width}x{window_height}")
+            if responsive.is_windows_scale_150():
+                logging.info("تم تطبيق إعدادات خاصة لـ Windows Scale 150%")
+            
+        except Exception as e:
+            logging.error(f"خطأ في إعداد الأحجام المتجاوبة: {e}")
+            # في حالة الخطأ، استخدم الأحجام الافتراضية
+            self.setMinimumSize(config.WINDOW_MIN_WIDTH, config.WINDOW_MIN_HEIGHT)
+            self.resize(1200, 800)
+            self.dpi_scale = 1.0
     
     def center_window(self):
         """توسيط النافذة في الشاشة"""
@@ -128,7 +172,10 @@ class MainWindow(QMainWindow):
             # إطار القائمة الجانبية
             self.sidebar_frame = QFrame()
             self.sidebar_frame.setObjectName("sidebarFrame")
-            self.sidebar_frame.setFixedWidth(280)
+            
+            # حساب عرض الشريط الجانبي بناءً على نظام التصميم المتجاوب
+            sidebar_width = responsive.get_sidebar_width(280)
+            self.sidebar_frame.setFixedWidth(sidebar_width)
 
             sidebar_layout = QVBoxLayout(self.sidebar_frame)
             sidebar_layout.setContentsMargins(0, 0, 0, 0)
@@ -169,20 +216,24 @@ class MainWindow(QMainWindow):
             # إطار الرأس
             header_frame = QFrame()
             header_frame.setObjectName("sidebarHeader")
-            header_frame.setFixedHeight(120)
+            
+            # حساب ارتفاع متجاوب
+            header_height = responsive.get_scaled_size(100)
+            header_frame.setFixedHeight(max(80, header_height))
             
             header_layout = QVBoxLayout(header_frame)
             header_layout.setAlignment(Qt.AlignCenter)
-            header_layout.setContentsMargins(20, 15, 20, 15)
+            
+            # تقليل الهوامش للشاشات الصغيرة
+            margin = responsive.get_margin(15)
+            header_layout.setContentsMargins(margin, margin, margin, margin)
             
             # عنوان التطبيق
             title_label = QLabel("حسابات المدارس")
             title_label.setObjectName("appTitle")
             title_label.setAlignment(Qt.AlignCenter)
-            title_label.setMinimumHeight(48)  # زيادة ارتفاع العنوان
-            title_label.setWordWrap(True)     # السماح بتغليف النص إذا لزم
+            title_label.setWordWrap(True)
             header_layout.addWidget(title_label)
-          
             
             layout.addWidget(header_frame)
             
@@ -241,7 +292,10 @@ class MainWindow(QMainWindow):
             button = QPushButton(text)
             button.setObjectName("menuButton")
             button.setCheckable(True)
-            button.setFixedHeight(50)
+            
+            # حساب ارتفاع متجاوب للزر
+            button_height = responsive.get_button_height(45)
+            button.setFixedHeight(button_height)
             
             # إضافة خصائص للزر
             button.setProperty("page_name", name)
@@ -804,182 +858,232 @@ class MainWindow(QMainWindow):
     def setup_styles(self):
         """إعداد تنسيقات النافذة"""
         try:
-            style = """
+            # الحصول على متغيرات التصميم المتجاوب
+            style_vars = responsive.get_responsive_stylesheet_vars()
+            
+            style = f"""
                 /* Apply Cairo font to all widgets */
-                * {
+                * {{
                     font-family: 'Cairo';
-                }
-                QMainWindow {
+                    font-size: {style_vars['base_font_size']}px;
+                }}
+                QMainWindow {{
                     background-color: #F8F9FA;
                     font-family: 'Cairo', 'Segoe UI', Tahoma, Arial;
-                }
+                }}
                 
                 /* القائمة الجانبية */
-                #sidebarFrame {
-                    background-color: #1F2937; /* A modern dark blue-gray */
+                #sidebarFrame {{
+                    background-color: #1F2937;
                     border-right: 1px solid #2d3748;
-                }
+                }}
                 
-                #sidebarHeader {
-                    background-color: transparent; /* Make it blend with the sidebar */
+                #sidebarHeader {{
+                    background-color: transparent;
                     border-bottom: 1px solid #2d3748;
-                    padding: 0; /* إزالة البادينغ لمنع تقطيع النص */
-                }
+                    padding: 0;
+                }}
                 
-                #appTitle {
-                    color: #E5E7EB; /* Lighter text color */
-                    font-size: 24px; /* Slightly smaller */
+                #appTitle {{
+                    color: #E5E7EB;
+                    font-size: {style_vars['header_font_size']}px;
                     font-weight: bold;
-                    padding: 0; /* Prevent text cutoff */
-                }
+                    padding: {style_vars['base_padding']}px;
+                }}
                 
-                #appVersion {
-                    color: #9CA3AF; /* Softer gray */
-                    font-size: 18px; /* Slightly smaller */
-                }
-                
-                #sidebarScrollArea {
+                #sidebarScrollArea {{
                     background-color: transparent;
                     border: none;
-                }
+                }}
                 
-                #menuButton {
+                #menuButton {{
                     background-color: transparent;
                     border: none;
-                    color: #000000; /* Black text for sidebar sections */
-                    text-align: center; /* Center the text */
-                    padding: 0; /* Remove padding to prevent text cutoff */
-                    font-size: 18px; /* Adjust font size */
-                    border-radius: 0px; /* Softer corners */
-                    margin: 0px 0px; /* Adjust margin */
-                }
+                    color: #E5E7EB;
+                    text-align: center;
+                    padding: {style_vars['button_padding']}px;
+                    font-size: {style_vars['button_font_size']}px;
+                    border-radius: {style_vars['border_radius']}px;
+                    margin: 2px {style_vars['base_padding']}px;
+                }}
                 
-                #menuButton:hover {
-                    background-color: #374151; /* A slightly lighter shade for hover */
+                #menuButton:hover {{
+                    background-color: #374151;
                     color: white;
-                }
+                }}
                 
-                #menuButton:checked {
-                    background-color: #3B82F6; /* A modern blue for selected item */
+                #menuButton:checked {{
+                    background-color: #3B82F6;
                     color: white;
                     font-weight: bold;
-                }
+                }}
                 
-                #menuButton[coming_soon="true"] {
-                    color: #6B7280; /* Adjusted for new palette */
+                #menuButton[coming_soon="true"] {{
+                    color: #6B7280;
                     font-style: italic;
-                }
+                }}
                 
-                #menuSeparator {
-                    background-color: #374151; /* Match the new palette */
-                    margin: 10px 20px;
+                #menuSeparator {{
+                    background-color: #374151;
+                    margin: {style_vars['base_padding']}px {style_vars['base_padding'] * 2}px;
                     height: 1px;
                     border: none;
-                }
+                }}
                 
                 /* منطقة المحتوى */
-                #contentFrame {
+                #contentFrame {{
                     background-color: #F8F9FA;
-                }
+                }}
                 
-                #contentHeader {
+                #contentHeader {{
                     background-color: white;
                     border-bottom: 1px solid #E9ECEF;
                     border-radius: 8px 8px 0 0;
-                    padding: 5px 20px; /* Reduced vertical padding */
-                }
+                    padding: {style_vars['base_padding']}px {style_vars['base_padding'] * 2}px;
+                }}
                 
-                #pageTitle {
-                    font-size: 24px;
+                #pageTitle {{
+                    font-size: {style_vars['title_font_size']}px;
                     font-weight: bold;
                     color: #2C3E50;
-                }
+                }}
                 
-                #userInfo {
+                #userInfo {{
                     background-color: #ECF0F1;
-                    border-radius: 20px;
-                    padding: 8px 15px;
-                }
+                    border-radius: {style_vars['base_padding'] * 2}px;
+                    padding: {style_vars['button_padding']}px {style_vars['base_padding'] + 2}px;
+                }}
                 
-                #userName {
+                #userName {{
                     color: #2C3E50;
-                    font-size: 18px;
+                    font-size: {style_vars['button_font_size']}px;
                     font-weight: bold;
-                }
+                }}
                 
-                #pagesStack {
+                #pagesStack {{
                     background-color: white;
                     border-radius: 0 0 8px 8px;
                     border: 1px solid #E9ECEF;
-                }
+                }}
                 
-                #placeholderMessage {
-                    font-size: 24px;
+                #placeholderMessage {{
+                    font-size: {style_vars['title_font_size']}px;
                     color: #7F8C8D;
-                    padding: 50px;
-                }
+                    padding: {style_vars['base_padding'] * 5}px;
+                }}
                 
                 /* شريط القوائم */
-                QMenuBar {
+                QMenuBar {{
                     background-color: #2C3E50;
                     color: white;
                     border-bottom: 1px solid #34495E;
-                }
+                    font-size: {style_vars['base_font_size']}px;
+                }}
                 
-                QMenuBar::item {
+                QMenuBar::item {{
                     background-color: transparent;
-                    padding: 8px 16px;
-                }
+                    padding: {style_vars['button_padding']}px {style_vars['base_padding'] + 4}px;
+                }}
                 
-                QMenuBar::item:selected {
+                QMenuBar::item:selected {{
                     background-color: #34495E;
-                }
+                }}
                 
-                QMenu {
+                QMenu {{
                     background-color: white;
                     border: 1px solid #BDC3C7;
+                    font-size: {style_vars['base_font_size']}px;
+                }}
+                
+                QMenu::item {{
+                    padding: {style_vars['button_padding']}px {style_vars['base_padding'] + 4}px;
                     color: #2C3E50;
-                }
+                }}
                 
-                QMenu::item {
-                    padding: 8px 16px;
-                }
-                
-                QMenu::item:selected {
-                    background-color: #ECF0F1;
-                }
+                QMenu::item:selected {{
+                    background-color: #3498DB;
+                    color: white;
+                }}
                 
                 /* شريط الحالة */
-                QStatusBar {
+                QStatusBar {{
+                    background-color: #34495E;
+                    color: white;
+                    border-top: 1px solid #2C3E50;
+                    font-size: {int(style_vars['base_font_size'] * 0.9)}px;
+                }}
+                
+                /* شريط التمرير */
+                QScrollBar:vertical {{
                     background-color: #ECF0F1;
-                    border-top: 1px solid #BDC3C7;
-                    color: #2C3E50;
-                }
+                    width: {style_vars['scrollbar_width']}px;
+                    border: none;
+                }}
+                
+                QScrollBar::handle:vertical {{
+                    background-color: #BDC3C7;
+                    min-height: {max(20, int(20 * responsive.dpi_scale))}px;
+                    border-radius: {style_vars['border_radius']}px;
+                }}
+                
+                QScrollBar::handle:vertical:hover {{
+                    background-color: #95A5A6;
+                }}
                 
                 /* زر النسخ الاحتياطي السريع */
-                QPushButton#quickBackupButton {
+                QPushButton#quickBackupButton {{
                     background-color: #27AE60;
                     color: white;
                     border: none;
-                    border-radius: 5px;
-                    padding: 8px 16px;
+                    border-radius: {style_vars['border_radius']}px;
+                    padding: {style_vars['button_padding']}px {style_vars['base_padding'] + 4}px;
                     font-weight: bold;
-                    font-size: 12px;
+                    font-size: {style_vars['small_font_size']}px;
                     min-width: 140px;
-                }
+                }}
                 
-                QPushButton#quickBackupButton:hover {
+                QPushButton#quickBackupButton:hover {{
                     background-color: #229954;
-                }
+                }}
                 
-                QPushButton#quickBackupButton:pressed {
+                QPushButton#quickBackupButton:pressed {{
                     background-color: #1E8449;
-                }
+                }}
             """
+            
             self.setStyleSheet(style)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد التنسيقات: {e}")
+            # استخدام تنسيق بسيط في حالة الخطأ
+            basic_style = """
+                QMainWindow {
+                    background-color: #F8F9FA;
+                    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial;
+                }
+            """
+            self.setStyleSheet(basic_style)
+            
+            self.setStyleSheet(style)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إعداد التنسيقات: {e}")
+    
+    def setup_responsive_ui(self):
+        """إعداد واجهة المستخدم المتجاوبة"""
+        try:
+            # تحديث الأحجام بناءً على نظام التصميم المتجاوب
+            if hasattr(self, 'sidebar_frame'):
+                sidebar_width = responsive.get_sidebar_width(280)
+                self.sidebar_frame.setFixedWidth(sidebar_width)
+            
+            # تحديث ارتفاع الأزرار
+            button_height = responsive.get_button_height(45)
+            for button in self.sidebar_buttons.values():
+                button.setFixedHeight(button_height)
+                
+        except Exception as e:
+            logging.error(f"خطأ في إعداد واجهة المستخدم المتجاوبة: {e}")
     
     def closeEvent(self, event):
         """معالجة إغلاق النافذة"""
