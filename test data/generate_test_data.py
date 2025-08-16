@@ -268,7 +268,8 @@ class TestDataGenerator:
                 for i in range(teachers_count):
                     name = random.choice(self.names)
                     class_hours = random.randint(10, 14)
-                    monthly_salary = random.randint(400000, 600000)
+                    # اختر راتب ثابت من مبالغ واضحة بزيادات 50,000
+                    monthly_salary = random.choice([400000, 450000, 500000, 550000, 600000])
                     phone = f"075{random.randint(10000000, 99999999)}"
                     
                     query = """
@@ -302,7 +303,8 @@ class TestDataGenerator:
                 for i in range(10):
                     name = random.choice(self.names)
                     job_type = random.choice(self.job_types)
-                    monthly_salary = random.randint(300000, 500000)
+                    # اختر راتب ثابت من مبالغ واضحة بزيادات 50,000
+                    monthly_salary = random.choice([300000, 350000, 400000, 450000, 500000])
                     phone = f"076{random.randint(10000000, 99999999)}"
                     
                     query = """
