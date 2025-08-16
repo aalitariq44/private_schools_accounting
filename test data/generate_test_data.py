@@ -13,8 +13,10 @@ from pathlib import Path
 import sys
 import os
 
-# إضافة مسار المشروع
-sys.path.insert(0, str(Path(__file__).parent))
+# إضافة مسار المشروع (دليل المشروع الرئيسي)
+project_root = Path(__file__).parent.parent.resolve()
+sys.path.insert(0, str(project_root))
+os.chdir(str(project_root))  # Set CWD to project root for imports
 
 import config
 from core.database.connection import db_manager
