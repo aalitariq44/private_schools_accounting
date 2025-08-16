@@ -193,7 +193,7 @@ class SchoolsPage(QWidget):
                 SELECT id, name_ar, name_en, school_types, principal_name, 
                        phone, address, created_at
                 FROM schools 
-                ORDER BY name_ar
+                ORDER BY id
             """
             
             schools = db_manager.execute_query(query)
@@ -238,6 +238,8 @@ class SchoolsPage(QWidget):
                 actions_widget = self.create_actions_widget(school['id'])
                 self.schools_table.setCellWidget(row_idx, 6, actions_widget)
             
+            # فرز حسب المعرف افتراضيا
+            self.schools_table.sortItems(0, Qt.AscendingOrder)
             # تحديث العداد
             self.update_schools_count()
             
