@@ -183,7 +183,7 @@ class SalariesPage(QWidget):
             
             # إعداد أعمدة الجدول
             columns = [
-                "م", "اسم الموظف/المعلم", "المدرسة", "النوع", "الراتب المسجل", 
+                "اسم الموظف/المعلم", "المدرسة", "النوع", "الراتب المسجل", 
                 "المبلغ المدفوع", "فترة الراتب", "عدد الأيام", 
                 "تاريخ الدفع", "ملاحظات"
             ]
@@ -199,15 +199,14 @@ class SalariesPage(QWidget):
             # تكوين عرض الأعمدة
             header = self.salaries_table.horizontalHeader()
             header.setStretchLastSection(True)
-            header.resizeSection(0, 50)   # م
-            header.resizeSection(1, 180)  # الاسم
-            header.resizeSection(2, 140)  # المدرسة
-            header.resizeSection(3, 80)   # النوع
-            header.resizeSection(4, 120)  # الراتب المسجل
-            header.resizeSection(5, 120)  # المبلغ المدفوع
-            header.resizeSection(6, 150)  # فترة الراتب
-            header.resizeSection(7, 80)   # عدد الأيام
-            header.resizeSection(8, 120)  # تاريخ الدفع
+            header.resizeSection(0, 180)  # الاسم
+            header.resizeSection(1, 140)  # المدرسة
+            header.resizeSection(2, 80)   # النوع
+            header.resizeSection(3, 120)  # الراتب المسجل
+            header.resizeSection(4, 120)  # المبلغ المدفوع
+            header.resizeSection(5, 150)  # فترة الراتب
+            header.resizeSection(6, 80)   # عدد الأيام
+            header.resizeSection(7, 120)  # تاريخ الدفع
             
             table_layout.addWidget(self.salaries_table)
             layout.addWidget(table_frame)
@@ -626,43 +625,40 @@ class SalariesPage(QWidget):
             self.salaries_table.setRowCount(len(salaries))
             
             for row, salary in enumerate(salaries):
-                # رقم التسلسل
-                self.salaries_table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-                
                 # اسم الموظف/المعلم
-                self.salaries_table.setItem(row, 1, QTableWidgetItem(salary['staff_name'] or ''))
+                self.salaries_table.setItem(row, 0, QTableWidgetItem(salary['staff_name'] or ''))
                 
                 # المدرسة
-                self.salaries_table.setItem(row, 2, QTableWidgetItem(salary['school_name'] or 'غير محدد'))
+                self.salaries_table.setItem(row, 1, QTableWidgetItem(salary['school_name'] or 'غير محدد'))
                 
                 # النوع
-                self.salaries_table.setItem(row, 3, QTableWidgetItem(salary['staff_type_ar'] or ''))
+                self.salaries_table.setItem(row, 2, QTableWidgetItem(salary['staff_type_ar'] or ''))
                 
                 # الراتب المسجل
                 base_salary = f"{float(salary['base_salary']):.2f}" if salary['base_salary'] else "0.00"
-                self.salaries_table.setItem(row, 4, QTableWidgetItem(base_salary))
+                self.salaries_table.setItem(row, 3, QTableWidgetItem(base_salary))
                 
                 # المبلغ المدفوع
                 paid_amount = f"{float(salary['paid_amount']):.2f}" if salary['paid_amount'] else "0.00"
-                self.salaries_table.setItem(row, 5, QTableWidgetItem(paid_amount))
+                self.salaries_table.setItem(row, 4, QTableWidgetItem(paid_amount))
                 
                 # فترة الراتب
                 from_date = salary['from_date'] or ''
                 to_date = salary['to_date'] or ''
                 period = f"{from_date} إلى {to_date}" if from_date and to_date else "غير محدد"
-                self.salaries_table.setItem(row, 6, QTableWidgetItem(period))
+                self.salaries_table.setItem(row, 5, QTableWidgetItem(period))
                 
                 # عدد الأيام
                 days_count = str(salary['days_count']) if salary['days_count'] else "0"
-                self.salaries_table.setItem(row, 7, QTableWidgetItem(days_count))
+                self.salaries_table.setItem(row, 6, QTableWidgetItem(days_count))
                 
                 # تاريخ الدفع
-                self.salaries_table.setItem(row, 8, QTableWidgetItem(salary['payment_date'] or ''))
+                self.salaries_table.setItem(row, 7, QTableWidgetItem(salary['payment_date'] or ''))
                 
                 # الملاحظات
-                self.salaries_table.setItem(row, 9, QTableWidgetItem(salary['notes'] or ''))
+                self.salaries_table.setItem(row, 8, QTableWidgetItem(salary['notes'] or ''))
                 
-                # إخفاء ID في البيانات
+                # إخفاء ID في البيانات (مخزن على عمود اسم الموظف)
                 self.salaries_table.item(row, 0).setData(Qt.UserRole, salary['id'])
             
             # تحديث العداد
