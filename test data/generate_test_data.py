@@ -49,7 +49,7 @@ class TestDataGenerator:
         
         # أنواع الوظائف للموظفين
         self.job_types = [
-            "محاسب", "سكرتير", "عامل نظافة", "حارس أمن", "سائق", 
+            "محاسب", "كاتب", "عامل نظافة", "حارس أمن", "سائق", 
             "مشرف", "أمين مكتبة", "فني كمبيوتر", "مسؤول صيانة", "مرشد تربوي"
         ]
         
@@ -68,8 +68,7 @@ class TestDataGenerator:
         
         # أنواع الرسوم الإضافية
         self.additional_fee_types = [
-            "رسوم التسجيل", "الزي المدرسي", "الكتب", "القرطاسية",
-            "رسوم النشاطات", "رسوم الامتحانات", "رسوم النقل", "رسوم أخرى"
+            "رسوم التسجيل", "الزي المدرسي", "الكتب", "القرطاسية", "رسوم النشاطات"
         ]
         
         # الصفوف لكل نوع مدرسة
@@ -345,17 +344,18 @@ class TestDataGenerator:
                 total_fee = student['total_fee']
                 start_date = datetime.strptime(student['start_date'], '%Y-%m-%d').date()
                 
+                # تعديل: جعل مبالغ الأقساط أرقاماً واضحة (مضاعف 100,000)
                 # تحديد عدد الأقساط (1-4 أقساط)
                 installments_count = random.randint(1, 4)
-                amount_per_installment = total_fee // installments_count
-                remaining_amount = total_fee - (amount_per_installment * (installments_count - 1))
-                
+                basic_amount = ((total_fee // installments_count) // 100000) * 100000
+                if basic_amount == 0:
+                    basic_amount = 100000
+                remaining_amount = total_fee - basic_amount * (installments_count - 1)
                 for i in range(installments_count):
-                    # المبلغ (القسط الأخير يأخذ المتبقي)
                     if i == installments_count - 1:
                         amount = remaining_amount
                     else:
-                        amount = amount_per_installment
+                        amount = basic_amount
                     
                     # تاريخ الدفع (بعد تاريخ المباشرة)
                     payment_date = start_date + timedelta(days=random.randint(0, 120))
@@ -397,7 +397,17 @@ class TestDataGenerator:
                 
                 for i in range(fees_count):
                     fee_type = random.choice(self.additional_fee_types)
-                    amount = random.randint(25000, 100000)
+                    # تحديد مبلغ الرسوم الثابت بناءً على النوع
+                    if fee_type == "رسوم التسجيل":
+                        amount = 25000
+                    elif fee_type in ["الزي المدرسي", "الكتب"]:
+                        amount = 40000
+                    elif fee_type == "القرطاسية":
+                        amount = 25000
+                    elif fee_type == "رسوم النشاطات":
+                        amount = 90000
+                    else:
+                        amount = 0
                     paid = random.choice([True, False])  # 70% مدفوعة
                     payment_date = None
                     
