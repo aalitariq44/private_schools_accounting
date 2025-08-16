@@ -447,7 +447,8 @@ class TestDataGenerator:
                 
                 for i in range(expenses_count):
                     expense_type = random.choice(self.expense_types)
-                    amount = random.randint(50000, 500000)
+                    # مبلغ المصروف ثابت من خيارات محددة
+                    amount = random.choice([50000, 100000, 250000])
                     expense_date = date(2025, random.randint(8, 12), random.randint(1, 28))
                     description = f"مصروف {expense_type} للمدرسة"
                     notes = random.choice([None, "مصروف ضروري", "مصروف عاجل", "مصروف شهري"]) if random.random() < 0.3 else None
@@ -485,7 +486,8 @@ class TestDataGenerator:
                 for i in range(income_count):
                     category = random.choice(self.income_categories)
                     income_type = random.choice(["نقدي", "شيك", "تحويل مصرفي"])
-                    amount = random.randint(100000, 1000000)
+                    # مبلغ الإيراد الخارجي ثابت من خيارات محددة
+                    amount = random.choice([50000, 100000, 250000])
                     income_date = date(2025, random.randint(8, 12), random.randint(1, 28))
                     title = f"إيراد من {category}"
                     description = f"إيراد خارجي من {category} للمدرسة"
