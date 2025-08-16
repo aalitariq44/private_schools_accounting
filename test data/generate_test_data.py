@@ -202,11 +202,25 @@ class TestDataGenerator:
                     else:
                         student_gender = gender
                     
-                    # تحديد الرسوم حسب نوع المدرسة
-                    if "ابتدائية" in school["types"]:
-                        total_fee = random.randint(400000, 800000)
-                    else:  # متوسطة وإعدادية
-                        total_fee = random.randint(800000, 2400000)
+                    # تحديد الرسوم حسب الصف
+                    if grade in ["الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي"]:
+                        total_fee = 500000
+                    elif grade in ["الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي"]:
+                        total_fee = 600000
+                    elif grade == "الأول المتوسط":
+                        total_fee = 800000
+                    elif grade == "الثاني المتوسط":
+                        total_fee = 850000
+                    elif grade == "الثالث المتوسط":
+                        total_fee = 900000
+                    elif grade in ["الرابع العلمي", "الرابع الأدبي"]:
+                        total_fee = 1000000
+                    elif grade in ["الخامس العلمي", "الخامس الأدبي"]:
+                        total_fee = 1250000
+                    elif grade in ["السادس العلمي", "السادس الأدبي"]:
+                        total_fee = 1500000
+                    else:
+                        total_fee = 0  # قيمة افتراضية
                     
                     # تاريخ مباشرة حديث
                     start_date = date(2025, random.randint(8, 12), random.randint(1, 28))
