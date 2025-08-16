@@ -126,7 +126,7 @@ class TestDataGenerator:
                 "name_ar": "ثانوية سومر للبنات",
                 "name_en": "Sumer Girls High School",
                 "school_types": ",".join(["متوسطة", "إعدادية"]),
-                "principal_name": "فاطمة حسن أحمد",
+                "principal_name": "فاطمة رضا أحمد",
                 "address": "حي الجامعة - شارع الكندي - بغداد",
                 "phone": "07721556789 - 07821667890"
             },
@@ -134,7 +134,7 @@ class TestDataGenerator:
                 "name_ar": "ثانوية سومر للبنين",
                 "name_en": "Sumer Boys High School", 
                 "school_types": ",".join(["متوسطة", "إعدادية"]),
-                "principal_name": "محمد علي حسن",
+                "principal_name": "محمد علي يوسف",
                 "address": "حي الجامعة - شارع الكندي - بغداد",
                 "phone": "07731778901 - 07831889012"
             }
