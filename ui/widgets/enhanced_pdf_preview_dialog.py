@@ -106,10 +106,13 @@ class EnhancedPDFPreviewDialog(QDialog):
             main_layout.addLayout(header_layout)
             
             # منطقة عرض PDF
+            # PDF display area should take most space
             if WEB_ENGINE_AVAILABLE:
                 self.setup_web_viewer(main_layout)
+                main_layout.setStretchFactor(self.pdf_viewer, 10)
             else:
                 self.setup_fallback_viewer(main_layout)
+                main_layout.setStretchFactor(self.pdf_viewer, 10)
             
             # شريط الحالة
             status_layout = QHBoxLayout()
@@ -128,7 +131,10 @@ class EnhancedPDFPreviewDialog(QDialog):
             self.file_info_label.setObjectName("fileInfo")
             status_layout.addWidget(self.file_info_label)
             
+            # add status bar with minimal stretch
+            # status bar layout minimal stretch
             main_layout.addLayout(status_layout)
+            main_layout.setStretchFactor(status_layout, 0)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة معاينة PDF المحسنة: {e}")
