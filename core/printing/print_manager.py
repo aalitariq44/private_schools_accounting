@@ -109,18 +109,11 @@ class PrintManager:
             import os
             
             if os.path.exists(pdf_path):
-                # استخدام نافذة المعاينة المحسنة
-                try:
-                    from ui.widgets.enhanced_pdf_preview_dialog import EnhancedPDFPreviewDialog
-                    preview_dialog = EnhancedPDFPreviewDialog(pdf_path, "معاينة الإيصال", self.parent)
-                    preview_dialog.exec_()
-                    logging.info(f"تم فتح معاينة PDF محسنة: {pdf_path}")
-                except ImportError:
-                    # استخدام النافذة العادية كاحتياطي
-                    from ui.widgets.pdf_preview_dialog import PDFPreviewDialog
-                    preview_dialog = PDFPreviewDialog(pdf_path, "معاينة الإيصال", self.parent)
-                    preview_dialog.exec_()
-                    logging.info(f"تم فتح معاينة PDF عادية: {pdf_path}")
+                # استخدام نافذة المعاينة المحسنة فقط
+                from ui.widgets.enhanced_pdf_preview_dialog import EnhancedPDFPreviewDialog
+                preview_dialog = EnhancedPDFPreviewDialog(pdf_path, "معاينة الإيصال", self.parent)
+                preview_dialog.exec_()
+                logging.info(f"تم فتح معاينة PDF محسنة: {pdf_path}")
             else:
                 logging.error(f"ملف PDF غير موجود: {pdf_path}")
                 
