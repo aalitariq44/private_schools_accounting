@@ -545,13 +545,12 @@ class AddSalaryDialog(QDialog):
             with db_manager.get_cursor() as cursor:
                 cursor.execute("""
                     INSERT INTO salaries 
-                    (staff_type, staff_id, staff_name, base_salary, paid_amount, 
+                    (staff_type, staff_id, base_salary, paid_amount, 
                      from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     staff_type,
                     staff['id'],
-                    staff['name'],
                     staff['salary'],
                     self.paid_amount_input.value(),
                     from_date,

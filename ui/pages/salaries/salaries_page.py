@@ -548,7 +548,8 @@ class SalariesPage(QWidget):
         """تحميل بيانات الرواتب"""
         try:
             query = """
-                SELECT s.*, 
+                SELECT s.*,
+                       COALESCE(t.name, e.name, s.staff_name) as dynamic_staff_name,
                        CASE s.staff_type 
                            WHEN 'teacher' THEN 'معلم'
                            WHEN 'employee' THEN 'موظف'
@@ -557,6 +558,8 @@ class SalariesPage(QWidget):
                        sch.name_ar as school_name
                 FROM salaries s
                 LEFT JOIN schools sch ON s.school_id = sch.id
+                LEFT JOIN teachers t ON s.staff_id = t.id AND s.staff_type = 'teacher'
+                LEFT JOIN employees e ON s.staff_id = e.id AND s.staff_type = 'employee'
                 ORDER BY s.payment_date DESC, s.created_at DESC
             """
             
@@ -585,7 +588,7 @@ class SalariesPage(QWidget):
             
             for salary in self.current_salaries:
                 # فلتر البحث بالاسم
-                if search_text and search_text not in (salary['staff_name'] or '').lower():
+                if search_text and search_text not in (salary['dynamic_staff_name'] or '').lower():
                     continue
                 
                 # فلتر المدرسة
@@ -626,7 +629,7 @@ class SalariesPage(QWidget):
             
             for row, salary in enumerate(salaries):
                 # اسم الموظف/المعلم
-                self.salaries_table.setItem(row, 0, QTableWidgetItem(salary['staff_name'] or ''))
+                self.salaries_table.setItem(row, 0, QTableWidgetItem(salary['dynamic_staff_name'] or ''))
                 
                 # المدرسة
                 self.salaries_table.setItem(row, 1, QTableWidgetItem(salary['school_name'] or 'غير محدد'))
@@ -801,4 +804,3 @@ class SalariesPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث البيانات: {e}")
-    
