@@ -240,8 +240,10 @@ class DatabaseManager:
                         payment_date DATE NOT NULL,
                         payment_time TIME NOT NULL,
                         notes TEXT,
+                        school_id INTEGER,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
                     )
                 """)
                 
@@ -304,6 +306,7 @@ class DatabaseManager:
             # فهارس الرواتب
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_staff_type ON salaries(staff_type)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_staff_id ON salaries(staff_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_school_id ON salaries(school_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_payment_date ON salaries(payment_date)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_from_date ON salaries(from_date)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_salaries_to_date ON salaries(to_date)")

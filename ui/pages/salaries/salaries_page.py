@@ -31,6 +31,8 @@ class SalariesPage(QWidget):
         self.current_salaries = []
         self.setup_ui()
         self.setup_connections()
+        self.load_schools()
+        self.load_persons_list()
         self.load_salaries()
         self.update_statistics()
         
@@ -97,6 +99,12 @@ class SalariesPage(QWidget):
             self.search_input.setPlaceholderText("البحث باسم الموظف/المعلم...")
             self.search_input.setMinimumWidth(200)
             
+            # فلتر المدرسة
+            school_label = QLabel("المدرسة:")
+            self.school_filter = QComboBox()
+            self.school_filter.addItem("جميع المدارس", "")
+            self.school_filter.setMinimumWidth(150)
+            
             # فلتر نوع الموظف
             type_label = QLabel("النوع:")
             self.type_filter = QComboBox()
@@ -104,6 +112,12 @@ class SalariesPage(QWidget):
             self.type_filter.addItem("المعلمين", "teacher")
             self.type_filter.addItem("الموظفين", "employee")
             self.type_filter.setMinimumWidth(120)
+            
+            # فلتر الشخص المحدد
+            person_label = QLabel("الشخص:")
+            self.person_filter = QComboBox()
+            self.person_filter.addItem("الجميع", "")
+            self.person_filter.setMinimumWidth(200)
             
             # فلتر التاريخ - من (افتراضي من 2025-01-01)
             from_label = QLabel("من تاريخ:")
@@ -129,8 +143,12 @@ class SalariesPage(QWidget):
             # ترتيب العناصر
             search_layout.addWidget(search_label)
             search_layout.addWidget(self.search_input)
+            search_layout.addWidget(school_label)
+            search_layout.addWidget(self.school_filter)
             search_layout.addWidget(type_label)
             search_layout.addWidget(self.type_filter)
+            search_layout.addWidget(person_label)
+            search_layout.addWidget(self.person_filter)
             search_layout.addWidget(from_label)
             search_layout.addWidget(self.from_date_filter)
             search_layout.addWidget(to_label)
@@ -165,7 +183,7 @@ class SalariesPage(QWidget):
             
             # إعداد أعمدة الجدول
             columns = [
-                "م", "اسم الموظف/المعلم", "النوع", "الراتب المسجل", 
+                "م", "اسم الموظف/المعلم", "المدرسة", "النوع", "الراتب المسجل", 
                 "المبلغ المدفوع", "فترة الراتب", "عدد الأيام", 
                 "تاريخ الدفع", "ملاحظات"
             ]
@@ -183,12 +201,13 @@ class SalariesPage(QWidget):
             header.setStretchLastSection(True)
             header.resizeSection(0, 50)   # م
             header.resizeSection(1, 180)  # الاسم
-            header.resizeSection(2, 80)   # النوع
-            header.resizeSection(3, 120)  # الراتب المسجل
-            header.resizeSection(4, 120)  # المبلغ المدفوع
-            header.resizeSection(5, 150)  # فترة الراتب
-            header.resizeSection(6, 80)   # عدد الأيام
-            header.resizeSection(7, 120)  # تاريخ الدفع
+            header.resizeSection(2, 140)  # المدرسة
+            header.resizeSection(3, 80)   # النوع
+            header.resizeSection(4, 120)  # الراتب المسجل
+            header.resizeSection(5, 120)  # المبلغ المدفوع
+            header.resizeSection(6, 150)  # فترة الراتب
+            header.resizeSection(7, 80)   # عدد الأيام
+            header.resizeSection(8, 120)  # تاريخ الدفع
             
             table_layout.addWidget(self.salaries_table)
             layout.addWidget(table_frame)
@@ -291,7 +310,11 @@ class SalariesPage(QWidget):
         try:
             # أحداث البحث والفلترة
             self.search_input.textChanged.connect(self.apply_filters)
+            self.school_filter.currentTextChanged.connect(self.load_persons_list)
+            self.school_filter.currentTextChanged.connect(self.apply_filters)
+            self.type_filter.currentTextChanged.connect(self.load_persons_list)
             self.type_filter.currentTextChanged.connect(self.apply_filters)
+            self.person_filter.currentTextChanged.connect(self.apply_filters)
             self.from_date_filter.dateChanged.connect(self.apply_filters)
             self.to_date_filter.dateChanged.connect(self.apply_filters)
             self.clear_search_btn.clicked.connect(self.clear_filters)
@@ -417,6 +440,111 @@ class SalariesPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في إعداد الأنماط: {e}")
     
+    def load_schools(self):
+        """تحميل قائمة المدارس للفلتر"""
+        try:
+            self.school_filter.clear()
+            self.school_filter.addItem("جميع المدارس", "")
+            
+            query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
+            
+            with db_manager.get_cursor() as cursor:
+                cursor.execute(query)
+                schools = cursor.fetchall()
+                
+                for school in schools:
+                    self.school_filter.addItem(school['name_ar'], school['id'])
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحميل المدارس: {e}")
+    
+    def load_persons_list(self):
+        """تحميل قائمة الأشخاص (معلمين وموظفين) للفلتر"""
+        try:
+            self.person_filter.clear()
+            self.person_filter.addItem("الجميع", "")
+            
+            school_id = self.school_filter.currentData()
+            staff_type = self.type_filter.currentData()
+            
+            # بناء شروط الفلتر
+            conditions = []
+            params = []
+            
+            if school_id:
+                conditions.append("school_id = ?")
+                params.append(school_id)
+            
+            condition_str = ""
+            if conditions:
+                condition_str = " WHERE " + " AND ".join(conditions)
+            
+            persons = []
+            
+            # تحميل المعلمين إذا لم يتم تحديد نوع أو تم تحديد معلمين
+            if not staff_type or staff_type == "teacher":
+                teacher_query = f"""
+                    SELECT t.id, t.name, s.name_ar as school_name, 'teacher' as type
+                    FROM teachers t
+                    LEFT JOIN schools s ON t.school_id = s.id
+                    {condition_str.replace("school_id", "t.school_id")}
+                    ORDER BY t.name
+                """
+                
+                with db_manager.get_cursor() as cursor:
+                    if params:
+                        cursor.execute(teacher_query, params)
+                    else:
+                        cursor.execute(teacher_query)
+                    teachers = cursor.fetchall()
+                    
+                    for teacher in teachers:
+                        persons.append({
+                            'id': teacher['id'],
+                            'name': teacher['name'],
+                            'school': teacher['school_name'] or 'غير محدد',
+                            'type': 'teacher',
+                            'type_ar': 'معلم'
+                        })
+            
+            # تحميل الموظفين إذا لم يتم تحديد نوع أو تم تحديد موظفين
+            if not staff_type or staff_type == "employee":
+                employee_query = f"""
+                    SELECT e.id, e.name, s.name_ar as school_name, 'employee' as type
+                    FROM employees e
+                    LEFT JOIN schools s ON e.school_id = s.id
+                    {condition_str.replace("school_id", "e.school_id")}
+                    ORDER BY e.name
+                """
+                
+                with db_manager.get_cursor() as cursor:
+                    if params:
+                        cursor.execute(employee_query, params)
+                    else:
+                        cursor.execute(employee_query)
+                    employees = cursor.fetchall()
+                    
+                    for employee in employees:
+                        persons.append({
+                            'id': employee['id'],
+                            'name': employee['name'],
+                            'school': employee['school_name'] or 'غير محدد',
+                            'type': 'employee',
+                            'type_ar': 'موظف'
+                        })
+            
+            # ترتيب الأشخاص حسب الاسم
+            persons.sort(key=lambda x: x['name'])
+            
+            # إضافة الأشخاص للقائمة
+            for person in persons:
+                display_text = f"{person['name']} - {person['school']} ({person['type_ar']})"
+                person_key = f"{person['type']}_{person['id']}"
+                self.person_filter.addItem(display_text, person_key)
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحميل قائمة الأشخاص: {e}")
+    
     def load_salaries(self):
         """تحميل بيانات الرواتب"""
         try:
@@ -426,8 +554,10 @@ class SalariesPage(QWidget):
                            WHEN 'teacher' THEN 'معلم'
                            WHEN 'employee' THEN 'موظف'
                            ELSE s.staff_type
-                       END as staff_type_ar
+                       END as staff_type_ar,
+                       sch.name_ar as school_name
                 FROM salaries s
+                LEFT JOIN schools sch ON s.school_id = sch.id
                 ORDER BY s.payment_date DESC, s.created_at DESC
             """
             
@@ -446,7 +576,9 @@ class SalariesPage(QWidget):
         """تطبيق الفلاتر على البيانات"""
         try:
             search_text = self.search_input.text().strip().lower()
+            school_id = self.school_filter.currentData()
             staff_type = self.type_filter.currentData()
+            person_key = self.person_filter.currentData()
             from_date = self.from_date_filter.date().toPyDate()
             to_date = self.to_date_filter.date().toPyDate()
             
@@ -457,9 +589,19 @@ class SalariesPage(QWidget):
                 if search_text and search_text not in (salary['staff_name'] or '').lower():
                     continue
                 
+                # فلتر المدرسة
+                if school_id and salary['school_id'] != school_id:
+                    continue
+                
                 # فلتر نوع الموظف
                 if staff_type and salary['staff_type'] != staff_type:
                     continue
+                
+                # فلتر الشخص المحدد
+                if person_key:
+                    person_type, person_id = person_key.split('_')
+                    if salary['staff_type'] != person_type or salary['staff_id'] != int(person_id):
+                        continue
                 
                 # فلتر التاريخ (يُطبق فقط إذا تم تغيير النطاق عن القيم القصوى)
                 payment_date = datetime.strptime(salary['payment_date'], '%Y-%m-%d').date()
@@ -490,32 +632,35 @@ class SalariesPage(QWidget):
                 # اسم الموظف/المعلم
                 self.salaries_table.setItem(row, 1, QTableWidgetItem(salary['staff_name'] or ''))
                 
+                # المدرسة
+                self.salaries_table.setItem(row, 2, QTableWidgetItem(salary['school_name'] or 'غير محدد'))
+                
                 # النوع
-                self.salaries_table.setItem(row, 2, QTableWidgetItem(salary['staff_type_ar'] or ''))
+                self.salaries_table.setItem(row, 3, QTableWidgetItem(salary['staff_type_ar'] or ''))
                 
                 # الراتب المسجل
                 base_salary = f"{float(salary['base_salary']):.2f}" if salary['base_salary'] else "0.00"
-                self.salaries_table.setItem(row, 3, QTableWidgetItem(base_salary))
+                self.salaries_table.setItem(row, 4, QTableWidgetItem(base_salary))
                 
                 # المبلغ المدفوع
                 paid_amount = f"{float(salary['paid_amount']):.2f}" if salary['paid_amount'] else "0.00"
-                self.salaries_table.setItem(row, 4, QTableWidgetItem(paid_amount))
+                self.salaries_table.setItem(row, 5, QTableWidgetItem(paid_amount))
                 
                 # فترة الراتب
                 from_date = salary['from_date'] or ''
                 to_date = salary['to_date'] or ''
                 period = f"{from_date} إلى {to_date}" if from_date and to_date else "غير محدد"
-                self.salaries_table.setItem(row, 5, QTableWidgetItem(period))
+                self.salaries_table.setItem(row, 6, QTableWidgetItem(period))
                 
                 # عدد الأيام
                 days_count = str(salary['days_count']) if salary['days_count'] else "0"
-                self.salaries_table.setItem(row, 6, QTableWidgetItem(days_count))
+                self.salaries_table.setItem(row, 7, QTableWidgetItem(days_count))
                 
                 # تاريخ الدفع
-                self.salaries_table.setItem(row, 7, QTableWidgetItem(salary['payment_date'] or ''))
+                self.salaries_table.setItem(row, 8, QTableWidgetItem(salary['payment_date'] or ''))
                 
                 # الملاحظات
-                self.salaries_table.setItem(row, 8, QTableWidgetItem(salary['notes'] or ''))
+                self.salaries_table.setItem(row, 9, QTableWidgetItem(salary['notes'] or ''))
                 
                 # إخفاء ID في البيانات
                 self.salaries_table.item(row, 0).setData(Qt.UserRole, salary['id'])
@@ -595,7 +740,9 @@ class SalariesPage(QWidget):
         """مسح جميع الفلاتر"""
         try:
             self.search_input.clear()
+            self.school_filter.setCurrentIndex(0)
             self.type_filter.setCurrentIndex(0)
+            self.person_filter.setCurrentIndex(0)
             # إعادة تعيين النطاق إلى 1 يناير 2025 حتى 31 ديسمبر 2040
             self.from_date_filter.setDate(QDate(2025, 1, 1))
             self.to_date_filter.setDate(QDate(2040, 12, 31))
@@ -652,6 +799,7 @@ class SalariesPage(QWidget):
     def refresh_data(self):
         """تحديث البيانات"""
         try:
+            self.load_persons_list()  # تحديث قائمة الأشخاص
             self.load_salaries()
             self.update_statistics()
             

@@ -29,6 +29,7 @@ class AddSalaryDialog(QDialog):
         self.staff_list = []
         self.setup_ui()
         self.setup_connections()
+        self.load_schools()
         self.load_staff_data()
         self.calculate_default_period()
         
@@ -99,12 +100,19 @@ class AddSalaryDialog(QDialog):
         main_layout.addWidget(scroll_area)
         
     def create_staff_group(self):
-        """إنشاء مجموعة اختيار الموظف/المعلم"""
+        """إنشاء مجموعة اختيار الموظف/المعلم مع نظام التصفية"""
         group = QGroupBox("بيانات الموظف/المعلم")
         layout = QFormLayout()
         
+        # اختيار المدرسة
+        self.school_combo = QComboBox()
+        self.school_combo.addItem("جميع المدارس", "")
+        self.school_combo.setMinimumWidth(300)
+        layout.addRow("اختر المدرسة:", self.school_combo)
+        
         # نوع الموظف
         self.staff_type_combo = QComboBox()
+        self.staff_type_combo.addItem("جميع الأنواع", "")
         self.staff_type_combo.addItem("معلم", "teacher")
         self.staff_type_combo.addItem("موظف", "employee")
         layout.addRow("نوع الموظف:", self.staff_type_combo)
@@ -205,6 +213,7 @@ class AddSalaryDialog(QDialog):
     
     def setup_connections(self):
         """إعداد الاتصالات والأحداث"""
+        self.school_combo.currentTextChanged.connect(self.load_staff_data)
         self.staff_type_combo.currentTextChanged.connect(self.load_staff_data)
         self.staff_combo.currentTextChanged.connect(self.update_base_salary)
         self.from_date_input.dateChanged.connect(self.calculate_days)
@@ -338,43 +347,129 @@ class AddSalaryDialog(QDialog):
             self.days_count_label.setText("تاريخ غير صحيح!")
             self.days_count_label.setStyleSheet("color: #e74c3c; font-weight: bold;")
     
+    def load_schools(self):
+        """تحميل قائمة المدارس"""
+        try:
+            self.school_combo.clear()
+            self.school_combo.addItem("جميع المدارس", "")
+            
+            query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
+            
+            with db_manager.get_cursor() as cursor:
+                cursor.execute(query)
+                schools = cursor.fetchall()
+                
+                for school in schools:
+                    self.school_combo.addItem(school['name_ar'], school['id'])
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحميل المدارس: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في تحميل المدارس:\n{e}")
+    
     def load_staff_data(self):
-        """تحميل بيانات الموظفين/المعلمين"""
+        """تحميل بيانات الموظفين/المعلمين مع التصفية"""
         try:
             self.staff_combo.clear()
             self.staff_list = []
             
+            school_id = self.school_combo.currentData()
             staff_type = self.staff_type_combo.currentData()
             
+            # بناء الاستعلام حسب الفلاتر
             if staff_type == "teacher":
-                table_name = "teachers"
                 query = """
-                    SELECT t.id, t.name, t.monthly_salary, s.name_ar as school_name
+                    SELECT t.id, t.name, t.monthly_salary, t.school_id, s.name_ar as school_name
                     FROM teachers t
                     LEFT JOIN schools s ON t.school_id = s.id
-                    ORDER BY t.name
                 """
-            else:  # employee
-                table_name = "employees"
+                conditions = []
+                params = []
+                
+                if school_id:
+                    conditions.append("t.school_id = ?")
+                    params.append(school_id)
+                
+                if conditions:
+                    query += " WHERE " + " AND ".join(conditions)
+                query += " ORDER BY t.name"
+                
+            elif staff_type == "employee":
                 query = """
-                    SELECT e.id, e.name, e.monthly_salary, s.name_ar as school_name
+                    SELECT e.id, e.name, e.monthly_salary, e.school_id, s.name_ar as school_name
                     FROM employees e
                     LEFT JOIN schools s ON e.school_id = s.id
-                    ORDER BY e.name
                 """
+                conditions = []
+                params = []
+                
+                if school_id:
+                    conditions.append("e.school_id = ?")
+                    params.append(school_id)
+                
+                if conditions:
+                    query += " WHERE " + " AND ".join(conditions)
+                query += " ORDER BY e.name"
+                
+            else:  # جميع الأنواع
+                # تحميل المعلمين والموظفين معاً
+                conditions = []
+                params = []
+                
+                if school_id:
+                    conditions.append("school_id = ?")
+                    params.append(school_id)
+                
+                condition_str = ""
+                if conditions:
+                    condition_str = " WHERE " + " AND ".join(conditions)
+                
+                # استعلام المعلمين
+                teacher_query = f"""
+                    SELECT t.id, t.name, t.monthly_salary, t.school_id, s.name_ar as school_name, 'teacher' as type
+                    FROM teachers t
+                    LEFT JOIN schools s ON t.school_id = s.id
+                    {condition_str.replace("school_id", "t.school_id")}
+                """
+                
+                # استعلام الموظفين
+                employee_query = f"""
+                    SELECT e.id, e.name, e.monthly_salary, e.school_id, s.name_ar as school_name, 'employee' as type
+                    FROM employees e
+                    LEFT JOIN schools s ON e.school_id = s.id
+                    {condition_str.replace("school_id", "e.school_id")}
+                """
+                
+                query = f"{teacher_query} UNION {employee_query} ORDER BY name"
             
             with db_manager.get_cursor() as cursor:
-                cursor.execute(query)
+                if staff_type in ["teacher", "employee"]:
+                    cursor.execute(query, params)
+                else:
+                    # للاستعلام المدمج (UNION) نحتاج parameters مكررة
+                    if params:
+                        cursor.execute(query, params + params)
+                    else:
+                        cursor.execute(query)
+                    
                 staff_data = cursor.fetchall()
                 
                 for staff in staff_data:
-                    display_text = f"{staff['name']} - {staff['school_name'] or 'غير محدد'}"
+                    # تحديد نوع الموظف
+                    if 'type' in staff.keys():
+                        staff_type_actual = staff['type']
+                    else:
+                        staff_type_actual = staff_type
+                    
+                    staff_type_display = "معلم" if staff_type_actual == "teacher" else "موظف"
+                    display_text = f"{staff['name']} - {staff['school_name'] or 'غير محدد'} ({staff_type_display})"
                     self.staff_combo.addItem(display_text)
                     self.staff_list.append({
                         'id': staff['id'],
                         'name': staff['name'],
                         'salary': staff['monthly_salary'] or 0,
-                        'school': staff['school_name']
+                        'school_id': staff['school_id'],
+                        'school_name': staff['school_name'],
+                        'type': staff_type_actual
                     })
             
             # تحديث الراتب المعروض
@@ -431,9 +526,9 @@ class AddSalaryDialog(QDialog):
                 return
             
             # جمع البيانات
-            staff_type = self.staff_type_combo.currentData()
             current_index = self.staff_combo.currentIndex()
             staff = self.staff_list[current_index]
+            staff_type = staff['type']
             
             # الحصول على كائنات QDate لحساب عدد الأيام
             from_date_q = self.from_date_input.date()
@@ -451,8 +546,8 @@ class AddSalaryDialog(QDialog):
                 cursor.execute("""
                     INSERT INTO salaries 
                     (staff_type, staff_id, staff_name, base_salary, paid_amount, 
-                     from_date, to_date, days_count, payment_date, payment_time, notes)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     staff_type,
                     staff['id'],
@@ -464,13 +559,14 @@ class AddSalaryDialog(QDialog):
                     days_count,
                     payment_date,
                     payment_time,
-                    self.notes_input.toPlainText().strip() or None
+                    self.notes_input.toPlainText().strip() or None,
+                    staff['school_id']
                 ))
             
             # تسجيل العملية
             log_user_action(
                 f"إضافة راتب {staff_type}",
-                f"الاسم: {staff['name']}, المبلغ: {self.paid_amount_input.value()}"
+                f"الاسم: {staff['name']}, المبلغ: {self.paid_amount_input.value()}, المدرسة: {staff['school_name']}"
             )
             
             # إرسال إشارة التحديث

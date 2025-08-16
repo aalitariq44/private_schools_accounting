@@ -539,9 +539,9 @@ class TestDataGenerator:
         try:
             # رواتب المعلمين
             for teacher_id in teacher_ids:
-                # الحصول على معلومات المعلم
+                # الحصول على معلومات المعلم مع المدرسة
                 teacher = self.db_manager.execute_fetch_one(
-                    "SELECT name, monthly_salary FROM teachers WHERE id = ?", 
+                    "SELECT name, monthly_salary, school_id FROM teachers WHERE id = ?", 
                     (teacher_id,)
                 )
                 
@@ -568,21 +568,21 @@ class TestDataGenerator:
                     
                     query = """
                         INSERT INTO salaries (staff_type, staff_id, staff_name, base_salary, paid_amount,
-                                            from_date, to_date, days_count, payment_date, payment_time, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     salary_id = self.db_manager.execute_insert(
                         query, ('teacher', teacher_id, teacher['name'], base_salary, paid_amount,
-                               from_date, to_date, days_count, payment_date, payment_time, notes)
+                               from_date, to_date, days_count, payment_date, payment_time, notes, teacher['school_id'])
                     )
                     salary_ids.append(salary_id)
             
             # رواتب الموظفين
             for employee_id in employee_ids:
-                # الحصول على معلومات الموظف
+                # الحصول على معلومات الموظف مع المدرسة
                 employee = self.db_manager.execute_fetch_one(
-                    "SELECT name, monthly_salary FROM employees WHERE id = ?", 
+                    "SELECT name, monthly_salary, school_id FROM employees WHERE id = ?", 
                     (employee_id,)
                 )
                 
@@ -609,13 +609,13 @@ class TestDataGenerator:
                     
                     query = """
                         INSERT INTO salaries (staff_type, staff_id, staff_name, base_salary, paid_amount,
-                                            from_date, to_date, days_count, payment_date, payment_time, notes)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                            from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     salary_id = self.db_manager.execute_insert(
                         query, ('employee', employee_id, employee['name'], base_salary, paid_amount,
-                               from_date, to_date, days_count, payment_date, payment_time, notes)
+                               from_date, to_date, days_count, payment_date, payment_time, notes, employee['school_id'])
                     )
                     salary_ids.append(salary_id)
             
