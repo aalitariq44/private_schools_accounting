@@ -157,7 +157,7 @@ class EmployeesPage(QWidget):
             self.employees_table.setObjectName("dataTable")
             
             # إعداد أعمدة الجدول
-            columns = ["م", "الاسم", "المدرسة", "المهنة", "الراتب الشهري", "رقم الهاتف", "ملاحظات"]
+            columns = ["الاسم", "المدرسة", "المهنة", "الراتب الشهري", "رقم الهاتف", "ملاحظات"]
             self.employees_table.setColumnCount(len(columns))
             self.employees_table.setHorizontalHeaderLabels(columns)
             
@@ -170,12 +170,11 @@ class EmployeesPage(QWidget):
             # تكوين عرض الأعمدة
             header = self.employees_table.horizontalHeader()
             header.setStretchLastSection(True)
-            header.resizeSection(0, 50)   # رقم التسلسل
-            header.resizeSection(1, 200)  # الاسم
-            header.resizeSection(2, 150)  # المدرسة
-            header.resizeSection(3, 100)  # المهنة
-            header.resizeSection(4, 120)  # الراتب
-            header.resizeSection(5, 120)  # الهاتف
+            header.resizeSection(0, 200)  # الاسم
+            header.resizeSection(1, 150)  # المدرسة
+            header.resizeSection(2, 100)  # المهنة
+            header.resizeSection(3, 120)  # الراتب
+            header.resizeSection(4, 120)  # الهاتف
             
             table_layout.addWidget(self.employees_table)
             layout.addWidget(table_frame)
@@ -407,28 +406,19 @@ class EmployeesPage(QWidget):
             self.employees_table.setRowCount(len(employees))
             
             for row, employee in enumerate(employees):
-                # رقم التسلسل
-                self.employees_table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-                
                 # الاسم
-                self.employees_table.setItem(row, 1, QTableWidgetItem(employee['name'] or ''))
-                
+                self.employees_table.setItem(row, 0, QTableWidgetItem(employee['name'] or ''))
                 # المدرسة
-                self.employees_table.setItem(row, 2, QTableWidgetItem(employee['school_name'] or ''))
-                
+                self.employees_table.setItem(row, 1, QTableWidgetItem(employee['school_name'] or ''))
                 # المهنة
-                self.employees_table.setItem(row, 3, QTableWidgetItem(employee['job_type'] or ''))
-                
+                self.employees_table.setItem(row, 2, QTableWidgetItem(employee['job_type'] or ''))
                 # الراتب الشهري
                 salary = f"{employee['monthly_salary']:.2f}" if employee['monthly_salary'] else "0.00"
-                self.employees_table.setItem(row, 4, QTableWidgetItem(salary))
-                
+                self.employees_table.setItem(row, 3, QTableWidgetItem(salary))
                 # رقم الهاتف
-                self.employees_table.setItem(row, 5, QTableWidgetItem(employee['phone'] or ''))
-                
+                self.employees_table.setItem(row, 4, QTableWidgetItem(employee['phone'] or ''))
                 # الملاحظات
-                self.employees_table.setItem(row, 6, QTableWidgetItem(employee['notes'] or ''))
-                
+                self.employees_table.setItem(row, 5, QTableWidgetItem(employee['notes'] or ''))
                 # إخفاء ID في البيانات
                 self.employees_table.item(row, 0).setData(Qt.UserRole, employee['id'])
             

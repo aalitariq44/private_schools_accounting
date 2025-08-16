@@ -143,7 +143,7 @@ class TeachersPage(QWidget):
             self.teachers_table.setObjectName("dataTable")
             
             # إعداد أعمدة الجدول
-            columns = ["م", "الاسم", "المدرسة", "عدد الحصص", "الراتب الشهري", "رقم الهاتف", "ملاحظات"]
+            columns = ["الاسم", "المدرسة", "عدد الحصص", "الراتب الشهري", "رقم الهاتف", "ملاحظات"]
             self.teachers_table.setColumnCount(len(columns))
             self.teachers_table.setHorizontalHeaderLabels(columns)
             
@@ -156,12 +156,11 @@ class TeachersPage(QWidget):
             # تكوين عرض الأعمدة
             header = self.teachers_table.horizontalHeader()
             header.setStretchLastSection(True)
-            header.resizeSection(0, 50)   # رقم التسلسل
-            header.resizeSection(1, 200)  # الاسم
-            header.resizeSection(2, 150)  # المدرسة
-            header.resizeSection(3, 100)  # عدد الحصص
-            header.resizeSection(4, 120)  # الراتب
-            header.resizeSection(5, 120)  # الهاتف
+            header.resizeSection(0, 200)  # الاسم
+            header.resizeSection(1, 150)  # المدرسة
+            header.resizeSection(2, 100)  # عدد الحصص
+            header.resizeSection(3, 120)  # الراتب
+            header.resizeSection(4, 120)  # الهاتف
             
             table_layout.addWidget(self.teachers_table)
             layout.addWidget(table_frame)
@@ -385,28 +384,19 @@ class TeachersPage(QWidget):
             self.teachers_table.setRowCount(len(teachers))
             
             for row, teacher in enumerate(teachers):
-                # رقم التسلسل
-                self.teachers_table.setItem(row, 0, QTableWidgetItem(str(row + 1)))
-                
                 # الاسم
-                self.teachers_table.setItem(row, 1, QTableWidgetItem(teacher['name'] or ''))
-                
+                self.teachers_table.setItem(row, 0, QTableWidgetItem(teacher['name'] or ''))
                 # المدرسة
-                self.teachers_table.setItem(row, 2, QTableWidgetItem(teacher['school_name'] or ''))
-                
+                self.teachers_table.setItem(row, 1, QTableWidgetItem(teacher['school_name'] or ''))
                 # عدد الحصص
-                self.teachers_table.setItem(row, 3, QTableWidgetItem(str(teacher['class_hours'] or 0)))
-                
+                self.teachers_table.setItem(row, 2, QTableWidgetItem(str(teacher['class_hours'] or 0)))
                 # الراتب الشهري
                 salary = f"{teacher['monthly_salary']:.2f}" if teacher['monthly_salary'] else "0.00"
-                self.teachers_table.setItem(row, 4, QTableWidgetItem(salary))
-                
+                self.teachers_table.setItem(row, 3, QTableWidgetItem(salary))
                 # رقم الهاتف
-                self.teachers_table.setItem(row, 5, QTableWidgetItem(teacher['phone'] or ''))
-                
+                self.teachers_table.setItem(row, 4, QTableWidgetItem(teacher['phone'] or ''))
                 # الملاحظات
-                self.teachers_table.setItem(row, 6, QTableWidgetItem(teacher['notes'] or ''))
-                
+                self.teachers_table.setItem(row, 5, QTableWidgetItem(teacher['notes'] or ''))
                 # إخفاء ID في البيانات
                 self.teachers_table.item(row, 0).setData(Qt.UserRole, teacher['id'])
             
