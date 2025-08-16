@@ -131,6 +131,16 @@ class StudentsPage(QWidget):
                                       "الخامس العلمي", "الخامس الأدبي", "السادس العلمي", "السادس الأدبي"])
             filters_layout.addWidget(self.grade_combo)
             
+            # فلتر الشعبة
+            section_label = QLabel("الشعبة:")
+            section_label.setObjectName("filterLabel")
+            filters_layout.addWidget(section_label)
+            
+            self.section_combo = QComboBox()
+            self.section_combo.setObjectName("filterCombo")
+            self.section_combo.addItems(["جميع الشعب", "أ", "ب", "ج", "د", "هـ", "و", "ز", "ح", "ط", "ي"])
+            filters_layout.addWidget(self.section_combo)
+            
             # فلتر الحالة
             status_label = QLabel("الحالة:")
             status_label.setObjectName("filterLabel")
@@ -358,6 +368,7 @@ class StudentsPage(QWidget):
             # ربط الفلاتر
             self.school_combo.currentTextChanged.connect(self.apply_filters)
             self.grade_combo.currentTextChanged.connect(self.apply_filters)
+            self.section_combo.currentTextChanged.connect(self.apply_filters)
             self.status_combo.currentTextChanged.connect(self.apply_filters)
             self.gender_combo.currentTextChanged.connect(self.apply_filters)
             self.payment_combo.currentTextChanged.connect(self.apply_filters)
@@ -414,6 +425,12 @@ class StudentsPage(QWidget):
             if selected_grade and selected_grade != "جميع الصفوف":
                 query += " AND s.grade = ?"
                 params.append(selected_grade)
+            
+            # فلتر الشعبة
+            selected_section = self.section_combo.currentText()
+            if selected_section and selected_section != "جميع الشعب":
+                query += " AND s.section = ?"
+                params.append(selected_section)
             
             # فلتر الحالة
             selected_status = self.status_combo.currentText()
@@ -582,6 +599,7 @@ class StudentsPage(QWidget):
         try:
             self.school_combo.setCurrentIndex(0) # "جميع المدارس"
             self.grade_combo.setCurrentIndex(0) # "جميع الصفوف"
+            self.section_combo.setCurrentIndex(0) # "جميع الشعب"
             self.status_combo.setCurrentIndex(1) # "نشط"
             self.gender_combo.setCurrentIndex(0) # "جميع الطلاب"
             self.payment_combo.setCurrentIndex(0) # "الجميع"
@@ -633,6 +651,9 @@ class StudentsPage(QWidget):
             grade = self.grade_combo.currentText()
             if grade and grade != "جميع الصفوف":
                 filters.append(f"الصف: {grade}")
+            section = self.section_combo.currentText()
+            if section and section != "جميع الشعب":
+                filters.append(f"الشعبة: {section}")
             status = self.status_combo.currentText()
             if status and status != "جميع الحالات":
                 filters.append(f"الحالة: {status}")
