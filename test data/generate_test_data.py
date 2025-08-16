@@ -61,9 +61,9 @@ class TestDataGenerator:
         ]
         
         # فئات الإيرادات الخارجية
+        # تحديث: فئات الإيرادات الخارجية طبقًا للصورة
         self.income_categories = [
-            "تأجير المرافق", "دورات تدريبية", "فعاليات خاصة", "مبيعات القرطاسية",
-            "خدمات إضافية", "تبرعات", "منح حكومية", "استثمارات"
+            "الحانوت", "النقل", "الأنشطة", "التبرعات", "إيجارات", "أخرى"
         ]
         
         # أنواع الرسوم الإضافية
@@ -484,8 +484,22 @@ class TestDataGenerator:
                 income_count = random.randint(8, 15)
                 
                 for i in range(income_count):
+                    # اختيار فئة الإيراد من الفئات المحدّثة
                     category = random.choice(self.income_categories)
-                    income_type = random.choice(["نقدي", "شيك", "تحويل مصرفي"])
+                    # توليد وصف نوع الإيراد بناءً على الفئة المختارة
+                    if category == "الحانوت":
+                        income_type = f"أموال {category}"
+                    elif category == "النقل":
+                        income_type = f"عائدات {category}"
+                    elif category == "الأنشطة":
+                        income_type = f"عائدات {category}"
+                    elif category == "التبرعات":
+                        income_type = "تبرعات من مؤسسة"
+                    elif category == "إيجارات":
+                        income_type = "إيجارات من جهات خارجية"
+                    else:
+                        income_type = "دخل متفرقة"
+                    
                     # مبلغ الإيراد الخارجي ثابت من خيارات محددة
                     amount = random.choice([50000, 100000, 250000])
                     income_date = date(2025, random.randint(8, 12), random.randint(1, 28))
