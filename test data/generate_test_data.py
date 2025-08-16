@@ -115,7 +115,7 @@ class TestDataGenerator:
             {
                 "name_ar": "مدرسة سومر الابتدائية",
                 "name_en": "Sumer Elementary School",
-                "school_types": json.dumps(["ابتدائية"]),
+                "school_types": ",".join(["ابتدائية"]),
                 "principal_name": "أحمد محمد علي",
                 "address": "حي الجامعة - شارع الكندي - بغداد",
                 "phone": "07710995922 - 07810454344"
@@ -123,7 +123,7 @@ class TestDataGenerator:
             {
                 "name_ar": "ثانوية سومر للبنات",
                 "name_en": "Sumer Girls High School",
-                "school_types": json.dumps(["متوسطة", "إعدادية"]),
+                "school_types": ",".join(["متوسطة", "إعدادية"]),
                 "principal_name": "فاطمة حسن أحمد",
                 "address": "حي الجامعة - شارع الكندي - بغداد",
                 "phone": "07721556789 - 07821667890"
@@ -131,7 +131,7 @@ class TestDataGenerator:
             {
                 "name_ar": "ثانوية سومر للبنين",
                 "name_en": "Sumer Boys High School", 
-                "school_types": json.dumps(["متوسطة", "إعدادية"]),
+                "school_types": ",".join(["متوسطة", "إعدادية"]),
                 "principal_name": "محمد علي حسن",
                 "address": "حي الجامعة - شارع الكندي - بغداد",
                 "phone": "07731778901 - 07831889012"
