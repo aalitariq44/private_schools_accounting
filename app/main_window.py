@@ -6,11 +6,12 @@
 
 import logging
 import sys
+from datetime import datetime
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QStackedWidget, QFrame, QLabel, QPushButton, 
     QMessageBox, QMenuBar, QStatusBar, QAction,
-    QSplitter, QScrollArea
+    QSplitter, QScrollArea, QProgressDialog, QApplication
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QKeySequence
@@ -1088,23 +1089,61 @@ class MainWindow(QMainWindow):
             logging.error(f"خطأ في إعداد واجهة المستخدم المتجاوبة: {e}")
     
     def closeEvent(self, event):
-        """معالجة إغلاق النافذة"""
+        """معالجة إغلاق النافذة مع النسخ الاحتياطي التلقائي"""
         try:
-            reply = QMessageBox.question(
-                self,
-                "إغلاق التطبيق",
-                "هل تريد إغلاق التطبيق؟",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
-            )
+            # التحقق من تفعيل النسخ الاحتياطي التلقائي
+            if config.AUTO_BACKUP_ON_EXIT and config.AUTO_BACKUP_CONFIRMATION_DIALOG:
+                # سؤال المستخدم عن الخروج مع النسخ الاحتياطي
+                reply = QMessageBox.question(
+                    self,
+                    "إغلاق التطبيق",
+                    "هل تريد إغلاق التطبيق؟\n\n"
+                    "🔄 سيتم إنشاء نسخة احتياطية تلقائية قبل الإغلاق.",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
+            elif config.AUTO_BACKUP_ON_EXIT:
+                # النسخ الاحتياطي مفعل بدون حوار تأكيد
+                reply = QMessageBox.question(
+                    self,
+                    "إغلاق التطبيق",
+                    "هل تريد إغلاق التطبيق؟\n\n"
+                    "🔄 سيتم إنشاء نسخة احتياطية تلقائية قبل الإغلاق.",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
+            else:
+                # النسخ الاحتياطي معطل
+                reply = QMessageBox.question(
+                    self,
+                    "إغلاق التطبيق",
+                    "هل تريد إغلاق التطبيق؟",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
             
             if reply == QMessageBox.Yes:
+                # إنشاء نسخة احتياطية تلقائية إذا كانت مفعلة
+                if config.AUTO_BACKUP_ON_EXIT:
+                    backup_success = self.create_auto_backup_on_exit()
+                    
+                    # إذا فشل النسخ الاحتياطي وأراد المستخدم إيقاف الإغلاق
+                    if backup_success is False:
+                        event.ignore()
+                        return
+                
                 # تنظيف الموارد
                 if hasattr(self, 'session_timer'):
                     self.session_timer.stop()
                 
                 auth_manager.logout()
-                log_user_action("تم إغلاق التطبيق")
+                
+                # تسجيل مختلف حسب حالة النسخ الاحتياطي
+                if config.AUTO_BACKUP_ON_EXIT:
+                    log_user_action("تم إغلاق التطبيق مع نسخة احتياطية تلقائية")
+                else:
+                    log_user_action("تم إغلاق التطبيق")
+                    
                 event.accept()
             else:
                 event.ignore()
@@ -1149,10 +1188,6 @@ class MainWindow(QMainWindow):
     def create_quick_backup(self):
         """إنشاء نسخة احتياطية سريعة"""
         try:
-            from PyQt5.QtWidgets import QProgressDialog, QMessageBox
-            from PyQt5.QtCore import QThread, pyqtSignal
-            from datetime import datetime
-            
             # عرض حوار التقدم
             progress = QProgressDialog(
                 "جاري إنشاء النسخة الاحتياطية...",
@@ -1198,3 +1233,87 @@ class MainWindow(QMainWindow):
                 self, "خطأ", 
                 f"حدث خطأ أثناء النسخ الاحتياطي:\n{e}"
             )
+
+    def create_auto_backup_on_exit(self):
+        """إنشاء نسخة احتياطية تلقائية عند الخروج"""
+        try:
+            # عرض حوار التقدم بتصميم مخصص للخروج
+            progress = QProgressDialog(
+                "🔄 جاري إنشاء نسخة احتياطية تلقائية قبل الإغلاق...\nيرجى الانتظار قليلاً...",
+                None, 0, 0, self
+            )
+            progress.setWindowTitle("نسخ احتياطي تلقائي")
+            progress.setModal(True)
+            progress.setMinimumDuration(0)  # عرض فوري
+            progress.show()
+            
+            # معالجة الأحداث لضمان عرض شريط التقدم
+            QApplication.processEvents()
+            
+            # إنشاء وصف للنسخة الاحتياطية التلقائية
+            description = f"نسخة احتياطية تلقائية عند الخروج - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            
+            # إنشاء النسخة الاحتياطية
+            success, message = backup_manager.create_backup(description)
+            
+            # تأخير قصير لضمان إكمال العملية
+            QTimer.singleShot(500, lambda: None)
+            QApplication.processEvents()
+            
+            # إغلاق حوار التقدم
+            progress.close()
+            
+            if success:
+                # عرض إشعار النجاح إذا كان مفعلاً في الإعدادات
+                if config.AUTO_BACKUP_SHOW_SUCCESS_MESSAGE:
+                    success_msg = QMessageBox(self)
+                    success_msg.setWindowTitle("نجح النسخ الاحتياطي")
+                    success_msg.setText("✅ تم إنشاء النسخة الاحتياطية التلقائية بنجاح")
+                    success_msg.setIcon(QMessageBox.Information)
+                    success_msg.setStandardButtons(QMessageBox.Ok)
+                    success_msg.setDefaultButton(QMessageBox.Ok)
+                    
+                    # إغلاق الرسالة تلقائياً بعد ثانيتين
+                    QTimer.singleShot(2000, success_msg.accept)
+                    success_msg.exec_()
+                
+                # تسجيل الإجراء
+                log_user_action("backup auto-exit", description)
+                
+            else:
+                # في حالة فشل النسخ الاحتياطي، اسأل المستخدم
+                if "disabled" in message.lower():
+                    # النظام معطل - لا نوقف الإغلاق
+                    logging.warning("نظام النسخ الاحتياطي معطل، سيتم إغلاق التطبيق بدون نسخة احتياطية")
+                else:
+                    # خطأ آخر - اسأل المستخدم
+                    reply = QMessageBox.question(
+                        self,
+                        "فشل في النسخ الاحتياطي التلقائي", 
+                        f"❌ فشل في إنشاء النسخة الاحتياطية التلقائية:\n\n{message}\n\n"
+                        "هل تريد المتابعة والخروج من التطبيق بدون نسخة احتياطية؟",
+                        QMessageBox.Yes | QMessageBox.No,
+                        QMessageBox.No
+                    )
+                    
+                    if reply == QMessageBox.No:
+                        # المستخدم لا يريد الخروج بدون نسخة احتياطية
+                        return False
+                
+        except Exception as e:
+            logging.error(f"خطأ في النسخ الاحتياطي التلقائي عند الخروج: {e}")
+            
+            # في حالة خطأ، اسأل المستخدم
+            reply = QMessageBox.question(
+                self,
+                "خطأ في النسخ الاحتياطي التلقائي",
+                f"⚠️ حدث خطأ أثناء النسخ الاحتياطي التلقائي:\n\n{e}\n\n"
+                "هل تريد المتابعة والخروج من التطبيق؟",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                return False
+        
+        return True

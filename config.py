@@ -40,6 +40,11 @@ SESSION_TIMEOUT = 3600  # ساعة واحدة بالثواني
 BACKUP_INTERVAL_DAYS = 7
 MAX_BACKUP_FILES = 30
 
+# إعدادات النسخ الاحتياطي التلقائي عند الخروج
+AUTO_BACKUP_ON_EXIT = True  # تفعيل النسخ الاحتياطي التلقائي عند إغلاق التطبيق
+AUTO_BACKUP_SHOW_SUCCESS_MESSAGE = True  # عرض رسالة نجاح النسخ الاحتياطي
+AUTO_BACKUP_CONFIRMATION_DIALOG = True  # عرض حوار تأكيد قبل الخروج
+
 # إنشاء المجلدات المطلوبة
 for directory in [DATA_DIR, DATABASE_DIR, UPLOADS_DIR, BACKUPS_DIR, EXPORTS_DIR, LOGS_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
@@ -60,6 +65,9 @@ for directory in [DATA_DIR, DATABASE_DIR, UPLOADS_DIR, BACKUPS_DIR, EXPORTS_DIR,
 # إنشاء مجلد الموارد وخطوط التطبيق
 RESOURCES_DIR.mkdir(parents=True, exist_ok=True)
 (RESOURCES_DIR / "fonts").mkdir(parents=True, exist_ok=True)
+
+# إضافة مسار الخطوط
+FONTS_DIR = RESOURCES_DIR / "fonts"
 
 # إعدادات Supabase للنسخ الاحتياطية
 SUPABASE_URL = "https://tsyvpjhpogxmqcpeaowb.supabase.co"
