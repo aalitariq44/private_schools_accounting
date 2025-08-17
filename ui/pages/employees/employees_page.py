@@ -100,6 +100,9 @@ class EmployeesPage(QWidget):
                 header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
 
             self.employees_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
+            # إخفاء عمود المعرف من العرض
+            self.employees_table.setColumnHidden(0, True)
+
             self.employees_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.employees_table.customContextMenuRequested.connect(self.show_context_menu)
 

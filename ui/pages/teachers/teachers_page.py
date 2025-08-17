@@ -110,6 +110,8 @@ class TeachersPage(QWidget):
                 header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
 
             self.teachers_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
+            # إخفاء عمود المعرف من العرض
+            self.teachers_table.setColumnHidden(0, True)
 
             self.teachers_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.teachers_table.customContextMenuRequested.connect(self.show_context_menu)
