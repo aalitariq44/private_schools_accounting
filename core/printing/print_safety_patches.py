@@ -80,12 +80,42 @@ def apply_print_safety_patches():
     try:
         logging.info("تطبيق إصلاحات أمان الطباعة...")
         
+        # إصلاح hashlib لحل مشكلة usedforsecurity
+        import hashlib
+        
+        # Patch openssl_md5 specifically for ReportLab
+        if hasattr(hashlib, 'openssl_md5'):
+            _orig_openssl_md5 = hashlib.openssl_md5
+            def _patched_openssl_md5(data=b'', **kwargs):
+                kwargs.pop('usedforsecurity', None)
+                try:
+                    return _orig_openssl_md5(data)
+                except TypeError:
+                    return _orig_openssl_md5(data)
+            hashlib.openssl_md5 = _patched_openssl_md5
+            logging.info("تم إصلاح openssl_md5 بنجاح")
+        
+        # Patch additional hash functions
+        for hash_name in ['md5', 'sha1', 'sha224', 'sha256', 'sha384', 'sha512']:
+            if hasattr(hashlib, hash_name):
+                orig_func = getattr(hashlib, hash_name)
+                def make_patched_func(original):
+                    def patched_func(data=b'', **kwargs):
+                        kwargs.pop('usedforsecurity', None)
+                        try:
+                            return original(data)
+                        except TypeError:
+                            return original(data)
+                    return patched_func
+                setattr(hashlib, hash_name, make_patched_func(orig_func))
+        
         # تحديث إعدادات Qt
         app = QApplication.instance()
         if app:
             app.setAttribute(app.AA_DontCreateNativeWidgetSiblings, True)
             app.setAttribute(app.AA_UseHighDpiPixmaps, True)
         
+        logging.info("تم تطبيق جميع إصلاحات الأمان بنجاح")
         return True
     except Exception as e:
         logging.error(f"فشل في تطبيق إصلاحات الأمان: {e}")

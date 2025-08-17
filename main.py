@@ -4,6 +4,9 @@
 نقطة البداية الرئيسية لتطبيق حسابات المدارس الأهلية
 """
 
+# CRITICAL: Apply hashlib patch FIRST before any other imports
+import hashlib_patch
+
 import sys
 import os
 import logging
@@ -57,26 +60,56 @@ try:
 except ImportError:
     logging.warning("فشل في تطبيق إصلاحات أمان الطباعة")
 
-# Monkey-patch hashlib to ignore deprecated 'usedforsecurity' keyword
+# Comprehensive hashlib patch to fix 'usedforsecurity' issues
 import hashlib
-# Patch hashlib.new to remove 'usedforsecurity' if present
-_orig_hashlib_new = hashlib.new
-def _patched_hashlib_new(name, data=b'', **kwargs):
-    kwargs.pop('usedforsecurity', None)
-    return _orig_hashlib_new(name, data, **kwargs)
-hashlib.new = _patched_hashlib_new
-# Patch md5 constructor to ignore 'usedforsecurity'
-_orig_md5 = hashlib.md5
-def _patched_md5(data=b'', **kwargs):
-    kwargs.pop('usedforsecurity', None)
-    return _orig_md5(data)
-hashlib.md5 = _patched_md5
-# Patch openssl_md5 if available
-if hasattr(hashlib, 'openssl_md5'):
-    _orig_openssl_md5 = hashlib.openssl_md5
-    def _patched_openssl_md5(data=b'', **kwargs):
-        return _orig_openssl_md5(data)
-    hashlib.openssl_md5 = _patched_openssl_md5
+import sys
+
+# More comprehensive patch for hashlib to handle various OpenSSL issues
+def patch_hashlib():
+    """تطبيق إصلاح شامل لمشاكل hashlib"""
+    
+    # Patch hashlib.new
+    if hasattr(hashlib, 'new'):
+        _orig_hashlib_new = hashlib.new
+        def _patched_hashlib_new(name, data=b'', **kwargs):
+            kwargs.pop('usedforsecurity', None)
+            return _orig_hashlib_new(name, data, **kwargs)
+        hashlib.new = _patched_hashlib_new
+    
+    # Patch md5 constructor
+    if hasattr(hashlib, 'md5'):
+        _orig_md5 = hashlib.md5
+        def _patched_md5(data=b'', **kwargs):
+            kwargs.pop('usedforsecurity', None)
+            return _orig_md5(data)
+        hashlib.md5 = _patched_md5
+    
+    # Patch openssl_md5 - this is the main culprit
+    if hasattr(hashlib, 'openssl_md5'):
+        _orig_openssl_md5 = hashlib.openssl_md5
+        def _patched_openssl_md5(data=b'', **kwargs):
+            kwargs.pop('usedforsecurity', None)
+            return _orig_openssl_md5(data)
+        hashlib.openssl_md5 = _patched_openssl_md5
+    
+    # Patch sha1
+    if hasattr(hashlib, 'sha1'):
+        _orig_sha1 = hashlib.sha1
+        def _patched_sha1(data=b'', **kwargs):
+            kwargs.pop('usedforsecurity', None)
+            return _orig_sha1(data)
+        hashlib.sha1 = _patched_sha1
+    
+    # Patch openssl_sha1
+    if hasattr(hashlib, 'openssl_sha1'):
+        _orig_openssl_sha1 = hashlib.openssl_sha1
+        def _patched_openssl_sha1(data=b'', **kwargs):
+            kwargs.pop('usedforsecurity', None)
+            return _orig_openssl_sha1(data)
+        hashlib.openssl_sha1 = _patched_openssl_sha1
+
+# Apply the comprehensive patch
+patch_hashlib()
 
 
 class SchoolAccountingApp:

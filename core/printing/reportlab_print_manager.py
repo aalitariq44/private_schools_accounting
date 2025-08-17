@@ -4,6 +4,9 @@
 يوفر طباعة دقيقة مع دعم كامل للعربية (RTL + تشكيل الأحرف)
 """
 
+# Apply hashlib patch FIRST
+import hashlib_patch
+
 import logging
 import os
 from datetime import datetime
