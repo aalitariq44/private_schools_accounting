@@ -464,11 +464,10 @@ class DashboardPage(QWidget):
     def view_reports_action(self):
         """إجراء عرض التقارير"""
         try:
-            from PyQt5.QtWidgets import QApplication
+            from PyQt5.QtWidgets import QApplication, QMessageBox
             main_window = QApplication.activeWindow()
-            if main_window and hasattr(main_window, 'navigate_to_page'):
-                main_window.navigate_to_page('reports')
-            
+            # Inform user that reports feature is coming soon
+            QMessageBox.information(main_window, "عرض التقارير", "سيتم اضافة الميزة قريبا")
             log_user_action("طلب عرض التقارير من لوحة التحكم")
             
         except Exception as e:
