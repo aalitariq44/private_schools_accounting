@@ -248,8 +248,10 @@ class DashboardPage(QWidget):
             info_grid.addWidget(self.db_status_label, 1, 1)
             
             # حالة النسخ الاحتياطي
-            self.backup_status_label = QLabel("غير مفعل")
+            self.backup_status_label = QLabel("مفعل")
             self.backup_status_label.setObjectName("infoLabel")
+            # لون أخضر لمطابقة حالة 'متصل'
+            self.backup_status_label.setStyleSheet("color: #27AE60;")
             info_grid.addWidget(QLabel("النسخ الاحتياطي:"), 2, 0)
             info_grid.addWidget(self.backup_status_label, 2, 1)
             
