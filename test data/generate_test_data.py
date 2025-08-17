@@ -567,13 +567,13 @@ class TestDataGenerator:
                     notes = random.choice([None, "راتب كامل", "راتب جزئي", "راتب مع مكافأة"]) if random.random() < 0.3 else None
                     
                     query = """
-                        INSERT INTO salaries (staff_type, staff_id, staff_name, base_salary, paid_amount,
-                                            from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO salaries (staff_type, staff_id, base_salary, paid_amount,
+                                               from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     salary_id = self.db_manager.execute_insert(
-                        query, ('teacher', teacher_id, teacher['name'], base_salary, paid_amount,
+                        query, ('teacher', teacher_id, base_salary, paid_amount,
                                from_date, to_date, days_count, payment_date, payment_time, notes, teacher['school_id'])
                     )
                     salary_ids.append(salary_id)
@@ -608,13 +608,13 @@ class TestDataGenerator:
                     notes = random.choice([None, "راتب كامل", "راتب جزئي", "راتب مع علاوة"]) if random.random() < 0.3 else None
                     
                     query = """
-                        INSERT INTO salaries (staff_type, staff_id, staff_name, base_salary, paid_amount,
+                        INSERT INTO salaries (staff_type, staff_id, base_salary, paid_amount,
                                             from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     salary_id = self.db_manager.execute_insert(
-                        query, ('employee', employee_id, employee['name'], base_salary, paid_amount,
+                        query, ('employee', employee_id, base_salary, paid_amount,
                                from_date, to_date, days_count, payment_date, payment_time, notes, employee['school_id'])
                     )
                     salary_ids.append(salary_id)

@@ -28,11 +28,10 @@ def recreate_salaries_table():
             
             # إنشاء الجدول الجديد
             cursor.execute("""
-                CREATE TABLE salaries (
+                    CREATE TABLE salaries (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     staff_type TEXT NOT NULL CHECK (staff_type IN ('teacher', 'employee')),
                     staff_id INTEGER NOT NULL,
-                    staff_name TEXT NOT NULL,
                     base_salary DECIMAL(10,2) NOT NULL,
                     paid_amount DECIMAL(10,2) NOT NULL,
                     from_date DATE NOT NULL,

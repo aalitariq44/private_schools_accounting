@@ -183,7 +183,6 @@ class DatabaseFixer:
                 payment_date DATE,
                 payment_status TEXT DEFAULT 'غير مدفوع' CHECK (payment_status IN ('مدفوع', 'غير مدفوع')),
                 notes TEXT,
-                staff_name TEXT,
                 staff_type TEXT,
                 paid_amount DECIMAL(10,2),
                 from_date DATE,
@@ -202,7 +201,6 @@ class DatabaseFixer:
         columns = [col[1] for col in cursor.fetchall()]
         
         missing_columns = [
-            ('staff_name', 'TEXT'),
             ('staff_type', 'TEXT'),
             ('paid_amount', 'DECIMAL(10,2)'),
             ('from_date', 'DATE'),
@@ -217,7 +215,6 @@ class DatabaseFixer:
         # تحديث البيانات
         cursor.execute("UPDATE salaries SET staff_type = employee_type WHERE staff_type IS NULL")
         cursor.execute("UPDATE salaries SET paid_amount = final_salary WHERE paid_amount IS NULL")
-        cursor.execute("UPDATE salaries SET staff_name = 'غير محدد' WHERE staff_name IS NULL OR staff_name = ''")
         
         logging.info("✓ تم إصلاح جدول salaries")
     
