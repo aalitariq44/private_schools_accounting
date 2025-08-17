@@ -10,11 +10,12 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
-    QComboBox, QDateEdit, QGroupBox, QFormLayout, QSplitter
+    QMenu, QComboBox, QDateEdit, QAction
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QFontDatabase
 
+import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
 
@@ -29,430 +30,358 @@ class SalariesPage(QWidget):
     def __init__(self):
         super().__init__()
         self.current_salaries = []
+        
+        self.setup_cairo_font()
         self.setup_ui()
+        self.setup_styles()
         self.setup_connections()
         self.load_schools()
         self.load_persons_list()
-        self.load_salaries()
-        self.update_statistics()
-        
+        self.refresh()
+
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            font_db = QFontDatabase()
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
+
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
         try:
-            # التخطيط الرئيسي
-            layout = QVBoxLayout()
+            layout = QVBoxLayout(self)
             layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(20)
+            layout.setSpacing(15)
             
-            # إنشاء splitter لتقسيم المساحة
-            splitter = QSplitter(Qt.Horizontal)
-            
-            # الجانب الأيسر - الجدول والبحث
-            left_widget = QWidget()
-            left_layout = QVBoxLayout(left_widget)
-            left_layout.setContentsMargins(0, 0, 0, 0)
-            
-            # شريط البحث والفلترة
-            self.create_search_bar(left_layout)
-            
-            # جدول الرواتب
-            self.create_salaries_table(left_layout)
-            
-            # شريط الأدوات
-            self.create_toolbar(left_layout)
-            
-            # الجانب الأيمن - الإحصائيات
-            right_widget = QWidget()
-            right_layout = QVBoxLayout(right_widget)
-            right_layout.setContentsMargins(10, 0, 0, 0)
-            
-            # مجموعة الإحصائيات
-            self.create_statistics_panel(right_layout)
-            
-            # إضافة الأجزاء للـ splitter
-            splitter.addWidget(left_widget)
-            splitter.addWidget(right_widget)
-            splitter.setSizes([800, 300])  # نسبة المساحة
-            
-            layout.addWidget(splitter)
-            self.setLayout(layout)
-            self.setup_styles()
+            self.create_toolbar(layout)
+            self.create_salaries_table(layout)
+            self.create_summary(layout)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة الرواتب: {e}")
             raise
     
-    def create_search_bar(self, layout):
-        """إنشاء شريط البحث والفلترة"""
-        try:
-            # إطار شريط البحث
-            search_frame = QFrame()
-            search_frame.setObjectName("searchFrame")
-            
-            search_layout = QHBoxLayout(search_frame)
-            search_layout.setContentsMargins(15, 10, 15, 10)
-            search_layout.setSpacing(10)
-            
-            # حقل البحث
-            search_label = QLabel("البحث:")
-            self.search_input = QLineEdit()
-            self.search_input.setPlaceholderText("البحث باسم الموظف/المعلم...")
-            self.search_input.setMinimumWidth(200)
-            
-            # فلتر المدرسة
-            school_label = QLabel("المدرسة:")
-            self.school_filter = QComboBox()
-            self.school_filter.addItem("جميع المدارس", "")
-            self.school_filter.setMinimumWidth(150)
-            
-            # فلتر نوع الموظف
-            type_label = QLabel("النوع:")
-            self.type_filter = QComboBox()
-            self.type_filter.addItem("الكل", "")
-            self.type_filter.addItem("المعلمين", "teacher")
-            self.type_filter.addItem("الموظفين", "employee")
-            self.type_filter.setMinimumWidth(120)
-            
-            # فلتر الشخص المحدد
-            person_label = QLabel("الشخص:")
-            self.person_filter = QComboBox()
-            self.person_filter.addItem("الجميع", "")
-            self.person_filter.setMinimumWidth(200)
-            
-            # فلتر التاريخ - من (افتراضي من 2025-01-01)
-            from_label = QLabel("من تاريخ:")
-            self.from_date_filter = QDateEdit()
-            # تعيين افتراضيًا إلى 1 يناير 2025
-            self.from_date_filter.setDate(QDate(2025, 1, 1))
-            self.from_date_filter.setCalendarPopup(True)
-            self.from_date_filter.setMinimumWidth(120)
-            
-            # فلتر التاريخ - إلى (افتراضي حتى 31 ديسمبر 2040)
-            to_label = QLabel("إلى تاريخ:")
-            self.to_date_filter = QDateEdit()
-            # تعيين افتراضيًا إلى 31 ديسمبر 2040
-            self.to_date_filter.setDate(QDate(2040, 12, 31))
-            self.to_date_filter.setCalendarPopup(True)
-            self.to_date_filter.setMinimumWidth(120)
-            
-            # زر مسح البحث
-            self.clear_search_btn = QPushButton("مسح الفلاتر")
-            self.clear_search_btn.setObjectName("clearButton")
-            self.clear_search_btn.setMinimumWidth(100)
-            
-            # ترتيب العناصر
-            search_layout.addWidget(search_label)
-            search_layout.addWidget(self.search_input)
-            search_layout.addWidget(school_label)
-            search_layout.addWidget(self.school_filter)
-            search_layout.addWidget(type_label)
-            search_layout.addWidget(self.type_filter)
-            search_layout.addWidget(person_label)
-            search_layout.addWidget(self.person_filter)
-            search_layout.addWidget(from_label)
-            search_layout.addWidget(self.from_date_filter)
-            search_layout.addWidget(to_label)
-            search_layout.addWidget(self.to_date_filter)
-            search_layout.addWidget(self.clear_search_btn)
-            search_layout.addStretch()
-            
-            layout.addWidget(search_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء شريط البحث: {e}")
-            raise
-    
     def create_salaries_table(self, layout):
         """إنشاء جدول الرواتب"""
         try:
-            # إطار الجدول
             table_frame = QFrame()
             table_frame.setObjectName("tableFrame")
-            
             table_layout = QVBoxLayout(table_frame)
             table_layout.setContentsMargins(0, 0, 0, 0)
-            
-            # عنوان الجدول
-            table_header = QLabel("سجل الرواتب")
-            table_header.setObjectName("tableHeader")
-            table_layout.addWidget(table_header)
-            
-            # الجدول
+
             self.salaries_table = QTableWidget()
             self.salaries_table.setObjectName("dataTable")
-            
-            # إعداد أعمدة الجدول
-            columns = [
-                "اسم الموظف/المعلم", "المدرسة", "النوع", "الراتب المسجل", 
-                "المبلغ المدفوع", "فترة الراتب", "عدد الأيام", 
-                "تاريخ الدفع", "ملاحظات"
-            ]
+
+            columns = ["المعرف", "الاسم", "المدرسة", "النوع", "الراتب المسجل", "المدفوع", "فترة الراتب", "تاريخ الدفع", "ملاحظات"]
             self.salaries_table.setColumnCount(len(columns))
             self.salaries_table.setHorizontalHeaderLabels(columns)
-            
-            # إعداد خصائص الجدول
+
             self.salaries_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             self.salaries_table.setSelectionMode(QAbstractItemView.SingleSelection)
             self.salaries_table.setAlternatingRowColors(True)
             self.salaries_table.setSortingEnabled(True)
-            
-            # تكوين عرض الأعمدة
+
             header = self.salaries_table.horizontalHeader()
             header.setStretchLastSection(True)
-            header.resizeSection(0, 180)  # الاسم
-            header.resizeSection(1, 140)  # المدرسة
-            header.resizeSection(2, 80)   # النوع
-            header.resizeSection(3, 120)  # الراتب المسجل
-            header.resizeSection(4, 120)  # المبلغ المدفوع
-            header.resizeSection(5, 150)  # فترة الراتب
-            header.resizeSection(6, 80)   # عدد الأيام
-            header.resizeSection(7, 120)  # تاريخ الدفع
-            
+            for i in range(len(columns)):
+                header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
+
+            self.salaries_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
+            self.salaries_table.setContextMenuPolicy(Qt.CustomContextMenu)
+            self.salaries_table.customContextMenuRequested.connect(self.show_context_menu)
+
             table_layout.addWidget(self.salaries_table)
             layout.addWidget(table_frame)
-            
+
         except Exception as e:
             logging.error(f"خطأ في إنشاء جدول الرواتب: {e}")
             raise
     
     def create_toolbar(self, layout):
-        """إنشاء شريط الأدوات"""
+        """إنشاء شريط الأدوات والفلاتر"""
         try:
             toolbar_frame = QFrame()
             toolbar_frame.setObjectName("toolbarFrame")
-            
-            toolbar_layout = QHBoxLayout(toolbar_frame)
+            toolbar_layout = QVBoxLayout(toolbar_frame)
             toolbar_layout.setContentsMargins(15, 10, 15, 10)
             toolbar_layout.setSpacing(10)
+
+            filters_layout = QHBoxLayout()
             
-            # أزرار العمليات
-            self.add_btn = QPushButton("إضافة راتب")
-            self.add_btn.setObjectName("primaryButton")
-            self.add_btn.setMinimumWidth(120)
+            school_label = QLabel("المدرسة:")
+            school_label.setObjectName("filterLabel")
+            filters_layout.addWidget(school_label)
+            self.school_combo = QComboBox()
+            self.school_combo.setObjectName("filterCombo")
+            filters_layout.addWidget(self.school_combo)
+
+            type_label = QLabel("النوع:")
+            type_label.setObjectName("filterLabel")
+            filters_layout.addWidget(type_label)
+            self.type_combo = QComboBox()
+            self.type_combo.addItems(["الكل", "معلم", "موظف"])
+            self.type_combo.setObjectName("filterCombo")
+            filters_layout.addWidget(self.type_combo)
+
+            person_label = QLabel("الشخص:")
+            person_label.setObjectName("filterLabel")
+            filters_layout.addWidget(person_label)
+            self.person_combo = QComboBox()
+            self.person_combo.setObjectName("filterCombo")
+            self.person_combo.setMinimumWidth(200)
+            filters_layout.addWidget(self.person_combo)
+
+            from_label = QLabel("من:")
+            from_label.setObjectName("filterLabel")
+            filters_layout.addWidget(from_label)
+            self.from_date_edit = QDateEdit(calendarPopup=True)
+            self.from_date_edit.setDate(QDate(2024, 1, 1))
+            self.from_date_edit.setObjectName("filterCombo")
+            filters_layout.addWidget(self.from_date_edit)
+
+            to_label = QLabel("إلى:")
+            to_label.setObjectName("filterLabel")
+            filters_layout.addWidget(to_label)
+            self.to_date_edit = QDateEdit(calendarPopup=True)
+            self.to_date_edit.setDate(QDate(2040, 12, 31))
+            self.to_date_edit.setObjectName("filterCombo")
+            filters_layout.addWidget(self.to_date_edit)
+
+            filters_layout.addStretch()
+            toolbar_layout.addLayout(filters_layout)
+
+            actions_layout = QHBoxLayout()
+            search_label = QLabel("البحث:")
+            search_label.setObjectName("filterLabel")
+            actions_layout.addWidget(search_label)
+            self.search_input = QLineEdit()
+            self.search_input.setObjectName("searchInput")
+            self.search_input.setPlaceholderText("ابحث...")
+            actions_layout.addWidget(self.search_input)
+            actions_layout.addStretch()
+
+            self.add_button = QPushButton("إضافة راتب")
+            self.add_button.setObjectName("primaryButton")
+            actions_layout.addWidget(self.add_button)
+
+            self.print_button = QPushButton("طباعة")
+            self.print_button.setObjectName("secondaryButton")
+            actions_layout.addWidget(self.print_button)
+
+            self.refresh_button = QPushButton("تحديث")
+            self.refresh_button.setObjectName("secondaryButton")
+            actions_layout.addWidget(self.refresh_button)
+
+            self.clear_button = QPushButton("مسح الفلاتر")
+            self.clear_button.setObjectName("secondaryButton")
+            actions_layout.addWidget(self.clear_button)
             
-            self.refresh_btn = QPushButton("تحديث")
-            self.refresh_btn.setObjectName("secondaryButton")
-            self.refresh_btn.setMinimumWidth(100)
-            # زر تعديل راتب
-            self.edit_btn = QPushButton("تعديل راتب")
-            self.edit_btn.setObjectName("secondaryButton")
-            self.edit_btn.setMinimumWidth(120)
-            # زر حذف راتب
-            self.delete_btn = QPushButton("حذف راتب")
-            self.delete_btn.setObjectName("secondaryButton")
-            self.delete_btn.setMinimumWidth(120)
-            
-            # معلومات العدد
-            self.count_label = QLabel("إجمالي الرواتب: 0")
-            self.count_label.setObjectName("statsLabel")
-            
-            # ترتيب العناصر
-            toolbar_layout.addWidget(self.add_btn)
-            toolbar_layout.addWidget(self.edit_btn)
-            toolbar_layout.addWidget(self.delete_btn)
-            toolbar_layout.addWidget(self.refresh_btn)
-            toolbar_layout.addStretch()
-            toolbar_layout.addWidget(self.count_label)
-            
+            toolbar_layout.addLayout(actions_layout)
             layout.addWidget(toolbar_frame)
-            
         except Exception as e:
             logging.error(f"خطأ في إنشاء شريط الأدوات: {e}")
             raise
-    
-    def create_statistics_panel(self, layout):
-        """إنشاء لوحة الإحصائيات"""
+
+    def create_summary(self, layout):
+        """إنشاء ملخص الإحصائيات المفصل"""
         try:
-            # إحصائيات عامة
-            general_stats_group = QGroupBox("إحصائيات عامة")
-            general_layout = QFormLayout()
+            summary_frame = QFrame()
+            summary_frame.setObjectName("summaryFrame")
+            summary_layout = QHBoxLayout(summary_frame)
             
-            self.total_salaries_label = QLabel("0")
-            self.total_amount_label = QLabel("0.00 دينار")
-            self.teachers_count_label = QLabel("0")
-            self.employees_count_label = QLabel("0")
-            
-            general_layout.addRow("إجمالي الرواتب:", self.total_salaries_label)
-            general_layout.addRow("إجمالي المبالغ:", self.total_amount_label)
-            general_layout.addRow("رواتب المعلمين:", self.teachers_count_label)
-            general_layout.addRow("رواتب الموظفين:", self.employees_count_label)
-            
-            general_stats_group.setLayout(general_layout)
-            layout.addWidget(general_stats_group)
-            
-            # إحصائيات الشهر الحالي
-            monthly_stats_group = QGroupBox("إحصائيات الشهر الحالي")
-            monthly_layout = QFormLayout()
-            
-            self.monthly_count_label = QLabel("0")
-            self.monthly_amount_label = QLabel("0.00 دينار")
-            self.monthly_teachers_label = QLabel("0")
-            self.monthly_employees_label = QLabel("0")
-            
-            monthly_layout.addRow("عدد الرواتب:", self.monthly_count_label)
-            monthly_layout.addRow("إجمالي المبالغ:", self.monthly_amount_label)
-            monthly_layout.addRow("رواتب المعلمين:", self.monthly_teachers_label)
-            monthly_layout.addRow("رواتب الموظفين:", self.monthly_employees_label)
-            
-            monthly_stats_group.setLayout(monthly_layout)
-            layout.addWidget(monthly_stats_group)
-            
-            # إضافة مساحة فارغة
-            layout.addStretch()
-            
+            def create_stat_box(title, value_widget):
+                box = QVBoxLayout()
+                box.setAlignment(Qt.AlignCenter)
+                title_label = QLabel(title)
+                title_label.setObjectName("summaryLabel")
+                title_label.setAlignment(Qt.AlignCenter)
+                value_widget.setAlignment(Qt.AlignCenter)
+                box.addWidget(title_label)
+                box.addWidget(value_widget)
+                return box
+
+            # General Stats
+            self.total_paid_value = QLabel("0 د.ع")
+            self.total_paid_value.setObjectName("summaryValue")
+            summary_layout.addLayout(create_stat_box("إجمالي المدفوع", self.total_paid_value))
+
+            self.payments_count_value = QLabel("0")
+            self.payments_count_value.setObjectName("summaryValue")
+            summary_layout.addLayout(create_stat_box("عدد الدفعات", self.payments_count_value))
+
+            self.avg_salary_value = QLabel("0 د.ع")
+            self.avg_salary_value.setObjectName("summaryValue")
+            summary_layout.addLayout(create_stat_box("متوسط الراتب", self.avg_salary_value))
+
+            # Teacher Stats
+            self.teachers_total_value = QLabel("0 د.ع")
+            self.teachers_total_value.setObjectName("summaryValueSuccess")
+            summary_layout.addLayout(create_stat_box("مدفوعات المعلمين", self.teachers_total_value))
+
+            # Employee Stats
+            self.employees_total_value = QLabel("0 د.ع")
+            self.employees_total_value.setObjectName("summaryValueWarning")
+            summary_layout.addLayout(create_stat_box("مدفوعات الموظفين", self.employees_total_value))
+
+            self.last_update_label = QLabel("آخر تحديث: --")
+            self.last_update_label.setObjectName("statLabel")
+            summary_layout.addStretch()
+            summary_layout.addWidget(self.last_update_label)
+
+            layout.addWidget(summary_frame)
         except Exception as e:
-            logging.error(f"خطأ في إنشاء لوحة الإحصائيات: {e}")
+            logging.error(f"خطأ في إنشاء ملخص الرواتب: {e}")
             raise
     
     def setup_connections(self):
-        """إعداد الاتصالات والأحداث"""
+        """ربط الإشارات والأحداث"""
         try:
-            # أحداث البحث والفلترة
-            self.search_input.textChanged.connect(self.apply_filters)
-            self.school_filter.currentTextChanged.connect(self.load_persons_list)
-            self.school_filter.currentTextChanged.connect(self.apply_filters)
-            self.type_filter.currentTextChanged.connect(self.load_persons_list)
-            self.type_filter.currentTextChanged.connect(self.apply_filters)
-            self.person_filter.currentTextChanged.connect(self.apply_filters)
-            self.from_date_filter.dateChanged.connect(self.apply_filters)
-            self.to_date_filter.dateChanged.connect(self.apply_filters)
-            self.clear_search_btn.clicked.connect(self.clear_filters)
+            self.add_button.clicked.connect(self.add_salary)
+            self.refresh_button.clicked.connect(self.refresh)
+            self.clear_button.clicked.connect(self.clear_filters)
             
-            # أحداث الأزرار
-            self.add_btn.clicked.connect(self.add_salary)
-            self.refresh_btn.clicked.connect(self.refresh_data)
-            self.edit_btn.clicked.connect(self.handle_edit_selected)
-            self.delete_btn.clicked.connect(self.handle_delete_selected)
+            self.search_input.textChanged.connect(self.apply_filters)
+            self.school_combo.currentTextChanged.connect(self.load_persons_list)
+            self.school_combo.currentTextChanged.connect(self.apply_filters)
+            self.type_combo.currentTextChanged.connect(self.load_persons_list)
+            self.type_combo.currentTextChanged.connect(self.apply_filters)
+            self.person_combo.currentTextChanged.connect(self.apply_filters)
+            self.from_date_edit.dateChanged.connect(self.apply_filters)
+            self.to_date_edit.dateChanged.connect(self.apply_filters)
             
         except Exception as e:
-            logging.error(f"خطأ في إعداد الاتصالات: {e}")
+            logging.error(f"خطأ في ربط الإشارات: {e}")
     
     def setup_styles(self):
-        """إعداد أنماط العرض"""
+        """إعداد تنسيقات الصفحة"""
         try:
-            self.setStyleSheet("""
-                QFrame#searchFrame {
-                    background-color: #f8f9fa;
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
-                }
-                
-                QFrame#tableFrame {
-                    border: 1px solid #dee2e6;
-                    border-radius: 8px;
+            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            
+            style = """
+                QWidget {{
+                    background-color: #F8F9FA;
+                    font-family: {font_family};
+                    font-size: 16px;
+                }}
+                #toolbarFrame {{
                     background-color: white;
-                }
-                
-                QLabel#tableHeader {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2c3e50;
-                    padding: 15px;
-                    background-color: #ecf0f1;
-                    border-bottom: 1px solid #bdc3c7;
-                }
-                
-                QTableWidget#dataTable {
-                    border: none;
-                    gridline-color: #dee2e6;
-                    selection-background-color: #3498db;
-                    alternate-background-color: #f8f9fa;
-                }
-                
-                QFrame#toolbarFrame {
-                    background-color: #f8f9fa;
-                    border: 1px solid #dee2e6;
+                    border: 1px solid #E9ECEF;
                     border-radius: 8px;
-                }
-                
-                QPushButton#primaryButton {
-                    background-color: #007bff;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
+                    margin-bottom: 10px;
+                }}
+                #filterLabel {{
                     font-weight: bold;
-                }
-                
-                QPushButton#primaryButton:hover {
-                    background-color: #0056b3;
-                }
-                
-                QPushButton#secondaryButton {
-                    background-color: #6c757d;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                }
-                
-                QPushButton#secondaryButton:hover {
-                    background-color: #545b62;
-                }
-                
-                QPushButton#clearButton {
-                    background-color: #ffc107;
-                    color: #212529;
-                    border: none;
+                    color: #2C3E50;
+                    margin-right: 5px;
+                    font-size: 16px;
+                }}
+                #filterCombo, #searchInput, QDateEdit {{
                     padding: 8px 12px;
-                    border-radius: 4px;
-                    font-weight: bold;
-                }
-                
-                QPushButton#clearButton:hover {
-                    background-color: #e0a800;
-                }
-                
-                QLabel#statsLabel {
-                    color: #6c757d;
-                    font-weight: bold;
-                }
-                
-                QGroupBox {
-                    font-weight: bold;
-                    border: 2px solid #bdc3c7;
-                    border-radius: 8px;
-                    margin-top: 10px;
-                    padding-top: 10px;
-                }
-                
-                QGroupBox::title {
-                    subcontrol-origin: margin;
-                    left: 10px;
-                    padding: 0 5px 0 5px;
-                    color: #2c3e50;
-                }
-                
-                QComboBox, QLineEdit, QDateEdit {
-                    border: 1px solid #ced4da;
-                    border-radius: 4px;
-                    padding: 5px;
+                    border: 1px solid #BDC3C7;
+                    border-radius: 6px;
+                    font-size: 16px;
                     background-color: white;
-                }
-                
-                QComboBox:focus, QLineEdit:focus, QDateEdit:focus {
-                    border-color: #007bff;
-                    outline: none;
-                }
-            """)
+                }}
+                #primaryButton {{
+                    background-color: #F39C12; /* Orange color for salaries */
+                    border: none;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 16px;
+                }}
+                #secondaryButton {{
+                    background-color: #27AE60;
+                    border: none;
+                    color: white;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 16px;
+                }}
+                QTableWidget {{
+                    background-color: white;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    font-size: 16px;
+                }}
+                QTableWidget::item {{
+                    padding: 12px;
+                    border-bottom: 1px solid #E9ECEF;
+                }}
+                QTableWidget::item:selected {{
+                    background-color: #3498DB;
+                    color: white;
+                }}
+                QHeaderView::section {{
+                    background-color: #F39C12; /* Orange color for salaries */
+                    color: white;
+                    padding: 12px;
+                    border: none;
+                    font-weight: bold;
+                    font-size: 16px;
+                }}
+                #summaryFrame {{
+                    background-color: white;
+                    border: 1px solid #E9ECEF;
+                    border-radius: 8px;
+                    padding: 15px;
+                }}
+                #summaryLabel {{
+                    font-size: 16px;
+                    color: #7F8C8D;
+                    font-weight: bold;
+                }}
+                #summaryValue {{
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #E67E22;
+                }}
+                #summaryValueSuccess {{
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #27AE60;
+                }}
+                #summaryValueWarning {{
+                    font-size: 22px;
+                    font-weight: bold;
+                    color: #2980B9;
+                }}
+                #statLabel {{
+                    font-size: 14px;
+                    color: #7F8C8D;
+                }}
+            """.format(font_family=cairo_font)
+            
+            self.setStyleSheet(style)
             
         except Exception as e:
-            logging.error(f"خطأ في إعداد الأنماط: {e}")
+            logging.error(f"خطأ في إعداد الستايل: {e}")
     
     def load_schools(self):
-        """تحميل قائمة المدارس للفلتر"""
+        """تحميل قائمة المدارس"""
         try:
-            self.school_filter.clear()
-            self.school_filter.addItem("جميع المدارس", "")
+            self.school_combo.clear()
+            self.school_combo.addItem("جميع المدارس", None)
             
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
+            schools = db_manager.execute_query(query)
             
-            with db_manager.get_cursor() as cursor:
-                cursor.execute(query)
-                schools = cursor.fetchall()
-                
+            if schools:
                 for school in schools:
-                    self.school_filter.addItem(school['name_ar'], school['id'])
+                    self.school_combo.addItem(school['name_ar'], school['id'])
             
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
@@ -460,278 +389,143 @@ class SalariesPage(QWidget):
     def load_persons_list(self):
         """تحميل قائمة الأشخاص (معلمين وموظفين) للفلتر"""
         try:
-            self.person_filter.clear()
-            self.person_filter.addItem("الجميع", "")
+            self.person_combo.clear()
+            self.person_combo.addItem("الجميع", None)
             
-            school_id = self.school_filter.currentData()
-            staff_type = self.type_filter.currentData()
-            
-            # بناء شروط الفلتر
-            conditions = []
-            params = []
-            
-            if school_id:
-                conditions.append("school_id = ?")
-                params.append(school_id)
-            
-            condition_str = ""
-            if conditions:
-                condition_str = " WHERE " + " AND ".join(conditions)
-            
+            school_id = self.school_combo.currentData()
+            staff_type = self.type_combo.currentText()
+            if staff_type == "الكل": staff_type = None
+
             persons = []
-            
-            # تحميل المعلمين إذا لم يتم تحديد نوع أو تم تحديد معلمين
-            if not staff_type or staff_type == "teacher":
-                teacher_query = f"""
-                    SELECT t.id, t.name, s.name_ar as school_name, 'teacher' as type
-                    FROM teachers t
-                    LEFT JOIN schools s ON t.school_id = s.id
-                    {condition_str.replace("school_id", "t.school_id")}
-                    ORDER BY t.name
-                """
-                
-                with db_manager.get_cursor() as cursor:
-                    if params:
-                        cursor.execute(teacher_query, params)
-                    else:
-                        cursor.execute(teacher_query)
-                    teachers = cursor.fetchall()
-                    
-                    for teacher in teachers:
-                        persons.append({
-                            'id': teacher['id'],
-                            'name': teacher['name'],
-                            'school': teacher['school_name'] or 'غير محدد',
-                            'type': 'teacher',
-                            'type_ar': 'معلم'
-                        })
-            
-            # تحميل الموظفين إذا لم يتم تحديد نوع أو تم تحديد موظفين
-            if not staff_type or staff_type == "employee":
-                employee_query = f"""
-                    SELECT e.id, e.name, s.name_ar as school_name, 'employee' as type
-                    FROM employees e
-                    LEFT JOIN schools s ON e.school_id = s.id
-                    {condition_str.replace("school_id", "e.school_id")}
-                    ORDER BY e.name
-                """
-                
-                with db_manager.get_cursor() as cursor:
-                    if params:
-                        cursor.execute(employee_query, params)
-                    else:
-                        cursor.execute(employee_query)
-                    employees = cursor.fetchall()
-                    
-                    for employee in employees:
-                        persons.append({
-                            'id': employee['id'],
-                            'name': employee['name'],
-                            'school': employee['school_name'] or 'غير محدد',
-                            'type': 'employee',
-                            'type_ar': 'موظف'
-                        })
-            
-            # ترتيب الأشخاص حسب الاسم
+            if not staff_type or staff_type == "معلم":
+                query = "SELECT id, name FROM teachers"
+                if school_id: query += f" WHERE school_id = {school_id}"
+                teachers = db_manager.execute_query(query)
+                if teachers: persons.extend([{'id': t['id'], 'name': t['name'], 'type': 'teacher'} for t in teachers])
+
+            if not staff_type or staff_type == "موظف":
+                query = "SELECT id, name FROM employees"
+                if school_id: query += f" WHERE school_id = {school_id}"
+                employees = db_manager.execute_query(query)
+                if employees: persons.extend([{'id': e['id'], 'name': e['name'], 'type': 'employee'} for e in employees])
+
             persons.sort(key=lambda x: x['name'])
-            
-            # إضافة الأشخاص للقائمة
             for person in persons:
-                display_text = f"{person['name']} - {person['school']} ({person['type_ar']})"
+                type_ar = "معلم" if person['type'] == 'teacher' else "موظف"
+                display_text = f"{person['name']} ({type_ar})"
                 person_key = f"{person['type']}_{person['id']}"
-                self.person_filter.addItem(display_text, person_key)
+                self.person_combo.addItem(display_text, person_key)
             
         except Exception as e:
             logging.error(f"خطأ في تحميل قائمة الأشخاص: {e}")
     
     def load_salaries(self):
-        """تحميل بيانات الرواتب"""
+        """تحميل وتصفية بيانات الرواتب"""
         try:
             query = """
-                SELECT s.*,
-                       COALESCE(t.name, e.name, s.staff_name) as dynamic_staff_name,
-                       CASE s.staff_type 
-                           WHEN 'teacher' THEN 'معلم'
-                           WHEN 'employee' THEN 'موظف'
-                           ELSE s.staff_type
-                       END as staff_type_ar,
+                SELECT s.id, s.paid_amount, s.payment_date, s.from_date, s.to_date, s.notes,
+                       s.staff_type, s.staff_id,
+                       COALESCE(t.name, e.name) as staff_name,
+                       COALESCE(t.monthly_salary, e.monthly_salary) as base_salary,
                        sch.name_ar as school_name
                 FROM salaries s
                 LEFT JOIN schools sch ON s.school_id = sch.id
                 LEFT JOIN teachers t ON s.staff_id = t.id AND s.staff_type = 'teacher'
                 LEFT JOIN employees e ON s.staff_id = e.id AND s.staff_type = 'employee'
-                ORDER BY s.payment_date DESC, s.created_at DESC
+                WHERE 1=1
             """
+            params = []
+
+            school_id = self.school_combo.currentData()
+            if school_id:
+                query += " AND s.school_id = ?"
+                params.append(school_id)
+
+            staff_type = self.type_combo.currentText()
+            if staff_type and staff_type != "الكل":
+                type_en = 'teacher' if staff_type == 'معلم' else 'employee'
+                query += " AND s.staff_type = ?"
+                params.append(type_en)
+
+            person_key = self.person_combo.currentData()
+            if person_key:
+                p_type, p_id = person_key.split('_')
+                query += " AND s.staff_type = ? AND s.staff_id = ?"
+                params.extend([p_type, int(p_id)])
+
+            from_date = self.from_date_edit.date().toString("yyyy-MM-dd")
+            to_date = self.to_date_edit.date().toString("yyyy-MM-dd")
+            query += " AND s.payment_date BETWEEN ? AND ?"
+            params.extend([from_date, to_date])
+
+            search_text = self.search_input.text().strip()
+            if search_text:
+                query += " AND (t.name LIKE ? OR e.name LIKE ?)"
+                params.extend([f"%{search_text}%", f"%{search_text}%"])
+
+            query += " ORDER BY s.payment_date DESC"
             
-            with db_manager.get_cursor() as cursor:
-                cursor.execute(query)
-                salaries = cursor.fetchall()
-                
-                self.current_salaries = salaries
-                self.apply_filters()
-                
+            self.current_salaries = db_manager.execute_query(query, tuple(params))
+            self.populate_table()
+            self.update_statistics()
+
         except Exception as e:
             logging.error(f"خطأ في تحميل بيانات الرواتب: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في تحميل بيانات الرواتب:\n{e}")
-    
+
     def apply_filters(self):
-        """تطبيق الفلاتر على البيانات"""
-        try:
-            search_text = self.search_input.text().strip().lower()
-            school_id = self.school_filter.currentData()
-            staff_type = self.type_filter.currentData()
-            person_key = self.person_filter.currentData()
-            from_date = self.from_date_filter.date().toPyDate()
-            to_date = self.to_date_filter.date().toPyDate()
-            
-            filtered_salaries = []
-            
-            for salary in self.current_salaries:
-                # فلتر البحث بالاسم
-                if search_text and search_text not in (salary['dynamic_staff_name'] or '').lower():
-                    continue
-                
-                # فلتر المدرسة
-                if school_id and salary['school_id'] != school_id:
-                    continue
-                
-                # فلتر نوع الموظف
-                if staff_type and salary['staff_type'] != staff_type:
-                    continue
-                
-                # فلتر الشخص المحدد
-                if person_key:
-                    person_type, person_id = person_key.split('_')
-                    if salary['staff_type'] != person_type or salary['staff_id'] != int(person_id):
-                        continue
-                
-                # فلتر التاريخ (يُطبق فقط إذا تم تغيير النطاق عن القيم القصوى)
-                payment_date = datetime.strptime(salary['payment_date'], '%Y-%m-%d').date()
-                # الحصول على القيم القصوى للفلتر
-                min_date = self.from_date_filter.minimumDate().toPyDate()
-                max_date = self.to_date_filter.maximumDate().toPyDate()
-                # إذا لم تكن التواريخ في القيمة الافتراضية القصوى، طبق الفلتر
-                if not (from_date == min_date and to_date == max_date):
-                    if payment_date < from_date or payment_date > to_date:
-                        continue
-                
-                filtered_salaries.append(salary)
-            
-            self.populate_table(filtered_salaries)
-            
-        except Exception as e:
-            logging.error(f"خطأ في تطبيق الفلاتر: {e}")
+        """إعادة تحميل البيانات عند تغيير الفلاتر"""
+        self.load_salaries()
     
-    def populate_table(self, salaries):
-        """ملء الجدول بالبيانات"""
+    def populate_table(self):
+        """ملء جدول الرواتب بالبيانات"""
         try:
-            self.salaries_table.setRowCount(len(salaries))
-            
-            for row, salary in enumerate(salaries):
-                # اسم الموظف/المعلم
-                self.salaries_table.setItem(row, 0, QTableWidgetItem(salary['dynamic_staff_name'] or ''))
+            self.salaries_table.setRowCount(0)
+            if not self.current_salaries: return
+
+            for row_idx, salary in enumerate(self.current_salaries):
+                self.salaries_table.insertRow(row_idx)
                 
-                # المدرسة
-                self.salaries_table.setItem(row, 1, QTableWidgetItem(salary['school_name'] or 'غير محدد'))
+                type_ar = "معلم" if salary['staff_type'] == 'teacher' else "موظف"
+                period = f"{salary['from_date']} إلى {salary['to_date']}"
                 
-                # النوع
-                self.salaries_table.setItem(row, 2, QTableWidgetItem(salary['staff_type_ar'] or ''))
+                items = [
+                    str(salary['id']),
+                    salary['staff_name'] or "",
+                    salary['school_name'] or "",
+                    type_ar,
+                    f"{salary['base_salary']:,.0f} د.ع" if salary['base_salary'] else "0 د.ع",
+                    f"{salary['paid_amount']:,.0f} د.ع",
+                    period,
+                    salary['payment_date'],
+                    salary['notes'] or ""
+                ]
                 
-                # الراتب المسجل
-                base_salary = f"{float(salary['base_salary']):.2f}" if salary['base_salary'] else "0.00"
-                self.salaries_table.setItem(row, 3, QTableWidgetItem(base_salary))
-                
-                # المبلغ المدفوع
-                paid_amount = f"{float(salary['paid_amount']):.2f}" if salary['paid_amount'] else "0.00"
-                self.salaries_table.setItem(row, 4, QTableWidgetItem(paid_amount))
-                
-                # فترة الراتب
-                from_date = salary['from_date'] or ''
-                to_date = salary['to_date'] or ''
-                period = f"{from_date} إلى {to_date}" if from_date and to_date else "غير محدد"
-                self.salaries_table.setItem(row, 5, QTableWidgetItem(period))
-                
-                # عدد الأيام
-                days_count = str(salary['days_count']) if salary['days_count'] else "0"
-                self.salaries_table.setItem(row, 6, QTableWidgetItem(days_count))
-                
-                # تاريخ الدفع
-                self.salaries_table.setItem(row, 7, QTableWidgetItem(salary['payment_date'] or ''))
-                
-                # الملاحظات
-                self.salaries_table.setItem(row, 8, QTableWidgetItem(salary['notes'] or ''))
-                
-                # إخفاء ID في البيانات (مخزن على عمود اسم الموظف)
-                self.salaries_table.item(row, 0).setData(Qt.UserRole, salary['id'])
-            
-            # تحديث العداد
-            self.count_label.setText(f"إجمالي الرواتب: {len(salaries)}")
-            
-            # تعديل أعمدة الجدول
-            self.salaries_table.resizeColumnsToContents()
+                for col_idx, item_text in enumerate(items):
+                    item = QTableWidgetItem(item_text)
+                    item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    self.salaries_table.setItem(row_idx, col_idx, item)
             
         except Exception as e:
-            logging.error(f"خطأ في ملء الجدول: {e}")
+            logging.error(f"خطأ في ملء جدول الرواتب: {e}")
     
     def update_statistics(self):
-        """تحديث الإحصائيات"""
+        """تحديث الإحصائيات بناءً على البيانات المصفاة"""
         try:
-            with db_manager.get_cursor() as cursor:
-                # إحصائيات عامة
-                cursor.execute("SELECT COUNT(*) as count FROM salaries")
-                total_count = cursor.fetchone()['count']
-                
-                cursor.execute("SELECT SUM(paid_amount) as total FROM salaries")
-                total_amount = cursor.fetchone()['total'] or 0
-                
-                cursor.execute("SELECT COUNT(*) as count FROM salaries WHERE staff_type = 'teacher'")
-                teachers_count = cursor.fetchone()['count']
-                
-                cursor.execute("SELECT COUNT(*) as count FROM salaries WHERE staff_type = 'employee'")
-                employees_count = cursor.fetchone()['count']
-                
-                # إحصائيات الشهر الحالي
-                current_month = datetime.now().strftime('%Y-%m')
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as count 
-                    FROM salaries 
-                    WHERE strftime('%Y-%m', payment_date) = ?
-                """, (current_month,))
-                monthly_count = cursor.fetchone()['count']
-                
-                cursor.execute("""
-                    SELECT SUM(paid_amount) as total 
-                    FROM salaries 
-                    WHERE strftime('%Y-%m', payment_date) = ?
-                """, (current_month,))
-                monthly_amount = cursor.fetchone()['total'] or 0
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as count 
-                    FROM salaries 
-                    WHERE staff_type = 'teacher' AND strftime('%Y-%m', payment_date) = ?
-                """, (current_month,))
-                monthly_teachers = cursor.fetchone()['count']
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as count 
-                    FROM salaries 
-                    WHERE staff_type = 'employee' AND strftime('%Y-%m', payment_date) = ?
-                """, (current_month,))
-                monthly_employees = cursor.fetchone()['count']
-                
-                # تحديث التسميات
-                self.total_salaries_label.setText(str(total_count))
-                self.total_amount_label.setText(f"{total_amount:.2f} دينار")
-                self.teachers_count_label.setText(str(teachers_count))
-                self.employees_count_label.setText(str(employees_count))
-                
-                self.monthly_count_label.setText(str(monthly_count))
-                self.monthly_amount_label.setText(f"{monthly_amount:.2f} دينار")
-                self.monthly_teachers_label.setText(str(monthly_teachers))
-                self.monthly_employees_label.setText(str(monthly_employees))
-                
+            salaries = self.current_salaries
+            total_paid = sum(s['paid_amount'] for s in salaries)
+            count = len(salaries)
+            avg_salary = total_paid / count if count > 0 else 0
+            teachers_total = sum(s['paid_amount'] for s in salaries if s['staff_type'] == 'teacher')
+            employees_total = sum(s['paid_amount'] for s in salaries if s['staff_type'] == 'employee')
+
+            self.total_paid_value.setText(f"{total_paid:,.0f} د.ع")
+            self.payments_count_value.setText(str(count))
+            self.avg_salary_value.setText(f"{avg_salary:,.0f} د.ع")
+            self.teachers_total_value.setText(f"{teachers_total:,.0f} د.ع")
+            self.employees_total_value.setText(f"{employees_total:,.0f} د.ع")
+            
+            self.last_update_label.setText(f"آخر تحديث: {datetime.now().strftime('%H:%M:%S')}")
         except Exception as e:
             logging.error(f"خطأ في تحديث الإحصائيات: {e}")
     
@@ -739,14 +533,12 @@ class SalariesPage(QWidget):
         """مسح جميع الفلاتر"""
         try:
             self.search_input.clear()
-            self.school_filter.setCurrentIndex(0)
-            self.type_filter.setCurrentIndex(0)
-            self.person_filter.setCurrentIndex(0)
-            # إعادة تعيين النطاق إلى 1 يناير 2025 حتى 31 ديسمبر 2040
-            self.from_date_filter.setDate(QDate(2025, 1, 1))
-            self.to_date_filter.setDate(QDate(2040, 12, 31))
+            self.school_combo.setCurrentIndex(0)
+            self.type_combo.setCurrentIndex(0)
+            self.person_combo.setCurrentIndex(0)
+            self.from_date_edit.setDate(QDate(2024, 1, 1))
+            self.to_date_edit.setDate(QDate(2040, 12, 31))
             self.apply_filters()
-            
         except Exception as e:
             logging.error(f"خطأ في مسح الفلاتر: {e}")
     
@@ -754,53 +546,57 @@ class SalariesPage(QWidget):
         """إضافة راتب جديد"""
         try:
             dialog = AddSalaryDialog(self)
-            dialog.salary_added.connect(self.refresh_data)
-            dialog.exec_()
-            
+            if dialog.exec_() == dialog.Accepted:
+                self.refresh()
+                log_user_action("إضافة راتب جديد", "نجح")
         except Exception as e:
             logging.error(f"خطأ في إضافة راتب: {e}")
-            QMessageBox.critical(self, "خطأ", f"فشل في فتح نافذة إضافة راتب:\n{e}")
-    
-    def handle_edit_selected(self):
-        """معالجة تعديل الراتب المحدد في الجدول"""
-        row = self.salaries_table.currentRow()
-        if row < 0:
-            QMessageBox.warning(self, "خطأ", "يرجى اختيار راتب للتعديل.")
-            return
-        salary_id = self.salaries_table.item(row, 0).data(Qt.UserRole)
-        # فتح نافذة تعديل الراتب
-        dialog = EditSalaryDialog(salary_id, self)
-        dialog.salary_updated.connect(self.refresh_data)
-        dialog.exec_()
 
-    def handle_delete_selected(self):
-        """معالجة حذف الراتب المحدد في الجدول"""
-        row = self.salaries_table.currentRow()
-        if row < 0:
-            QMessageBox.warning(self, "خطأ", "يرجى اختيار راتب للحذف.")
-            return
-        salary_id = self.salaries_table.item(row, 0).data(Qt.UserRole)
-        reply = QMessageBox.question(
-            self, "تأكيد الحذف",
-            "هل أنت متأكد من حذف هذا الراتب؟",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            affected = db_manager.execute_update("DELETE FROM salaries WHERE id = ?", (salary_id,))
-            if affected > 0:
-                QMessageBox.information(self, "نجح", "تم حذف الراتب بنجاح")
-                self.refresh_data()
-                log_user_action(f"حذف الراتب {salary_id}", "نجح")
-            else:
-                QMessageBox.warning(self, "خطأ", "لم يتم العثور على الراتب")
-    
-    def refresh_data(self):
-        """تحديث البيانات"""
+    def edit_salary_by_id(self, salary_id):
+        """تعديل الراتب المحدد"""
         try:
-            self.load_persons_list()  # تحديث قائمة الأشخاص
-            self.load_salaries()
-            self.update_statistics()
-            
+            dialog = EditSalaryDialog(salary_id, self)
+            if dialog.exec_() == dialog.Accepted:
+                self.refresh()
+                log_user_action(f"تعديل الراتب {salary_id}", "نجح")
         except Exception as e:
-            logging.error(f"خطأ في تحديث البيانات: {e}")
+            logging.error(f"خطأ في تعديل راتب: {e}")
+
+    def delete_salary_by_id(self, salary_id):
+        """حذف الراتب المحدد"""
+        try:
+            reply = QMessageBox.question(self, "تأكيد الحذف", "هل أنت متأكد؟", QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                query = "DELETE FROM salaries WHERE id = ?"
+                if db_manager.execute_update(query, (salary_id,)) > 0:
+                    QMessageBox.information(self, "نجح", "تم الحذف بنجاح")
+                    self.refresh()
+                    log_user_action(f"حذف الراتب {salary_id}", "نجح")
+        except Exception as e:
+            logging.error(f"خطأ في حذف راتب: {e}")
+
+    def refresh(self):
+        """تحديث البيانات"""
+        log_user_action("تحديث صفحة الرواتب")
+        self.load_salaries()
+
+    def show_context_menu(self, position):
+        """عرض قائمة السياق للجدول"""
+        try:
+            if self.salaries_table.itemAt(position) is None: return
+            row = self.salaries_table.currentRow()
+            if row < 0: return
+            salary_id = int(self.salaries_table.item(row, 0).text())
+            
+            menu = QMenu(self)
+            edit_action = QAction("تعديل", self)
+            edit_action.triggered.connect(lambda: self.edit_salary_by_id(salary_id))
+            menu.addAction(edit_action)
+            
+            delete_action = QAction("حذف", self)
+            delete_action.triggered.connect(lambda: self.delete_salary_by_id(salary_id))
+            menu.addAction(delete_action)
+            
+            menu.exec_(self.salaries_table.mapToGlobal(position))
+        except Exception as e:
+            logging.error(f"خطأ في عرض قائمة السياق: {e}")
