@@ -267,7 +267,7 @@ class TeachersPage(QWidget):
                     font-family: {font_family};
                 }}
                 #primaryButton {{
-                    background-color: #9B59B6;
+                    background-color: #2980B9; /* Blue color for teachers */
                     border: none;
                     color: white;
                     padding: 10px 20px;
@@ -302,7 +302,7 @@ class TeachersPage(QWidget):
                     color: white;
                 }}
                 QHeaderView::section {{
-                    background-color: #9B59B6;
+                    background-color: #2980B9; /* Blue color for teachers */
                     color: white;
                     padding: 12px;
                     border: none;
