@@ -179,8 +179,8 @@ class DashboardPage(QWidget):
             buttons_layout = QHBoxLayout()
             buttons_layout.setSpacing(5)
             
-            # زر إضافة مدرسة
-            add_school_btn = QPushButton("إضافة مدرسة جديدة")
+            # زر عرض المدارس
+            add_school_btn = QPushButton("عرض المدارس")
             add_school_btn.setObjectName("actionButton")
             add_school_btn.clicked.connect(self.add_school_action)
             buttons_layout.addWidget(add_school_btn)
