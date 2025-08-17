@@ -228,7 +228,7 @@ class AdditionalFeesPage(QWidget):
             actions_layout.addWidget(self.export_fees_button)
             
             self.refresh_button = QPushButton("تحديث")
-            self.refresh_button.setObjectName("refreshButton")
+            self.refresh_button.setObjectName("secondaryButton")
             actions_layout.addWidget(self.refresh_button)
             
             self.clear_filters_button = QPushButton("مسح الفلاتر")
