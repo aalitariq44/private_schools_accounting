@@ -246,9 +246,32 @@ class AddTeacherDialog(QDialog):
             logging.error(f"خطأ في التحقق من البيانات: {e}")
             return False
     
+    def check_teacher_limit(self):
+        """فحص حد المعلمين في النسخة التجريبية"""
+        try:
+            query = "SELECT COUNT(*) FROM teachers"
+            result = db_manager.execute_query(query)
+            if result and result[0][0] >= 4:
+                return False
+            return True
+        except Exception as e:
+            logging.error(f"خطأ في فحص عدد المعلمين: {e}")
+            return True
+
     def add_teacher(self):
         """إضافة المعلم"""
         try:
+            # فحص حد المعلمين في النسخة التجريبية
+            if not self.check_teacher_limit():
+                QMessageBox.warning(
+                    self, 
+                    "النسخة التجريبية", 
+                    "هذه نسخة تجريبية لا يمكن إضافة أكثر من 4 معلمين.\n\n"
+                    "لشراء النسخة الكاملة اتصل بالرقم التالي:\n"
+                    "07710995922"
+                )
+                return
+            
             if not self.validate_data():
                 return
                 

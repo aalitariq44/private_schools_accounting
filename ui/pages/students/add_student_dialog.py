@@ -376,8 +376,31 @@ class AddStudentDialog(QDialog):
         
         return errors
     
+    def check_student_limit(self):
+        """فحص حد الطلاب في النسخة التجريبية"""
+        try:
+            query = "SELECT COUNT(*) FROM students WHERE status != 'محذوف'"
+            result = db_manager.execute_query(query)
+            if result and result[0][0] >= 10:
+                return False
+            return True
+        except Exception as e:
+            logging.error(f"خطأ في فحص عدد الطلاب: {e}")
+            return True
+
     def save_student(self):
         """حفظ بيانات الطالب"""
+        # فحص حد الطلاب في النسخة التجريبية
+        if not self.check_student_limit():
+            QMessageBox.warning(
+                self, 
+                "النسخة التجريبية", 
+                "هذه نسخة تجريبية لا يمكن إضافة أكثر من 10 طلاب.\n\n"
+                "لشراء النسخة الكاملة اتصل بالرقم التالي:\n"
+                "07710995922"
+            )
+            return
+        
         # التحقق من صحة البيانات
         errors = self.validate_inputs()
         if errors:

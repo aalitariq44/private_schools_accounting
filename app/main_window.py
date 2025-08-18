@@ -372,6 +372,14 @@ class MainWindow(QMainWindow):
             except ImportError as e:
                 logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
 
+            # ويدجت النسخة التجريبية
+            try:
+                from ui.widgets.trial_version_widget import TrialVersionWidget
+                self.trial_version_widget = TrialVersionWidget()
+                header_layout.addWidget(self.trial_version_widget)
+            except ImportError as e:
+                logging.warning(f"لم يتم تحميل ويدجت النسخة التجريبية: {e}")
+
             # زر النسخ الاحتياطي السريع
             self.quick_backup_btn = QPushButton("نسخ احتياطي سريع")
             self.quick_backup_btn.setObjectName("quickBackupButton")
