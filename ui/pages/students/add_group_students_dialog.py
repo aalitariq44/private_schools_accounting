@@ -403,11 +403,43 @@ class AddGroupStudentsDialog(QDialog):
                 
         return True
         
+    def check_student_limit_for_group(self, new_students_count):
+        """فحص حد الطلاب في النسخة التجريبية للمجموعة"""
+        try:
+            query = "SELECT COUNT(*) FROM students WHERE status != 'محذوف'"
+            result = db_manager.execute_query(query)
+            current_count = result[0][0] if result else 0
+            
+            if current_count + new_students_count > 10:
+                return False, current_count
+            return True, current_count
+        except Exception as e:
+            logging.error(f"خطأ في فحص عدد الطلاب: {e}")
+            return True, 0
+
     def save_students_group(self):
         """حفظ مجموعة الطلاب"""
         try:
             # التحقق من صحة البيانات
             if not self.validate_shared_data() or not self.validate_students_data():
+                return
+
+            # فحص حد الطلاب في النسخة التجريبية
+            new_students_count = self.students_table.rowCount()
+            can_add, current_count = self.check_student_limit_for_group(new_students_count)
+            
+            if not can_add:
+                remaining_slots = max(0, 10 - current_count)
+                QMessageBox.warning(
+                    self, 
+                    "النسخة التجريبية", 
+                    f"هذه نسخة تجريبية لا يمكن إضافة أكثر من 10 طلاب.\n\n"
+                    f"عدد الطلاب الحالي: {current_count}\n"
+                    f"عدد الطلاب المراد إضافتهم: {new_students_count}\n"
+                    f"المساحات المتاحة: {remaining_slots}\n\n"
+                    "لشراء النسخة الكاملة اتصل بالرقم التالي:\n"
+                    "07710995922"
+                )
                 return
                 
             # جمع البيانات المشتركة
