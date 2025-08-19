@@ -718,8 +718,8 @@ class TestDataGenerator:
             # إنشاء الموظفين
             employee_ids = self.create_employees(school_ids)
             
-            # إنشاء الأقساط
-            self.create_installments(student_ids)
+            # إنشاء الأقساط (تم التعطيل حسب طلب المستخدم)
+            # self.create_installments(student_ids)
             
             # إنشاء الرسوم الإضافية
             self.create_additional_fees(student_ids)
