@@ -14,11 +14,14 @@ import sys
 import os
 
 # إضافة مسار المشروع (دليل المشروع الرئيسي)
-project_root = Path(__file__).parent.parent.resolve()
+project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 os.chdir(str(project_root))  # Set CWD to project root for imports
 
-import config
+import importlib.util
+spec = importlib.util.spec_from_file_location("config", project_root / "config.py")
+config = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(config)
 from core.database.connection import db_manager
 
 class TestDataGenerator:
