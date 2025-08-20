@@ -62,6 +62,50 @@ class NumericTableWidgetItem(QTableWidgetItem):
             return super().__lt__(other)
 
 
+class ArabicTableWidgetItem(QTableWidgetItem):
+    """عنصر جدول مخصص للترتيب الأبجدي العربي"""
+    
+    def __init__(self, text):
+        super().__init__(text)
+        # تحويل النص للترتيب الأبجدي العربي
+        self.setData(Qt.UserRole, self.normalize_arabic_text(text))
+    
+    def normalize_arabic_text(self, text):
+        """تطبيع النص العربي للترتيب الصحيح"""
+        if not text:
+            return ""
+        
+        # إزالة التشكيل والرموز الإضافية
+        arabic_text = text.strip()
+        
+        # استبدال الأحرف المتشابهة للترتيب الموحد
+        replacements = {
+            'أ': 'ا', 'إ': 'ا', 'آ': 'ا',
+            'ة': 'ه',
+            'ى': 'ي',
+            'ؤ': 'و',
+            'ئ': 'ي'
+        }
+        
+        for old, new in replacements.items():
+            arabic_text = arabic_text.replace(old, new)
+        
+        return arabic_text.lower()
+    
+    def __lt__(self, other):
+        """مقارنة مخصصة للترتيب الأبجدي العربي"""
+        try:
+            self_data = self.data(Qt.UserRole)
+            other_data = other.data(Qt.UserRole)
+            
+            if self_data is not None and other_data is not None:
+                return str(self_data) < str(other_data)
+            
+            return super().__lt__(other)
+        except:
+            return super().__lt__(other)
+
+
 class StudentsPage(QWidget):
     """صفحة إدارة الطلاب"""
     
@@ -290,6 +334,10 @@ class StudentsPage(QWidget):
             self.students_table.cellDoubleClicked.connect(self.open_student_details)
             self.students_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.students_table.customContextMenuRequested.connect(self.show_context_menu)
+            
+            # ربط تغيير الترتيب لتحديث المؤشر
+            header = self.students_table.horizontalHeader()
+            header.sortIndicatorChanged.connect(self.update_sort_indicator)
 
             table_layout.addWidget(self.students_table)
             layout.addWidget(table_frame)
@@ -368,6 +416,11 @@ class StudentsPage(QWidget):
             self.displayed_count_label.setObjectName("statLabel")
             stats_layout.addWidget(self.displayed_count_label)
             
+            # مؤشر الترتيب الحالي
+            self.sort_indicator_label = QLabel("الترتيب: افتراضي")
+            self.sort_indicator_label.setObjectName("statLabel")
+            stats_layout.addWidget(self.sort_indicator_label)
+            
             self.male_students_label = QLabel("الذكور: 0")
             self.male_students_label.setObjectName("statLabel")
             stats_layout.addWidget(self.male_students_label)
@@ -395,7 +448,7 @@ class StudentsPage(QWidget):
             # ربط أزرار العمليات
             self.add_student_button.clicked.connect(self.add_student)
             self.add_group_students_button.clicked.connect(self.add_group_students)
-            self.print_list_button.clicked.connect(self.print_student_list)
+            self.print_list_button.clicked.connect(self.print_students_list_ordered)
             self.refresh_button.clicked.connect(self.refresh)
             self.clear_filters_button.clicked.connect(self.clear_filters)
             
@@ -546,6 +599,10 @@ class StudentsPage(QWidget):
                     # إنشاء عنصر الجدول حسب نوع العمود
                     if col_idx == 0:  # عمود المعرف
                         item = NumericTableWidgetItem(item_text, student['id'])
+                    elif col_idx in [1]:  # عمود الاسم - ترتيب أبجدي عربي
+                        item = ArabicTableWidgetItem(item_text)
+                    elif col_idx in [3, 4]:  # الصف والشعبة - ترتيب أبجدي عربي
+                        item = ArabicTableWidgetItem(item_text)
                     elif col_idx in [8, 9, 10]:  # أعمدة المبالغ (الرسوم، المدفوع، المتبقي)
                         # استخراج القيمة الرقمية من النص
                         numeric_value = 0
@@ -556,7 +613,7 @@ class StudentsPage(QWidget):
                         elif col_idx == 10:
                             numeric_value = remaining
                         item = NumericTableWidgetItem(item_text, numeric_value)
-                    else:  # الأعمدة النصية
+                    else:  # الأعمدة النصية الأخرى (المدرسة، الجنس، الهاتف، الحالة)
                         item = QTableWidgetItem(item_text)
                     
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
@@ -757,6 +814,93 @@ class StudentsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في عرض قائمة السياق: {e}")
+    
+    def get_students_in_current_order(self):
+        """الحصول على قائمة الطلاب بالترتيب الحالي المعروض في الجدول"""
+        try:
+            ordered_students = []
+            
+            # المرور عبر صفوف الجدول بالترتيب الحالي
+            for row in range(self.students_table.rowCount()):
+                # الحصول على معرف الطالب من العمود الأول
+                id_item = self.students_table.item(row, 0)
+                if id_item:
+                    student_id = int(id_item.text())
+                    
+                    # البحث عن بيانات الطالب الكاملة
+                    student_data = None
+                    for student in self.current_students:
+                        if student['id'] == student_id:
+                            student_data = student.copy()
+                            break
+                    
+                    if student_data:
+                        ordered_students.append(student_data)
+            
+            return ordered_students
+            
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على الطلاب بالترتيب الحالي: {e}")
+            return self.current_students  # إرجاع القائمة الأصلية في حالة الخطأ
+    
+    def print_students_list_ordered(self):
+        """طباعة قائمة الطلاب بالترتيب الحالي"""
+        try:
+            # الحصول على الطلاب بالترتيب الحالي
+            ordered_students = self.get_students_in_current_order()
+            
+            if not ordered_students:
+                QMessageBox.information(self, "تنبيه", "لا توجد بيانات طلاب للطباعة")
+                return
+            
+            # تحضير معلومات الفلتر المطبق
+            filter_info = []
+            if self.school_combo.currentText() != "جميع المدارس":
+                filter_info.append(f"المدرسة: {self.school_combo.currentText()}")
+            if self.grade_combo.currentText() != "جميع الصفوف":
+                filter_info.append(f"الصف: {self.grade_combo.currentText()}")
+            if self.section_combo.currentText() != "جميع الشعب":
+                filter_info.append(f"الشعبة: {self.section_combo.currentText()}")
+            if self.status_combo.currentText() != "جميع الحالات":
+                filter_info.append(f"الحالة: {self.status_combo.currentText()}")
+            
+            filter_text = " - ".join(filter_info) if filter_info else "بدون فلاتر"
+            
+            # الحصول على معلومات الترتيب الحالي
+            header = self.students_table.horizontalHeader()
+            sorted_column = header.sortIndicatorSection()
+            sort_order = header.sortIndicatorOrder()
+            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            
+            if sorted_column >= 0 and sorted_column < len(column_names):
+                sort_direction = "تصاعدي" if sort_order == Qt.AscendingOrder else "تنازلي"
+                filter_text += f" - مرتب حسب: {column_names[sorted_column]} ({sort_direction})"
+            
+            # طباعة القائمة
+            from core.printing.print_manager import print_students_list
+            print_students_list(ordered_students, filter_text, self)
+            
+            log_user_action("طباعة قائمة الطلاب مع الترتيب المخصص")
+            
+        except Exception as e:
+            logging.error(f"خطأ في طباعة قائمة الطلاب المرتبة: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ أثناء طباعة قائمة الطلاب:\n{str(e)}")
+    
+    def update_sort_indicator(self, logical_index, order):
+        """تحديث مؤشر الترتيب الحالي"""
+        try:
+            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            
+            if logical_index >= 0 and logical_index < len(column_names):
+                column_name = column_names[logical_index]
+                sort_direction = "تصاعدي" if order == Qt.AscendingOrder else "تنازلي"
+                self.sort_indicator_label.setText(f"الترتيب: {column_name} ({sort_direction})")
+            else:
+                self.sort_indicator_label.setText("الترتيب: افتراضي")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحديث مؤشر الترتيب: {e}")
+            self.sort_indicator_label.setText("الترتيب: افتراضي")
     
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
