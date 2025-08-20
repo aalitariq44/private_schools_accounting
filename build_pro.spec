@@ -84,7 +84,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='app/resources/images/icon.ico' if os.path.exists('app/resources/images/icon.ico') else None,
+    icon=os.path.join('app', 'resources', 'images', 'icon.ico'),
 )
 
 coll = COLLECT(

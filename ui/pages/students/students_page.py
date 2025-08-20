@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QMenu, QComboBox, QDateEdit, QSpinBox, QAction, QDialog,
     QSizePolicy
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QDate
+from PyQt5.QtCore import Qt, pyqtSignal, QDate, QVariant
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase, QColor
 
 import config
@@ -26,6 +26,40 @@ from core.utils.logger import log_user_action, log_database_operation
 from .add_student_dialog import AddStudentDialog
 from .edit_student_dialog import EditStudentDialog
 from .add_group_students_dialog import AddGroupStudentsDialog
+
+
+class NumericTableWidgetItem(QTableWidgetItem):
+    """عنصر جدول مخصص للترتيب الرقمي"""
+    
+    def __init__(self, text, numeric_value=None):
+        super().__init__(text)
+        if numeric_value is not None:
+            self.setData(Qt.UserRole, numeric_value)
+        else:
+            # محاولة استخراج القيمة الرقمية من النص
+            try:
+                # إزالة الفواصل والعملة
+                clean_text = text.replace(',', '').replace('د.ع', '').strip()
+                numeric_value = float(clean_text) if clean_text else 0
+                self.setData(Qt.UserRole, numeric_value)
+            except:
+                self.setData(Qt.UserRole, 0)
+    
+    def __lt__(self, other):
+        """مقارنة مخصصة للترتيب الرقمي"""
+        try:
+            self_data = self.data(Qt.UserRole)
+            other_data = other.data(Qt.UserRole)
+            
+            # إذا كان كلاهما رقمي
+            if self_data is not None and other_data is not None:
+                if isinstance(self_data, (int, float)) and isinstance(other_data, (int, float)):
+                    return float(self_data) < float(other_data)
+            
+            # في حالة عدم وجود بيانات رقمية، استخدم الترتيب النصي
+            return super().__lt__(other)
+        except:
+            return super().__lt__(other)
 
 
 class StudentsPage(QWidget):
@@ -509,7 +543,22 @@ class StudentsPage(QWidget):
                 ]
                 
                 for col_idx, item_text in enumerate(items):
-                    item = QTableWidgetItem(item_text)
+                    # إنشاء عنصر الجدول حسب نوع العمود
+                    if col_idx == 0:  # عمود المعرف
+                        item = NumericTableWidgetItem(item_text, student['id'])
+                    elif col_idx in [8, 9, 10]:  # أعمدة المبالغ (الرسوم، المدفوع، المتبقي)
+                        # استخراج القيمة الرقمية من النص
+                        numeric_value = 0
+                        if col_idx == 8:
+                            numeric_value = total_fee
+                        elif col_idx == 9:
+                            numeric_value = total_paid
+                        elif col_idx == 10:
+                            numeric_value = remaining
+                        item = NumericTableWidgetItem(item_text, numeric_value)
+                    else:  # الأعمدة النصية
+                        item = QTableWidgetItem(item_text)
+                    
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     
                     # تلوين المتبقي
