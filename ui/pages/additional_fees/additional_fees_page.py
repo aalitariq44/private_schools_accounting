@@ -533,11 +533,20 @@ class AdditionalFeesPage(QWidget):
                 query += " AND af.student_id = ?"
                 params.append(selected_student_id)
             
-            # فلتر نوع الرسم
+            # فلتر نوع الرسم (مع دعم الرسوم المخصصة)
             selected_fee_type = self.fee_type_combo.currentText()
             if selected_fee_type and selected_fee_type != "جميع الأنواع":
-                query += " AND af.fee_type = ?"
-                params.append(selected_fee_type)
+                # عند اختيار الرسوم المخصصة، عرض أي نوع رسم غير الأنواع الافتراضية
+                if selected_fee_type == "رسم مخصص":
+                    # استبعاد الأنواع الافتراضية
+                    default_types = ['رسوم التسجيل', 'الزي المدرسي', 'الكتب', 'القرطاسية']
+                    placeholders = ','.join('?' for _ in default_types)
+                    query += f" AND af.fee_type NOT IN ({placeholders})"
+                    params.extend(default_types)
+                else:
+                    # أنواع الرسم المحددة
+                    query += " AND af.fee_type = ?"
+                    params.append(selected_fee_type)
             
             # فلتر الحالة
             selected_status = self.status_combo.currentText()
