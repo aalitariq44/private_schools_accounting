@@ -185,6 +185,7 @@ class AddExpenseDialog(QDialog):
         """تحميل قائمة المدارس"""
         try:
             self.school_combo.clear()
+            self.school_combo.addItem("عام", None)  # إضافة خيار عام
             
             # جلب المدارس من قاعدة البيانات
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
@@ -194,8 +195,8 @@ class AddExpenseDialog(QDialog):
                 for school in schools:
                     self.school_combo.addItem(school['name_ar'], school['id'])
             else:
-                self.school_combo.addItem("لا توجد مدارس", None)
-                self.save_button.setEnabled(False)
+                # إذا لم توجد مدارس، يمكن على الأقل إضافة مصروفات عامة
+                pass  # الخيار "عام" موجود بالفعل
             
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
@@ -214,9 +215,7 @@ class AddExpenseDialog(QDialog):
             if self.amount_input.value() <= 0:
                 errors.append("يجب إدخال مبلغ أكبر من الصفر")
             
-            # التحقق من المدرسة
-            if not self.school_combo.currentData():
-                errors.append("يجب اختيار المدرسة")
+            # لا حاجة للتحقق من المدرسة لأن "عام" خيار صالح
             
             # التحقق من الفئة
             if self.category_combo.currentIndex() == 0:

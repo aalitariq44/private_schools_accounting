@@ -52,7 +52,7 @@ class ExpensesPage(QWidget):
             create_table_query = """
                 CREATE TABLE IF NOT EXISTS expenses (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    school_id INTEGER NOT NULL,
+                    school_id INTEGER NULL,
                     expense_type TEXT NOT NULL,
                     amount DECIMAL(10,2) NOT NULL,
                     expense_date DATE NOT NULL,
@@ -60,7 +60,7 @@ class ExpensesPage(QWidget):
                     notes TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                    FOREIGN KEY (school_id) REFERENCES schools(id)
                 )
             """
             db_manager.execute_update(create_table_query)
@@ -348,15 +348,18 @@ class ExpensesPage(QWidget):
         """تحميل قائمة المدارس"""
         try:
             self.school_combo.clear()
-            self.school_combo.addItem("جميع المدارس", None)
+            self.school_combo.addItem("الجميع", None)
+            self.school_combo.addItem("عام", "general")
+            
             # جلب المدارس من قاعدة البيانات
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
             schools = db_manager.execute_query(query)
             if schools:
                 for school in schools:
                     self.school_combo.addItem(school['name_ar'], school['id'])
-            else:
-                self.school_combo.addItem("لا توجد مدارس", None)
+            
+            # تحميل المصروفات بعد تحميل المدارس
+            self.refresh()
     
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
@@ -376,7 +379,11 @@ class ExpensesPage(QWidget):
             
             # فلتر المدرسة
             selected_school_id = self.school_combo.currentData()
-            if selected_school_id:
+            if selected_school_id == "general":
+                # إظهار المصروفات العامة فقط (school_id IS NULL)
+                query += " AND e.school_id IS NULL"
+            elif selected_school_id:
+                # إظهار مصروفات مدرسة محددة
                 query += " AND e.school_id = ?"
                 params.append(selected_school_id)
             
@@ -438,7 +445,7 @@ class ExpensesPage(QWidget):
                     f"{expense['amount']:,.2f} د.ع",
                     expense['expense_type'] or "",
                     expense['expense_date'] or "",
-                    expense['school_name'] or "",
+                    expense['school_name'] or "عام",
                     (expense['notes'] or "")[:50] + ("..." if len(expense['notes'] or "") > 50 else "")
                 ]
                 
@@ -649,7 +656,7 @@ class ExpensesPage(QWidget):
                 # كتابة البيانات
                 for expense in self.current_expenses:
                     f.write(f"{expense['id']},{expense['expense_type']},{expense['amount']},{expense['description']},"
-                           f"{expense['expense_date']},{expense['school_name']},\"{expense['notes'] or ''}\"\n")
+                           f"{expense['expense_date']},{expense['school_name'] or 'عام'},\"{expense['notes'] or ''}\"\n")
             
             QMessageBox.information(self, "نجح", f"تم تصدير التقرير بنجاح:\n{filename}")
             log_user_action("تصدير تقرير المصروفات", "نجح")
