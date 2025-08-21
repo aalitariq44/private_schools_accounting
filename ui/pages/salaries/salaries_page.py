@@ -24,6 +24,16 @@ from .add_salary_dialog import AddSalaryDialog
 from .edit_salary_dialog import EditSalaryDialog
 
 
+# Subclass QTableWidgetItem for numeric sorting of ID column
+class NumericTableWidgetItem(QTableWidgetItem):
+    """QTableWidgetItem subclass for numeric sorting based on integer value."""
+    def __lt__(self, other):
+        try:
+            return int(self.text()) < int(other.text())
+        except ValueError:
+            return self.text() < other.text()
+
+
 class SalariesPage(QWidget):
     """صفحة إدارة الرواتب"""
     
@@ -504,6 +514,8 @@ class SalariesPage(QWidget):
                 for col_idx, item_text in enumerate(items):
                     item = QTableWidgetItem(item_text)
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    if col_idx == 0:  # ID column
+                        item = NumericTableWidgetItem(item_text)  # Use numeric item for ID
                     self.salaries_table.setItem(row_idx, col_idx, item)
             
         except Exception as e:
