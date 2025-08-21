@@ -41,7 +41,7 @@ class SalaryDetailsDialog(QDialog):
         """إعداد واجهة المستخدم"""
         self.setWindowTitle(f"تفاصيل رواتب {self.person_name}")
         self.setModal(True)
-        self.resize(900, 600)
+        self.resize(1400, 600)
         
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
