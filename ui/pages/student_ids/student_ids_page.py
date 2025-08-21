@@ -89,8 +89,6 @@ class StudentIDsPage(QWidget):
         # عنوان الصفحة
         self.create_header(layout)
         
-        # إعدادات الهوية
-        self.create_id_settings(layout)
         
         # خيارات الفلترة والاختيار
         self.create_filter_section(layout)
