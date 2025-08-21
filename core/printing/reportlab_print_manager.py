@@ -352,20 +352,19 @@ class ReportLabPrintManager:
                 mask='auto'
             )
         # Draw text in left column
-        text1 = self.reshape_arabic_text("انشاء شركة الحلول التقنية الجديدة 07710995922")
+        text0 = self.reshape_arabic_text("يرجى الاحتفاظ بالوصل لإبرازه عند الحاجة")
+        text1 = self.reshape_arabic_text("شركة الحلول التقنية الجديدة   واتساب: 07859371340 تليجرام: @new_tech")
         text2 = self.reshape_arabic_text("لانشاء كافة تطبيقات الهاتف وسطح المكتب ومواقع الويب وادارة قواعد البيانات")
-        
         # Calculate horizontal center of the left column
         center_x_left_column = footer_x + (left_width / 2)
         
         # Calculate vertical center of the footer text area
         center_y = footer_y + (footer_height / 2)
 
-        # Draw text1 slightly above center, centered within the left column
-        self.draw_centered_text(c, text1, center_x_left_column, center_y + 5, self.arabic_bold_font, 10)
-        
-        # Draw text2 slightly below center, centered within the left column
-        self.draw_centered_text(c, text2, center_x_left_column, center_y - 5, self.arabic_font, 9)
+        # Draw three footer texts centered within the left column
+        self.draw_centered_text(c, text0, center_x_left_column, center_y + 14, self.arabic_font, 9)
+        self.draw_centered_text(c, text1, center_x_left_column, center_y + 2, self.arabic_bold_font, 9)
+        self.draw_centered_text(c, text2, center_x_left_column, center_y - 10, self.arabic_font, 9)
 
     def _number_to_arabic_words(self, number: float) -> str:
         """تحويل الرقم إلى كلمات عربية"""
