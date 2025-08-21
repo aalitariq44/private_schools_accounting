@@ -152,6 +152,14 @@ class StudentIDsPage(QWidget):
         filter_options_layout.addWidget(grade_label)
         filter_options_layout.addWidget(self.grade_filter)
         
+        # إضافة حقل بحث بالاسم
+        search_label = QLabel("بحث:")
+        self.search_input = QLineEdit()
+        self.search_input.setPlaceholderText("اسم الطالب")
+        self.search_input.textChanged.connect(self.apply_filters)
+        filter_options_layout.addWidget(search_label)
+        filter_options_layout.addWidget(self.search_input)
+        
         filter_options_layout.addStretch()
         filter_layout.addLayout(filter_options_layout)
         
@@ -352,6 +360,8 @@ class StudentIDsPage(QWidget):
         """تطبيق الفلاتر على بيانات الطلاب"""
         school_filter = self.school_filter.currentText()
         grade_filter = self.grade_filter.currentText()
+        # إضافة فلتر البحث بالنص
+        search_text = self.search_input.text().strip().lower()
         
         self.filtered_students = []
         
@@ -362,6 +372,9 @@ class StudentIDsPage(QWidget):
             
             # فلتر الصف
             if grade_filter != "الكل" and student['grade'] != grade_filter:
+                continue
+            # فلتر البحث بالاسم
+            if search_text and search_text not in student['name'].lower():
                 continue
             
             self.filtered_students.append(student)

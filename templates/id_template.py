@@ -192,7 +192,7 @@ TEMPLATE_ELEMENTS = {
         "type": "line"
     },
     
-    # رقم الهوية (اختياري)
+    # رقم الطالب (اختياري)
     "id_number": {
         "x": 0.96,
         "y": 0.28,
@@ -200,7 +200,7 @@ TEMPLATE_ELEMENTS = {
         "font_name": "Helvetica",
         "alignment": "right",
         "color": Color(0.5, 0.5, 0.5),
-        "text": "رقم الهوية: AUTO"
+        "text": "رقم الطالب: AUTO"
     }
 }
 
