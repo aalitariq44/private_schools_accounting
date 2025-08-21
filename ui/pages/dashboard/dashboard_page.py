@@ -197,11 +197,6 @@ class DashboardPage(QWidget):
             add_payment_btn.clicked.connect(self.add_payment_action)
             buttons_layout.addWidget(add_payment_btn)
             
-            # زر التقارير
-            reports_btn = QPushButton("عرض التقارير")
-            reports_btn.setObjectName("actionButton")
-            reports_btn.clicked.connect(self.view_reports_action)
-            buttons_layout.addWidget(reports_btn)
             
             # زر تحديث البيانات
             refresh_btn = QPushButton("تحديث البيانات")
