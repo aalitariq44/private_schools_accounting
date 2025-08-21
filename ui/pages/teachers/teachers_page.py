@@ -507,25 +507,53 @@ class TeachersPage(QWidget):
             QMessageBox.critical(self, "خطأ", f"فشل في تعديل المعلم:\n{e}")
 
     def delete_teacher(self, teacher_id):
-        """حذف المعلم المحدد"""
+        """حذف المعلم المحدد مع رواتبه"""
         try:
+            # أولاً، التحقق من وجود رواتب للمعلم
+            salary_query = "SELECT COUNT(*) as count FROM salaries WHERE staff_type = 'teacher' AND staff_id = ?"
+            salary_result = db_manager.execute_query(salary_query, (teacher_id,))
+            salary_count = salary_result[0]['count'] if salary_result else 0
+            
+            # إعداد رسالة التحذير
+            if salary_count > 0:
+                warning_message = f"""هل أنت متأكد من حذف هذا المعلم؟
+
+⚠️ تحذير: سيتم حذف جميع الرواتب المرتبطة بهذا المعلم أيضاً!
+
+عدد الرواتب المسجلة: {salary_count}
+
+هذا الإجراء لا يمكن التراجع عنه."""
+            else:
+                warning_message = "هل أنت متأكد من حذف هذا المعلم؟"
+            
             reply = QMessageBox.question(
                 self, "تأكيد الحذف",
-                "هل أنت متأكد من حذف هذا المعلم؟",
+                warning_message,
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
             )
             
             if reply == QMessageBox.Yes:
-                query = "DELETE FROM teachers WHERE id = ?"
-                affected_rows = db_manager.execute_update(query, (teacher_id,))
-                
-                if affected_rows > 0:
-                    QMessageBox.information(self, "نجح", "تم حذف المعلم بنجاح")
-                    self.refresh()
-                    log_user_action(f"حذف المعلم {teacher_id}", "نجح")
-                else:
-                    QMessageBox.warning(self, "خطأ", "لم يتم العثور على المعلم")
+                # بدء عملية الحذف باستخدام transaction
+                with db_manager.get_cursor() as cursor:
+                    # حذف الرواتب أولاً
+                    cursor.execute("DELETE FROM salaries WHERE staff_type = 'teacher' AND staff_id = ?", (teacher_id,))
+                    deleted_salaries = cursor.rowcount
+                    
+                    # ثم حذف المعلم
+                    cursor.execute("DELETE FROM teachers WHERE id = ?", (teacher_id,))
+                    affected_rows = cursor.rowcount
+                    
+                    if affected_rows > 0:
+                        success_message = "تم حذف المعلم بنجاح"
+                        if deleted_salaries > 0:
+                            success_message += f"\nتم حذف {deleted_salaries} راتب مرتبط بالمعلم"
+                        
+                        QMessageBox.information(self, "نجح", success_message)
+                        self.refresh()
+                        log_user_action(f"حذف المعلم {teacher_id} مع {deleted_salaries} راتب", "نجح")
+                    else:
+                        QMessageBox.warning(self, "خطأ", "لم يتم العثور على المعلم")
                 
         except Exception as e:
             logging.error(f"خطأ في حذف معلم: {e}")

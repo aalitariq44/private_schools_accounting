@@ -505,21 +505,54 @@ class EmployeesPage(QWidget):
             QMessageBox.critical(self, "خطأ", f"فشل في تعديل الموظف:\n{e}")
 
     def delete_employee(self, employee_id):
-        """حذف الموظف المحدد"""
+        """حذف الموظف المحدد مع رواتبه"""
         try:
+            # أولاً، التحقق من وجود رواتب للموظف
+            salary_query = "SELECT COUNT(*) as count FROM salaries WHERE staff_type = 'employee' AND staff_id = ?"
+            salary_result = db_manager.execute_query(salary_query, (employee_id,))
+            salary_count = salary_result[0]['count'] if salary_result else 0
+            
+            # إعداد رسالة التحذير
+            if salary_count > 0:
+                warning_message = f"""هل أنت متأكد من حذف هذا الموظف؟
+
+⚠️ تحذير: سيتم حذف جميع الرواتب المرتبطة بهذا الموظف أيضاً!
+
+عدد الرواتب المسجلة: {salary_count}
+
+هذا الإجراء لا يمكن التراجع عنه."""
+            else:
+                warning_message = "هل أنت متأكد من حذف هذا الموظف؟"
+            
             reply = QMessageBox.question(
-                self, "تأكيد الحذف", "هل أنت متأكد من حذف هذا الموظف؟",
-                QMessageBox.Yes | QMessageBox.No, QMessageBox.No
+                self, "تأكيد الحذف",
+                warning_message,
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
             )
+            
             if reply == QMessageBox.Yes:
-                query = "DELETE FROM employees WHERE id = ?"
-                affected_rows = db_manager.execute_update(query, (employee_id,))
-                if affected_rows > 0:
-                    QMessageBox.information(self, "نجح", "تم حذف الموظف بنجاح")
-                    self.refresh()
-                    log_user_action(f"حذف الموظف {employee_id}", "نجح")
-                else:
-                    QMessageBox.warning(self, "خطأ", "لم يتم العثور على الموظف")
+                # بدء عملية الحذف باستخدام transaction
+                with db_manager.get_cursor() as cursor:
+                    # حذف الرواتب أولاً
+                    cursor.execute("DELETE FROM salaries WHERE staff_type = 'employee' AND staff_id = ?", (employee_id,))
+                    deleted_salaries = cursor.rowcount
+                    
+                    # ثم حذف الموظف
+                    cursor.execute("DELETE FROM employees WHERE id = ?", (employee_id,))
+                    affected_rows = cursor.rowcount
+                    
+                    if affected_rows > 0:
+                        success_message = "تم حذف الموظف بنجاح"
+                        if deleted_salaries > 0:
+                            success_message += f"\nتم حذف {deleted_salaries} راتب مرتبط بالموظف"
+                        
+                        QMessageBox.information(self, "نجح", success_message)
+                        self.refresh()
+                        log_user_action(f"حذف الموظف {employee_id} مع {deleted_salaries} راتب", "نجح")
+                    else:
+                        QMessageBox.warning(self, "خطأ", "لم يتم العثور على الموظف")
+                
         except Exception as e:
             logging.error(f"خطأ في حذف موظف: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في حذف الموظف:\n{e}")
