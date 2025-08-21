@@ -10,24 +10,24 @@ from reportlab.lib.colors import Color, black, white
 
 # أبعاد الهوية (ISO ID-1 - حجم بطاقة ماستر كارد)
 # 85.60 × 53.98 مم = 242.646 × 153.014 نقطة
-ID_WIDTH = 85.60 * mm / 10  # تحويل إلى نقاط ReportLab
-ID_HEIGHT = 53.98 * mm / 10  # تحويل إلى نقاط ReportLab
+ID_WIDTH = 85.60 * mm  # تحويل إلى نقاط ReportLab
+ID_HEIGHT = 53.98 * mm  # تحويل إلى نقاط ReportLab
 
 # أبعاد صفحة A4
-A4_WIDTH = 210 * mm / 10
-A4_HEIGHT = 297 * mm / 10
+A4_WIDTH = 210 * mm
+A4_HEIGHT = 297 * mm
 
 # تخطيط الشبكة على صفحة A4 (2 عمود × 5 صفوف = 10 هويات)
 GRID_COLS = 2
 GRID_ROWS = 5
 
 # هوامش الصفحة
-PAGE_MARGIN_X = 15 * mm / 10
-PAGE_MARGIN_Y = 20 * mm / 10
+PAGE_MARGIN_X = 15 * mm
+PAGE_MARGIN_Y = 20 * mm
 
 # مسافات بين البطاقات
-CARD_SPACING_X = 10 * mm / 10
-CARD_SPACING_Y = 8 * mm / 10
+CARD_SPACING_X = 10 * mm
+CARD_SPACING_Y = 8 * mm
 
 # قالب العناصر داخل الهوية (إحداثيات نسبية من 0 إلى 1)
 TEMPLATE_ELEMENTS = {
@@ -130,7 +130,7 @@ TEMPLATE_ELEMENTS = {
 # إعدادات علامات القطع
 CUT_MARKS = {
     "enabled": True,
-    "length": 3 * mm / 10,
+    "length": 3 * mm,
     "color": Color(0.7, 0.7, 0.7),  # رمادي فاتح
     "width": 0.5
 }
@@ -244,12 +244,32 @@ def load_template_from_json(filepath):
         
         # تحديث المتغيرات العامة
         global TEMPLATE_ELEMENTS, CUT_MARKS, GRID_COLS, GRID_ROWS
+        global ID_WIDTH, ID_HEIGHT, A4_WIDTH, A4_HEIGHT
+        global PAGE_MARGIN_X, PAGE_MARGIN_Y, CARD_SPACING_X, CARD_SPACING_Y
+        
         TEMPLATE_ELEMENTS = template_data.get("elements", TEMPLATE_ELEMENTS)
         CUT_MARKS = template_data.get("cut_marks", CUT_MARKS)
         
         grid_layout = template_data.get("grid_layout", {})
         GRID_COLS = grid_layout.get("cols", GRID_COLS)
         GRID_ROWS = grid_layout.get("rows", GRID_ROWS)
+        
+        # تحديث الأبعاد إذا كانت متوفرة
+        dimensions = template_data.get("id_dimensions", {})
+        if "width_mm" in dimensions:
+            ID_WIDTH = dimensions["width_mm"] * mm
+        if "height_mm" in dimensions:
+            ID_HEIGHT = dimensions["height_mm"] * mm
+        
+        margins = template_data.get("margins", {})
+        if "page_margin_x_mm" in margins:
+            PAGE_MARGIN_X = margins["page_margin_x_mm"] * mm
+        if "page_margin_y_mm" in margins:
+            PAGE_MARGIN_Y = margins["page_margin_y_mm"] * mm
+        if "card_spacing_x_mm" in margins:
+            CARD_SPACING_X = margins["card_spacing_x_mm"] * mm
+        if "card_spacing_y_mm" in margins:
+            CARD_SPACING_Y = margins["card_spacing_y_mm"] * mm
         
         return True
     except Exception as e:

@@ -89,10 +89,6 @@ class StudentIDsPage(QWidget):
         # عنوان الصفحة
         self.create_header(layout)
         
-        
-        # إعدادات الهوية
-        self.create_id_settings(layout)
-        
         # خيارات الفلترة والاختيار
         self.create_filter_section(layout)
         
@@ -131,25 +127,7 @@ class StudentIDsPage(QWidget):
         
         layout.addWidget(header_frame)
     
-    def create_id_settings(self, layout):
-        """إنشاء إعدادات الهوية"""
-        settings_group = QGroupBox("إعدادات الهوية")
-        settings_layout = QFormLayout(settings_group)
-        
-        # اسم المدرسة
-        self.school_name_edit = QLineEdit()
-        # تحميل اسم المدرسة من الإعدادات
-        default_school_name = settings_manager.get_organization_name() or ""
-        self.school_name_edit.setText(default_school_name)
-        self.school_name_edit.setPlaceholderText("اسم المدرسة الذي سيظهر على الهوية")
-        settings_layout.addRow("اسم المدرسة:", self.school_name_edit)
-        
-        # عنوان الهوية
-        self.id_title_edit = QLineEdit("هوية طالب")
-        self.id_title_edit.setPlaceholderText("النص الذي سيظهر كعنوان للهوية")
-        settings_layout.addRow("عنوان الهوية:", self.id_title_edit)
-        
-        layout.addWidget(settings_group)
+
     
     def create_filter_section(self, layout):
         """إنشاء قسم الفلترة والاختيار"""
@@ -309,7 +287,7 @@ class StudentIDsPage(QWidget):
                 # تطبيق الفلاتر وعرض البيانات
                 self.apply_filters()
                 
-                log_database_operation("تحميل بيانات الطلاب لإنشاء الهويات", success=True)
+                log_database_operation("تحميل بيانات الطلاب", "students", "لإنشاء الهويات")
                 
             else:
                 self.students_data = []
@@ -320,6 +298,41 @@ class StudentIDsPage(QWidget):
             logging.error(f"خطأ في تحميل بيانات الطلاب: {e}")
             QMessageBox.warning(self, "خطأ", f"حدث خطأ في تحميل البيانات:\n{str(e)}")
     
+    def sort_grades(self, grades):
+        """ترتيب الصفوف حسب المراحل التعليمية"""
+        # تعريف ترتيب الصفوف
+        grade_order = {
+            # الابتدائي
+            'الأول الابتدائي': 1,
+            'الثاني الابتدائي': 2,
+            'الثالث الابتدائي': 3,
+            'الرابع الابتدائي': 4,
+            'الخامس الابتدائي': 5,
+            'السادس الابتدائي': 6,
+            
+            # المتوسط
+            'الأول المتوسط': 7,
+            'الثاني المتوسط': 8,
+            'الثالث المتوسط': 9,
+            
+            # الإعدادي
+            'الرابع العلمي': 10,
+            'الرابع الأدبي': 11,
+            'الخامس العلمي': 12,
+            'الخامس الأدبي': 13,
+            'السادس العلمي': 14,
+            'السادس الأدبي': 15
+        }
+        
+        # فلترة الصفوف لإزالة Grade 1 والصفوف غير المعرَّفة
+        filtered_grades = []
+        for grade in grades:
+            if grade and grade != 'Grade 1' and grade in grade_order:
+                filtered_grades.append(grade)
+        
+        # ترتيب الصفوف
+        return sorted(filtered_grades, key=lambda x: grade_order.get(x, 999))
+    
     def update_filters(self, schools, grades):
         """تحديث قوائم الفلاتر"""
         # تحديث فلتر المدارس
@@ -328,10 +341,11 @@ class StudentIDsPage(QWidget):
         for school in sorted(schools):
             self.school_filter.addItem(school)
         
-        # تحديث فلتر الصفوف
+        # تحديث فلتر الصفوف مع ترتيب مخصص
         self.grade_filter.clear()
         self.grade_filter.addItem("الكل")
-        for grade in sorted(grades):
+        sorted_grades = self.sort_grades(grades)
+        for grade in sorted_grades:
             self.grade_filter.addItem(grade)
     
     def apply_filters(self):
@@ -443,13 +457,9 @@ class StudentIDsPage(QWidget):
         if not output_path:
             return
         
-        # الحصول على إعدادات الهوية
-        school_name = self.school_name_edit.text().strip()
-        custom_title = self.id_title_edit.text().strip()
-        
-        if not school_name:
-            QMessageBox.warning(self, "تحذير", "يرجى إدخال اسم المدرسة")
-            return
+        # الحصول على إعدادات الهوية الافتراضية
+        school_name = settings_manager.get_organization_name() or "مدرسة"
+        custom_title = "هوية طالب"
         
         # إنشاء نافذة التقدم
         progress_dialog = QProgressDialog("جاري إنشاء الهويات...", "إلغاء", 0, 100, self)
@@ -516,7 +526,7 @@ class StudentIDsPage(QWidget):
         sample_data = [{
             'name': 'أحمد محمد علي السامرائي',
             'grade': 'الصف الثالث الابتدائي',
-            'school_name': self.school_name_edit.text() or 'مدرسة النموذج'
+            'school_name': settings_manager.get_organization_name() or "مدرسة النموذج"
         }]
         
         # إنشاء ملف معاينة مؤقت
@@ -524,8 +534,8 @@ class StudentIDsPage(QWidget):
         preview_path = temp_dir / f"preview_student_id_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         
         try:
-            school_name = self.school_name_edit.text().strip()
-            custom_title = self.id_title_edit.text().strip()
+            school_name = settings_manager.get_organization_name() or "مدرسة"
+            custom_title = "هوية طالب"
             
             success = generate_student_ids_pdf(
                 sample_data,
