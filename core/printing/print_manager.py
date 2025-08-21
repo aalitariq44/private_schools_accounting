@@ -244,6 +244,9 @@ def print_students_list(students, filter_info=None, parent=None, use_web_engine=
         }
         if filter_info:
             data['filter_info'] = filter_info
+        
+        logging.debug(f"Data being passed to print_students_list: {data}")
+        
         pm.preview_document(TemplateType.STUDENTS_LIST, data)
 
 

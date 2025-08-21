@@ -749,6 +749,8 @@ class StudentsPage(QWidget):
                 }
                 students_for_print.append(student_data)
             
+            logging.debug(f"Students data prepared for print: {students_for_print}")
+            
             # إعداد معلومات الفلاتر
             filters = []
             school = self.school_combo.currentText()
