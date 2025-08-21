@@ -239,6 +239,7 @@ class StudentIDsPage(QWidget):
                        sc.name_ar as school_name
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
+                WHERE s.status = 'نشط'
                 ORDER BY s.name
             """
             
