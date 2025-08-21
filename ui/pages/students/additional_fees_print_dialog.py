@@ -124,12 +124,15 @@ class AdditionalFeesPrintDialog(QDialog):
         
         # إعداد خصائص الجدول
         self.fees_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.fees_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.fees_table.setAlternatingRowColors(True)
         self.fees_table.verticalHeader().setVisible(False)
+        self.fees_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # منع التحرير إلا للاختيار
         
         # إعداد حجم الأعمدة
         header = self.fees_table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # اختيار
+        header.setSectionResizeMode(0, QHeaderView.Fixed)  # اختيار - حجم ثابت
+        header.resizeSection(0, 80)  # عرض 80 بكسل لعمود الاختيار
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # النوع
         header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # المبلغ
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # الحالة
@@ -250,7 +253,9 @@ class AdditionalFeesPrintDialog(QDialog):
                     
                     # خانة الاختيار باستخدام خاصية Qt.ItemIsUserCheckable
                     check_item = QTableWidgetItem()
-                    check_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+                    check_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
+                    check_item.setText("")  # نص فارغ حتى يظهر مربع الاختيار فقط
+                    check_item.setTextAlignment(Qt.AlignCenter)  # توسيط مربع الاختيار
                     # تحديد آخر 3 رسوم بشكل افتراضي (بدلاً من أول 3)
                     check_item.setCheckState(Qt.Checked if row < 3 else Qt.Unchecked)
                     self.fees_table.setItem(row, 0, check_item)
@@ -390,6 +395,9 @@ class AdditionalFeesPrintDialog(QDialog):
         يتم استدعاؤه عند تغيير حالة أي عنصر في الجدول.
         يفرض قيد عدم تحديد أكثر من 3 رسوم.
         """
+        # طباعة للتشخيص
+        logging.debug(f"تم تغيير العنصر في الصف {item.row()}, العمود {item.column()}, الحالة: {item.checkState()}")
+        
         # التأكد أن التغيير في العمود الأول (خانة الاختيار)
         if item.column() != 0:
             return
@@ -405,7 +413,9 @@ class AdditionalFeesPrintDialog(QDialog):
             if selected_count > 3:
                 QMessageBox.warning(self, "تنبيه", "لا يمكن تحديد أكثر من 3 رسوم للطباعة في الوصل الواحد.")
                 # منع التحديد بإلغاء تحديد العنصر مع حظر الإشارات لتجنب التكرار
+                self.fees_table.blockSignals(True)
                 item.setCheckState(Qt.Unchecked)
+                self.fees_table.blockSignals(False)
                 return
 
         # تحديث معلومات الملخص بعد أي تغيير
