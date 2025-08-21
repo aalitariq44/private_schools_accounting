@@ -260,8 +260,8 @@ class ExpensesPage(QWidget):
             self.expenses_table.setObjectName("dataTable")
             self.expenses_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
-            # إعداد أعمدة الجدول
-            columns = ["المعرف", "الوصف", "المبلغ", "النوع", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            # إعداد أعمدة الجدول (بدون عمود الإجراءات)
+            columns = ["المعرف", "الوصف", "المبلغ", "النوع", "التاريخ", "المدرسة", "الملاحظات"]
             self.expenses_table.setColumnCount(len(columns))
             self.expenses_table.setHorizontalHeaderLabels(columns)
 
@@ -452,9 +452,6 @@ class ExpensesPage(QWidget):
                     
                     self.expenses_table.setItem(row_idx, col_idx, item)
                 
-                # أزرار الإجراءات
-                actions_widget = self.create_actions_widget(expense['id'])
-                self.expenses_table.setCellWidget(row_idx, 7, actions_widget)
             
             # تحديث العداد
             self.displayed_count_label.setText(f"عدد المصروفات المعروضة: {len(self.current_expenses)}")
