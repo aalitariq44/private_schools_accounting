@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
     QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
@@ -326,7 +326,10 @@ class SalaryDetailsDialog(QDialog):
         self.base_salary_edit.setDecimals(2)
         self.base_salary_edit.setSuffix(" د.ع")
         self.base_salary_edit.setMinimumWidth(150)
-        layout.addRow("الراتب الأساسي:", self.base_salary_edit)
+        self.base_salary_edit.setReadOnly(True)  # غير قابل للتعديل
+        base_salary_label = QLabel("الراتب الأساسي (تلقائي):")
+        base_salary_label.setStyleSheet("color: #666666; font-style: italic;")
+        layout.addRow(base_salary_label, self.base_salary_edit)
         
         group.setLayout(layout)
         return group
@@ -553,6 +556,12 @@ class SalaryDetailsDialog(QDialog):
                 background-color: #f8fbff;
             }
             
+            QDoubleSpinBox:read-only {
+                background-color: #f0f0f0;
+                color: #666666;
+                border: 2px solid #cccccc;
+            }
+            
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #3498db, stop:1 #2980b9);
@@ -631,8 +640,7 @@ class SalaryDetailsDialog(QDialog):
         self.close_button.clicked.connect(self.accept)
         self.print_report_button.clicked.connect(self.print_salary_report)
         
-        # ربط حساب الراتب تلقائياً
-        self.base_salary_edit.valueChanged.connect(self.calculate_salary)
+        # ربط حساب الأيام والراتب تلقائياً (بدون ربط تغيير الراتب الأساسي)
         self.from_date_edit.dateChanged.connect(self.calculate_days)
         self.to_date_edit.dateChanged.connect(self.calculate_days)
 
@@ -651,25 +659,33 @@ class SalaryDetailsDialog(QDialog):
             result = db_manager.execute_query(query, (self.person_id,))
             
             if result:
-                self.person_data = result[0]
+                row = result[0]
+                self.person_data = dict(row)  # تحويل sqlite3.Row إلى dictionary
                 # تحديث معلومات الرأس
-                self.school_label.setText(f"المدرسة: {self.person_data.get('school_name', 'غير محدد')}")
-                salary = self.person_data.get('monthly_salary', 0) or 0
-                self.registered_salary_label.setText(f"الراتب المسجل: {salary:,.2f} د.ع")
+                school_name = self.person_data.get('school_name', 'غير محدد')
+                self.school_label.setText(f"المدرسة: {school_name}")
                 
-                # تعبئة الراتب الأساسي في النموذج
+                salary = float(self.person_data.get('monthly_salary', 0) or 0)
+                self.registered_salary_label.setText(f"الراتب المسجل: {salary:,.0f} د.ع")
+                
+                # تعبئة الراتب الأساسي في النموذج (غير قابل للتعديل)
                 self.base_salary_edit.setValue(salary)
-                self.amount_edit.setValue(salary)  # كقيمة افتراضية
+                self.base_salary_edit.setReadOnly(True)  # جعله غير قابل للتعديل
+                self.amount_edit.setValue(salary)  # كقيمة افتراضية قابلة للتعديل
             else:
                 self.person_data = {}
                 self.school_label.setText("المدرسة: غير محدد")
                 self.registered_salary_label.setText("الراتب المسجل: 0.00 د.ع")
+                self.base_salary_edit.setValue(0)
+                self.base_salary_edit.setReadOnly(True)
                 
         except Exception as e:
             logging.error(f"خطأ في تحميل بيانات الشخص: {e}")
             self.person_data = {}
             self.school_label.setText("المدرسة: خطأ في التحميل")
             self.registered_salary_label.setText("الراتب المسجل: خطأ في التحميل")
+            self.base_salary_edit.setValue(0)
+            self.base_salary_edit.setReadOnly(True)
 
     def load_salary_data(self):
         """تحميل بيانات الرواتب"""
@@ -684,13 +700,16 @@ class SalaryDetailsDialog(QDialog):
                 ORDER BY payment_date DESC
             """
             
-            self.salaries_data = db_manager.execute_query(query, (staff_type, self.person_id))
+            results = db_manager.execute_query(query, (staff_type, self.person_id))
+            # تحويل كل sqlite3.Row إلى dictionary
+            self.salaries_data = [dict(row) for row in results] if results else []
             self.populate_salaries_table()
             self.update_statistics()
             
         except Exception as e:
             logging.error(f"خطأ في تحميل بيانات الرواتب: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في تحميل بيانات الرواتب:\n{str(e)}")
+            self.salaries_data = []
 
     def update_statistics(self):
         """تحديث الإحصائيات التفصيلية"""
@@ -723,7 +742,16 @@ class SalaryDetailsDialog(QDialog):
             last_salary_date = None
             
             for salary in self.salaries_data:
-                amount = float(salary.get('paid_amount', 0) or 0)
+                # تحويل القيم إلى أرقام مع التعامل مع القيم المفقودة
+                paid_amount = salary.get('paid_amount', 0)
+                if paid_amount is None:
+                    paid_amount = 0
+                
+                try:
+                    amount = float(paid_amount)
+                except (ValueError, TypeError):
+                    amount = 0
+                
                 total_amount += amount
                 
                 if amount > highest_salary:
@@ -736,6 +764,7 @@ class SalaryDetailsDialog(QDialog):
                         if isinstance(payment_date_str, str):
                             payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d')
                         else:
+                            # إذا كان التاريخ كائن datetime بالفعل
                             payment_date = payment_date_str
                         
                         # أحدث راتب
@@ -752,8 +781,9 @@ class SalaryDetailsDialog(QDialog):
                                 current_month_count += 1
                                 current_month_amount += amount
                                 
-                    except Exception as e:
+                    except (ValueError, AttributeError) as e:
                         logging.debug(f"خطأ في تحليل التاريخ {payment_date_str}: {e}")
+                        continue
             
             # حساب المتوسط
             average_salary = total_amount / total_count if total_count > 0 else 0
@@ -763,12 +793,12 @@ class SalaryDetailsDialog(QDialog):
             self.current_year_count_label.setText(f"رواتب هذا العام: {current_year_count}")
             self.current_month_count_label.setText(f"رواتب هذا الشهر: {current_month_count}")
             
-            self.total_amount_label.setText(f"إجمالي المبالغ: {total_amount:,.2f} د.ع")
-            self.current_year_amount_label.setText(f"مبالغ هذا العام: {current_year_amount:,.2f} د.ع")
-            self.current_month_amount_label.setText(f"مبالغ هذا الشهر: {current_month_amount:,.2f} د.ع")
+            self.total_amount_label.setText(f"إجمالي المبالغ: {total_amount:,.0f} د.ع")
+            self.current_year_amount_label.setText(f"مبالغ هذا العام: {current_year_amount:,.0f} د.ع")
+            self.current_month_amount_label.setText(f"مبالغ هذا الشهر: {current_month_amount:,.0f} د.ع")
             
-            self.average_salary_label.setText(f"متوسط الراتب: {average_salary:,.2f} د.ع")
-            self.highest_salary_label.setText(f"أعلى راتب: {highest_salary:,.2f} د.ع")
+            self.average_salary_label.setText(f"متوسط الراتب: {average_salary:,.0f} د.ع")
+            self.highest_salary_label.setText(f"أعلى راتب: {highest_salary:,.0f} د.ع")
             
             if last_salary_date:
                 self.last_salary_date_label.setText(f"آخر راتب: {last_salary_date.strftime('%Y-%m-%d')}")
@@ -777,6 +807,16 @@ class SalaryDetailsDialog(QDialog):
                 
         except Exception as e:
             logging.error(f"خطأ في تحديث الإحصائيات: {e}")
+            # في حالة الخطأ، أظهر القيم الافتراضية
+            self.total_salaries_count_label.setText("إجمالي عدد الرواتب: خطأ")
+            self.current_year_count_label.setText("رواتب هذا العام: خطأ")
+            self.current_month_count_label.setText("رواتب هذا الشهر: خطأ")
+            self.total_amount_label.setText("إجمالي المبالغ: خطأ")
+            self.current_year_amount_label.setText("مبالغ هذا العام: خطأ")
+            self.current_month_amount_label.setText("مبالغ هذا الشهر: خطأ")
+            self.average_salary_label.setText("متوسط الراتب: خطأ")
+            self.last_salary_date_label.setText("آخر راتب: خطأ")
+            self.highest_salary_label.setText("أعلى راتب: خطأ")
 
     def populate_salaries_table(self):
         """ملء جدول الرواتب"""
@@ -790,42 +830,59 @@ class SalaryDetailsDialog(QDialog):
                 self.salaries_table.insertRow(row_idx)
                 
                 # تنسيق التواريخ
-                payment_date = salary['payment_date']
-                from_date = salary['from_date']
-                to_date = salary['to_date']
+                payment_date = salary.get('payment_date', '')
+                from_date = salary.get('from_date', '')
+                to_date = salary.get('to_date', '')
                 
-                if isinstance(payment_date, str):
+                # تحويل التواريخ إلى تنسيق قابل للقراءة
+                def format_date(date_str):
+                    if not date_str:
+                        return ""
                     try:
-                        payment_date = datetime.strptime(payment_date, '%Y-%m-%d').strftime('%Y-%m-%d')
+                        if isinstance(date_str, str):
+                            return datetime.strptime(date_str, '%Y-%m-%d').strftime('%Y-%m-%d')
+                        else:
+                            return date_str.strftime('%Y-%m-%d') if hasattr(date_str, 'strftime') else str(date_str)
                     except:
-                        pass
+                        return str(date_str)
                 
-                if isinstance(from_date, str):
-                    try:
-                        from_date = datetime.strptime(from_date, '%Y-%m-%d').strftime('%Y-%m-%d')
-                    except:
-                        pass
+                payment_date = format_date(payment_date)
+                from_date = format_date(from_date)
+                to_date = format_date(to_date)
                 
-                if isinstance(to_date, str):
+                # تحويل المبالغ مع التعامل مع القيم المفقودة
+                def format_amount(amount):
+                    if amount is None:
+                        return "0 د.ع"
                     try:
-                        to_date = datetime.strptime(to_date, '%Y-%m-%d').strftime('%Y-%m-%d')
-                    except:
-                        pass
+                        return f"{float(amount):,.0f} د.ع"
+                    except (ValueError, TypeError):
+                        return "0 د.ع"
+                
+                paid_amount = format_amount(salary.get('paid_amount'))
+                base_salary = format_amount(salary.get('base_salary'))
                 
                 items = [
-                    str(salary['id']),
-                    str(payment_date),
-                    f"{salary['paid_amount']:,.0f} د.ع" if salary['paid_amount'] else "0 د.ع",
-                    f"{salary['base_salary']:,.0f} د.ع" if salary['base_salary'] else "0 د.ع",
-                    str(from_date or ""),
-                    str(to_date or ""),
-                    str(salary['days_count'] or ""),
-                    salary['notes'] or ""
+                    str(salary.get('id', '')),
+                    payment_date,
+                    paid_amount,
+                    base_salary,
+                    from_date,
+                    to_date,
+                    str(salary.get('days_count', '') or ''),
+                    salary.get('notes', '') or ""
                 ]
                 
                 for col_idx, item_text in enumerate(items):
                     item = QTableWidgetItem(item_text)
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                    
+                    # تلوين الأموال بألوان مختلفة
+                    if col_idx == 2:  # المبلغ المدفوع
+                        item.setBackground(QColor(144, 238, 144))  # lightGreen
+                    elif col_idx == 3:  # الراتب الأساسي
+                        item.setBackground(QColor(173, 216, 230))  # lightBlue
+                    
                     self.salaries_table.setItem(row_idx, col_idx, item)
             
             # تحسين عرض الأعمدة
@@ -835,17 +892,18 @@ class SalaryDetailsDialog(QDialog):
             
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الرواتب: {e}")
+            QMessageBox.warning(self, "خطأ", f"فشل في ملء جدول الرواتب:\n{str(e)}")
 
     def validate_salary_inputs(self):
         """التحقق من صحة البيانات المدخلة"""
         # التحقق من المبلغ المدفوع
         if self.amount_edit.value() <= 0:
-            QMessageBox.warning(self, "تحذير", "يرجى إدخال مبلغ صحيح")
+            QMessageBox.warning(self, "تحذير", "يرجى إدخال مبلغ صحيح للمبلغ المدفوع")
             return False
         
-        # التحقق من الراتب الأساسي
+        # التحقق من الراتب الأساسي (يجب أن يكون موجود من البيانات المسجلة)
         if self.base_salary_edit.value() <= 0:
-            QMessageBox.warning(self, "تحذير", "يرجى إدخال راتب أساسي صحيح")
+            QMessageBox.warning(self, "تحذير", "الراتب الأساسي غير محدد. يرجى التأكد من تسجيل راتب للشخص في بياناته الأساسية")
             return False
         
         # التحقق من صحة التواريخ
@@ -928,9 +986,10 @@ class SalaryDetailsDialog(QDialog):
         """مسح نموذج الإدخال"""
         self.date_edit.setDate(QDate.currentDate())
         # استخدام الراتب المسجل كقيمة افتراضية
-        base_salary = self.person_data.get('monthly_salary', 0) or 0
+        base_salary = float(self.person_data.get('monthly_salary', 0) or 0)
         self.amount_edit.setValue(base_salary)
         self.base_salary_edit.setValue(base_salary)
+        self.base_salary_edit.setReadOnly(True)  # تأكد من أنه غير قابل للتعديل
         self.from_date_edit.setDate(QDate.currentDate().addDays(-30))
         self.to_date_edit.setDate(QDate.currentDate())
         self.notes_edit.clear()
@@ -985,25 +1044,30 @@ class SalaryDetailsDialog(QDialog):
     def print_salary_report(self):
         """طباعة تقرير مفصل عن رواتب الشخص"""
         try:
-            from ui.components.printing.salary_report_printer import SalaryReportPrinter
+            # محاولة استيراد وحدة الطباعة
+            try:
+                from ui.components.printing.salary_report_printer import SalaryReportPrinter
+                printer = SalaryReportPrinter()
+                printer.print_person_salary_report(
+                    person_type=self.person_type,
+                    person_id=self.person_id,
+                    person_name=self.person_name,
+                    person_data=self.person_data,
+                    salaries_data=self.salaries_data
+                )
+            except ImportError:
+                # في حالة عدم وجود وحدة الطباعة، اعرض تقرير أساسي
+                total_amount = sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data)
+                QMessageBox.information(
+                    self, "تقرير الرواتب", 
+                    f"تقرير رواتب: {self.person_name}\n"
+                    f"النوع: {'معلم' if self.person_type == 'teacher' else 'موظف'}\n"
+                    f"إجمالي الرواتب: {len(self.salaries_data)}\n"
+                    f"المجموع الكلي: {total_amount:,.0f} د.ع\n"
+                    f"الراتب المسجل: {float(self.person_data.get('monthly_salary', 0) or 0):,.0f} د.ع\n\n"
+                    "ميزة طباعة التقارير المفصلة ستكون متاحة قريباً."
+                )
             
-            printer = SalaryReportPrinter()
-            printer.print_person_salary_report(
-                person_type=self.person_type,
-                person_id=self.person_id,
-                person_name=self.person_name,
-                person_data=self.person_data,
-                salaries_data=self.salaries_data
-            )
-            
-        except ImportError:
-            # في حالة عدم وجود وحدة الطباعة، اعرض رسالة
-            QMessageBox.information(
-                self, "معلومات", 
-                "ميزة طباعة التقارير ستكون متاحة قريباً.\n"
-                f"إجمالي الرواتب: {len(self.salaries_data)}\n"
-                f"المجموع الكلي: {sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data):,.2f} د.ع"
-            )
         except Exception as e:
             logging.error(f"خطأ في طباعة التقرير: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في طباعة التقرير:\n{str(e)}")
