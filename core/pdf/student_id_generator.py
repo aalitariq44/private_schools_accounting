@@ -38,17 +38,38 @@ class StudentIDGenerator:
         """إعداد الخطوط العربية"""
         try:
             # محاولة تحميل خط Cairo العربي
-            font_dir = config.RESOURCES_DIR / "fonts"
+            font_dir = Path(config.BASE_DIR) / "app" / "resources" / "fonts"
             cairo_font_path = font_dir / "Cairo-Medium.ttf"
             cairo_bold_path = font_dir / "Cairo-Bold.ttf"
+            amiri_font_path = font_dir / "Amiri.ttf"
+            amiri_bold_path = font_dir / "Amiri-Bold.ttf"
             
+            fonts_loaded = False
+            
+            # تحميل خط Cairo إذا كان متوفراً
             if cairo_font_path.exists():
                 pdfmetrics.registerFont(TTFont('Cairo', str(cairo_font_path)))
+                fonts_loaded = True
                 logging.info("تم تحميل خط Cairo العربي")
             
             if cairo_bold_path.exists():
                 pdfmetrics.registerFont(TTFont('Cairo-Bold', str(cairo_bold_path)))
+                fonts_loaded = True
                 logging.info("تم تحميل خط Cairo-Bold العربي")
+            
+            # تحميل خط Amiri كبديل
+            if amiri_font_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri', str(amiri_font_path)))
+                fonts_loaded = True
+                logging.info("تم تحميل خط Amiri العربي")
+            
+            if amiri_bold_path.exists():
+                pdfmetrics.registerFont(TTFont('Amiri-Bold', str(amiri_bold_path)))
+                fonts_loaded = True
+                logging.info("تم تحميل خط Amiri-Bold العربي")
+            
+            if not fonts_loaded:
+                logging.warning("لم يتم العثور على خطوط عربية - سيتم استخدام الخط الافتراضي")
                 
         except Exception as e:
             logging.warning(f"فشل في تحميل الخطوط العربية: {e}")
@@ -169,11 +190,23 @@ class StudentIDGenerator:
         
         # إعداد الخط
         font_name = element_config.get('font_name', 'Helvetica')
-        if 'Cairo' in pdfmetrics.getRegisteredFontNames():
-            if 'Bold' in font_name:
+        
+        # استخدام الخطوط العربية إذا كانت متوفرة
+        available_fonts = pdfmetrics.getRegisteredFontNames()
+        if 'Bold' in font_name or 'bold' in font_name.lower():
+            if 'Cairo-Bold' in available_fonts:
                 font_name = 'Cairo-Bold'
-            else:
+            elif 'Amiri-Bold' in available_fonts:
+                font_name = 'Amiri-Bold'
+            elif 'Cairo' in available_fonts:
                 font_name = 'Cairo'
+            elif 'Amiri' in available_fonts:
+                font_name = 'Amiri'
+        else:
+            if 'Cairo' in available_fonts:
+                font_name = 'Cairo'
+            elif 'Amiri' in available_fonts:
+                font_name = 'Amiri'
         
         font_size = element_config.get('font_size', 8)
         color = element_config.get('color', black)
@@ -189,7 +222,7 @@ class StudentIDGenerator:
         text = self.fit_text_to_width(text, font_name, font_size, max_width)
         
         if alignment == 'center':
-            self.canvas.drawCentredText(abs_x, abs_y, text)
+            self.canvas.drawCentredString(abs_x, abs_y, text)
         elif alignment == 'left':
             self.canvas.drawString(abs_x, abs_y, text)
         else:  # right alignment (default)
@@ -221,14 +254,17 @@ class StudentIDGenerator:
         label = element_config.get('label', 'صورة')
         label_font_size = element_config.get('label_font_size', 6)
         
-        font_name = 'Cairo' if 'Cairo' in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
+        # استخدام الخط العربي إذا كان متوفراً
+        available_fonts = pdfmetrics.getRegisteredFontNames()
+        font_name = 'Cairo' if 'Cairo' in available_fonts else 'Amiri' if 'Amiri' in available_fonts else 'Helvetica'
+        
         self.canvas.setFont(font_name, label_font_size)
         self.canvas.setFillColor(Color(0.6, 0.6, 0.6))
         
         # وسط المربع
         center_x = abs_x + width / 2
         center_y = abs_y + height / 2
-        self.canvas.drawCentredText(center_x, center_y, label)
+        self.canvas.drawCentredString(center_x, center_y, label)
     
     def draw_qr_box(self, card_x: float, card_y: float, element_config: Dict):
         """رسم مربع QR مؤقت"""
@@ -255,7 +291,7 @@ class StudentIDGenerator:
         
         center_x = abs_x + width / 2
         center_y = abs_y + height / 2
-        self.canvas.drawCentredText(center_x, center_y, label)
+        self.canvas.drawCentredString(center_x, center_y, label)
     
     def draw_birth_date_box(self, card_x: float, card_y: float, element_config: Dict):
         """رسم خانة تاريخ الميلاد"""
@@ -279,7 +315,10 @@ class StudentIDGenerator:
         label_x = element_config.get('label_x', 0.1)
         label_y = element_config.get('label_y', 0.18)
         
-        font_name = 'Cairo' if 'Cairo' in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
+        # استخدام الخط العربي إذا كان متوفراً
+        available_fonts = pdfmetrics.getRegisteredFontNames()
+        font_name = 'Cairo' if 'Cairo' in available_fonts else 'Amiri' if 'Amiri' in available_fonts else 'Helvetica'
+        
         self.canvas.setFont(font_name, label_font_size)
         self.canvas.setFillColor(black)
         
@@ -321,7 +360,7 @@ class StudentIDGenerator:
         
         self.canvas.setFont('Helvetica', 6)
         self.canvas.setFillColor(Color(0.5, 0.5, 0.5))
-        self.canvas.drawCentredText(A4_WIDTH / 2, 10, info_text)
+        self.canvas.drawCentredString(A4_WIDTH / 2, 10, info_text)
     
     def fit_text_to_width(self, text: str, font_name: str, 
                          font_size: float, max_width: float) -> str:

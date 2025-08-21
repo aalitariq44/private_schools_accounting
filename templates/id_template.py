@@ -34,17 +34,17 @@ TEMPLATE_ELEMENTS = {
     # اسم المدرسة ونص "هوية طالب" في الأعلى
     "school_name": {
         "x": 0.5,          # وسط العرض
-        "y": 0.88,         # في الأعلى
-        "font_size": 8,
+        "y": 0.90,         # في الأعلى
+        "font_size": 9,
         "font_name": "Helvetica-Bold",
         "alignment": "center",
         "color": black,
-        "max_width": 0.9   # 90% من عرض البطاقة
+        "max_width": 0.95   # 95% من عرض البطاقة
     },
     
     "id_title": {
         "x": 0.5,
-        "y": 0.78,
+        "y": 0.82,
         "font_size": 7,
         "font_name": "Helvetica",
         "alignment": "center",
@@ -54,19 +54,19 @@ TEMPLATE_ELEMENTS = {
     
     # اسم الطالب
     "student_name": {
-        "x": 0.55,         # بجانب مربع الصورة
-        "y": 0.65,
-        "font_size": 9,
+        "x": 0.96,         # بجانب مربع الصورة من اليمين
+        "y": 0.68,
+        "font_size": 10,
         "font_name": "Helvetica-Bold",
         "alignment": "right",
         "color": black,
-        "max_width": 0.4
+        "max_width": 0.52  # المساحة المتبقية بعد مربع الصورة
     },
     
     # صف الطالب
     "student_grade": {
-        "x": 0.55,
-        "y": 0.55,
+        "x": 0.96,
+        "y": 0.58,
         "font_size": 8,
         "font_name": "Helvetica",
         "alignment": "right",
@@ -76,9 +76,9 @@ TEMPLATE_ELEMENTS = {
     
     # العام الدراسي
     "academic_year": {
-        "x": 0.55,
-        "y": 0.45,
-        "font_size": 8,
+        "x": 0.96,
+        "y": 0.48,
+        "font_size": 7,
         "font_name": "Helvetica",
         "alignment": "right",
         "color": black,
@@ -87,23 +87,23 @@ TEMPLATE_ELEMENTS = {
     
     # مربع الصورة (فارغ للتركيب اليدوي)
     "photo_box": {
-        "x": 0.08,
-        "y": 0.45,
-        "width": 0.35,
-        "height": 0.4,
+        "x": 0.04,
+        "y": 0.40,
+        "width": 0.40,
+        "height": 0.45,
         "border_color": black,
-        "border_width": 1,
+        "border_width": 1.5,
         "fill_color": white,
         "label": "صورة",
-        "label_font_size": 6
+        "label_font_size": 7
     },
     
     # مربع QR (مؤقت)
     "qr_box": {
-        "x": 0.75,
-        "y": 0.15,
-        "width": 0.2,
-        "height": 0.2,
+        "x": 0.76,
+        "y": 0.10,
+        "width": 0.20,
+        "height": 0.25,
         "border_color": black,
         "border_width": 1,
         "fill_color": white,
@@ -113,17 +113,17 @@ TEMPLATE_ELEMENTS = {
     
     # خانة المواليد (فارغة للكتابة اليدوية)
     "birth_date_box": {
-        "x": 0.08,
-        "y": 0.15,
-        "width": 0.6,
-        "height": 0.1,
+        "x": 0.04,
+        "y": 0.10,
+        "width": 0.65,
+        "height": 0.25,
         "border_color": black,
         "border_width": 0.5,
         "fill_color": white,
         "label": "تاريخ الميلاد: _______________",
-        "label_font_size": 6,
-        "label_x": 0.1,
-        "label_y": 0.18
+        "label_font_size": 7,
+        "label_x": 0.06,
+        "label_y": 0.20
     }
 }
 

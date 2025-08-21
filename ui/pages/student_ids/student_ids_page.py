@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QCheckBox, QGroupBox, QFormLayout,
     QFileDialog, QProgressDialog, QApplication, QSizePolicy,
-    QSplitter, QScrollArea
+    QSplitter, QScrollArea, QDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QCursor
@@ -89,6 +89,9 @@ class StudentIDsPage(QWidget):
         # عنوان الصفحة
         self.create_header(layout)
         
+        
+        # إعدادات الهوية
+        self.create_id_settings(layout)
         
         # خيارات الفلترة والاختيار
         self.create_filter_section(layout)
@@ -257,6 +260,12 @@ class StudentIDsPage(QWidget):
         preview_btn.setObjectName("previewButton")
         preview_btn.clicked.connect(self.preview_template)
         buttons_layout.addWidget(preview_btn)
+        
+        # زر إدارة القوالب
+        template_btn = QPushButton("إدارة القوالب")
+        template_btn.setObjectName("templateButton")
+        template_btn.clicked.connect(self.manage_templates)
+        buttons_layout.addWidget(template_btn)
         
         layout.addWidget(buttons_frame)
     
@@ -438,6 +447,10 @@ class StudentIDsPage(QWidget):
         school_name = self.school_name_edit.text().strip()
         custom_title = self.id_title_edit.text().strip()
         
+        if not school_name:
+            QMessageBox.warning(self, "تحذير", "يرجى إدخال اسم المدرسة")
+            return
+        
         # إنشاء نافذة التقدم
         progress_dialog = QProgressDialog("جاري إنشاء الهويات...", "إلغاء", 0, 100, self)
         progress_dialog.setWindowTitle("إنشاء الهويات")
@@ -531,6 +544,130 @@ class StudentIDsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في معاينة القالب: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في المعاينة:\n{str(e)}")
+    
+    def manage_templates(self):
+        """إدارة القوالب"""
+        # إنشاء نافذة إدارة القوالب
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("إدارة القوالب")
+        dialog.setIcon(QMessageBox.Information)
+        
+        template_actions = [
+            ("محرر القوالب المرئي", self.open_visual_editor),
+            ("حفظ القالب الحالي", self.save_current_template),
+            ("تصدير القالب إلى JSON", self.export_template),
+            ("استيراد قالب من JSON", self.import_template),
+            ("إعادة تعيين القالب الافتراضي", self.reset_template)
+        ]
+        
+        action_text = "اختر إجراءاً:\n\n"
+        for i, (name, _) in enumerate(template_actions, 1):
+            action_text += f"{i}. {name}\n"
+        
+        dialog.setText(action_text)
+        
+        # إضافة أزرار مخصصة
+        for name, action in template_actions:
+            btn = dialog.addButton(name, QMessageBox.ActionRole)
+            btn.clicked.connect(action)
+        
+        dialog.addButton("إلغاء", QMessageBox.RejectRole)
+        dialog.exec_()
+    
+    def open_visual_editor(self):
+        """فتح محرر القوالب المرئي"""
+        try:
+            from ui.dialogs.template_editor import TemplateEditor
+            
+            editor = TemplateEditor(self)
+            result = editor.exec_()
+            
+            if result == QDialog.Accepted:
+                QMessageBox.information(self, "نجح", "تم تحديث القالب بنجاح")
+                
+        except ImportError:
+            QMessageBox.warning(self, "خطأ", "محرر القوالب المرئي غير متوفر")
+        except Exception as e:
+            logging.error(f"خطأ في فتح محرر القوالب: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في فتح محرر القوالب:\n{str(e)}")
+    
+    def save_current_template(self):
+        """حفظ القالب الحالي"""
+        try:
+            from templates.id_template import save_template_as_json
+            
+            template_dir = Path(__file__).parent.parent.parent.parent / "templates"
+            template_file = template_dir / "id_template.json"
+            
+            save_template_as_json(template_file)
+            QMessageBox.information(self, "نجح", f"تم حفظ القالب في:\n{template_file}")
+            
+        except Exception as e:
+            logging.error(f"خطأ في حفظ القالب: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في حفظ القالب:\n{str(e)}")
+    
+    def export_template(self):
+        """تصدير القالب إلى ملف JSON"""
+        try:
+            from templates.id_template import save_template_as_json
+            
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "تصدير القالب",
+                f"id_template_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                "ملفات JSON (*.json)"
+            )
+            
+            if file_path:
+                save_template_as_json(file_path)
+                QMessageBox.information(self, "نجح", f"تم تصدير القالب إلى:\n{file_path}")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تصدير القالب: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في تصدير القالب:\n{str(e)}")
+    
+    def import_template(self):
+        """استيراد قالب من ملف JSON"""
+        try:
+            from templates.id_template import load_template_from_json
+            
+            file_path, _ = QFileDialog.getOpenFileName(
+                self,
+                "استيراد القالب",
+                "",
+                "ملفات JSON (*.json)"
+            )
+            
+            if file_path:
+                success = load_template_from_json(file_path)
+                if success:
+                    QMessageBox.information(self, "نجح", "تم استيراد القالب بنجاح")
+                else:
+                    QMessageBox.warning(self, "خطأ", "فشل في استيراد القالب")
+                    
+        except Exception as e:
+            logging.error(f"خطأ في استيراد القالب: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في استيراد القالب:\n{str(e)}")
+    
+    def reset_template(self):
+        """إعادة تعيين القالب الافتراضي"""
+        reply = QMessageBox.question(
+            self,
+            "تأكيد",
+            "هل أنت متأكد من إعادة تعيين القالب إلى الإعدادات الافتراضية؟",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
+            try:
+                from templates.id_template import ensure_default_template
+                ensure_default_template()
+                QMessageBox.information(self, "نجح", "تم إعادة تعيين القالب الافتراضي")
+                
+            except Exception as e:
+                logging.error(f"خطأ في إعادة تعيين القالب: {e}")
+                QMessageBox.critical(self, "خطأ", f"فشل في إعادة تعيين القالب:\n{str(e)}")
     
     def show_help(self):
         """عرض نافذة المساعدة"""
