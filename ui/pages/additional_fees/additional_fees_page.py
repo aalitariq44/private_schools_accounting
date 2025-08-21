@@ -599,6 +599,7 @@ class AdditionalFeesPage(QWidget):
                     status_item.setBackground(Qt.green)
                 else:
                     status_item.setBackground(Qt.yellow)
+                    status_item.setForeground(Qt.red)
                 self.fees_table.setItem(row, 5, status_item)
 
                 # تاريخ الدفع

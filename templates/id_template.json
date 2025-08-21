@@ -1,0 +1,23 @@
+{
+  "id_dimensions": {
+    "width_mm": 85.6,
+    "height_mm": 53.98
+  },
+  "grid_layout": {
+    "cols": 2,
+    "rows": 5
+  },
+  "margins": {
+    "page_margin_x_mm": 15,
+    "page_margin_y_mm": 20,
+    "card_spacing_x_mm": 10,
+    "card_spacing_y_mm": 8
+  },
+  "elements": {
+    "school_name": {
+      "x": 0.5,
+      "y": 0.88,
+      "font_size": 8,
+      "font_name": "Helvetica-Bold",
+      "alignment": "center",
+      "color": 

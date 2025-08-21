@@ -254,6 +254,7 @@ class MainWindow(QMainWindow):
                 {"name": "employees", "text": "الموظفين", "icon": "employees.png", "active": True},
                 {"name": "installments", "text": "الأقساط", "icon": "installments.png", "active": True},
                 {"name": "additional_fees", "text": "الرسوم الإضافية", "icon": "fees.png", "active": True},
+                {"name": "student_ids", "text": "إنشاء هويات", "icon": "id_card.png", "active": True},
                 {"name": "separator1", "text": "---", "icon": None, "active": False},
                 {"name": "external_income", "text": "الواردات الخارجية", "icon": "income.png", "active": True},
                 {"name": "expenses", "text": "المصروفات", "icon": "expenses.png", "active": True},
@@ -427,6 +428,9 @@ class MainWindow(QMainWindow):
             # صفحة الرسوم الإضافية
             self.load_additional_fees_page()
             
+            # صفحة إنشاء هويات الطلاب
+            self.load_student_ids_page()
+            
             # صفحة الواردات الخارجية
             self.load_external_income_page()
             
@@ -546,6 +550,22 @@ class MainWindow(QMainWindow):
             # إنشاء صفحة بديلة
             placeholder = self.create_placeholder_page("الرسوم الإضافية", "صفحة إدارة الرسوم الإضافية")
             self.pages["additional_fees"] = placeholder
+            self.pages_stack.addWidget(placeholder)
+    
+    def load_student_ids_page(self):
+        """تحميل صفحة إنشاء هويات الطلاب"""
+        try:
+            from ui.pages.student_ids.student_ids_page import StudentIDsPage
+            
+            student_ids = StudentIDsPage()
+            self.pages["student_ids"] = student_ids
+            self.pages_stack.addWidget(student_ids)
+            
+        except Exception as e:
+            logging.error(f"خطأ في تحميل صفحة إنشاء الهويات: {e}")
+            # إنشاء صفحة بديلة
+            placeholder = self.create_placeholder_page("إنشاء هويات الطلاب", "صفحة إنشاء هويات طلابية")
+            self.pages["student_ids"] = placeholder
             self.pages_stack.addWidget(placeholder)
     
     def load_external_income_page(self):
@@ -692,6 +712,7 @@ class MainWindow(QMainWindow):
                 "employees": "الموظفين",
                 "installments": "الأقساط",
                 "additional_fees": "الرسوم الإضافية",
+                "student_ids": "إنشاء هويات الطلاب",
                 
                 "external_income": "الواردات الخارجية",
                 "expenses": "المصروفات",
