@@ -89,8 +89,8 @@ TEMPLATE_ELEMENTS = {
     "photo_box": {
         "x": 0.04,
         "y": 0.40,
-        "width": 0.40,
-        "height": 0.45,
+        "width": 0.30,
+        "height": 0.54,
         "border_color": black,
         "border_width": 1.5,
         "fill_color": white,
