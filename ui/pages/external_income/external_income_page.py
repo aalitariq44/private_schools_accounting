@@ -53,10 +53,11 @@ class ExternalIncomePage(QWidget):
             create_table_query = """
                 CREATE TABLE IF NOT EXISTS external_income (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    school_id INTEGER NOT NULL,
-                    title VARCHAR(255) NOT NULL,
+                    school_id INTEGER NULL,
+                    income_type TEXT NOT NULL,
+                    description TEXT,
                     amount DECIMAL(10,2) NOT NULL,
-                    category VARCHAR(100),
+                    category TEXT,
                     income_date DATE NOT NULL,
                     notes TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -219,7 +220,7 @@ class ExternalIncomePage(QWidget):
             
             self.search_input = QLineEdit()
             self.search_input.setObjectName("searchInput")
-            self.search_input.setPlaceholderText("ابحث في العناوين والملاحظات...")
+            self.search_input.setPlaceholderText("ابحث في العناوين والأوصاف والملاحظات...")
             actions_layout.addWidget(self.search_input)
             
             actions_layout.addStretch() # Add stretch to push buttons to right
@@ -298,8 +299,8 @@ class ExternalIncomePage(QWidget):
             self.income_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            # Swap 'الوصف' and 'النوع' columns: description now second, type later
-            columns = ["المعرف", "الوصف", "المبلغ", "الفئة", "النوع", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            # تغيير ترتيب الأعمدة: عنوان الوارد، الوصف، المبلغ، الفئة، التاريخ، المدرسة، الملاحظات
+            columns = ["المعرف", "عنوان الوارد", "الوصف", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
             self.income_table.setColumnCount(len(columns))
             self.income_table.setHorizontalHeaderLabels(columns)
 
@@ -386,7 +387,8 @@ class ExternalIncomePage(QWidget):
         """تحميل قائمة المدارس"""
         try:
             self.school_combo.clear()
-            self.school_combo.addItem("جميع المدارس", None)
+            self.school_combo.addItem("الجميع", None)
+            self.school_combo.addItem("عام", "general")
             
             # جلب المدارس من قاعدة البيانات
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
@@ -418,7 +420,11 @@ class ExternalIncomePage(QWidget):
             
             # فلتر المدرسة
             selected_school_id = self.school_combo.currentData()
-            if selected_school_id:
+            if selected_school_id == "general":
+                # إظهار الواردات العامة فقط (school_id IS NULL)
+                query += " AND ei.school_id IS NULL"
+            elif selected_school_id:
+                # إظهار واردات مدرسة محددة
                 query += " AND ei.school_id = ?"
                 params.append(selected_school_id)
             
@@ -440,8 +446,8 @@ class ExternalIncomePage(QWidget):
             # فلتر البحث
             search_text = self.search_input.text().strip()
             if search_text:
-                query += " AND (ei.income_type LIKE ? OR ei.notes LIKE ?)"
-                params.extend([f"%{search_text}%", f"%{search_text}%"])
+                query += " AND (ei.income_type LIKE ? OR ei.description LIKE ? OR ei.notes LIKE ?)"
+                params.extend([f"%{search_text}%", f"%{search_text}%", f"%{search_text}%"])
             
             # Default sort by newest entries first based on id
             query += " ORDER BY ei.id DESC"
@@ -473,15 +479,15 @@ class ExternalIncomePage(QWidget):
             for row_idx, income in enumerate(self.current_incomes):
                 self.income_table.insertRow(row_idx)
                 
-                # البيانات الأساسية: id, الوصف, المبلغ, الفئة, النوع, التاريخ, المدرسة, الملاحظات
+                # البيانات الأساسية: id, عنوان الوارد, الوصف, المبلغ, الفئة, التاريخ, المدرسة, الملاحظات
                 items = [
                     str(income['id']),
+                    income['income_type'] or "",
                     income['description'] or "",
                     f"{income['amount']:,.2f} د.ع",
                     income['category'] or "",
-                    income['income_type'] or "",
                     income['income_date'] or "",
-                    income['school_name'] or "",
+                    income['school_name'] or "عام",
                     (income['notes'] or "")[:50] + ("..." if len(income['notes'] or "") > 50 else "")
                 ]
                 
@@ -490,7 +496,7 @@ class ExternalIncomePage(QWidget):
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     
                     # تنسيق خاص للمبلغ
-                    if col_idx == 2:  # عمود المبلغ
+                    if col_idx == 3:  # عمود المبلغ (تغير من 2 إلى 3 بعد إضافة عمود الوصف)
                         item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
                     
                     self.income_table.setItem(row_idx, col_idx, item)
@@ -690,12 +696,12 @@ class ExternalIncomePage(QWidget):
             # إنشاء التقرير
             with open(filename, 'w', encoding='utf-8-sig') as f:
                 # كتابة الرأس
-                f.write("المعرف,العنوان,المبلغ,الفئة,التاريخ,المدرسة,الملاحظات\n")
+                f.write("المعرف,عنوان الوارد,الوصف,المبلغ,الفئة,التاريخ,المدرسة,الملاحظات\n")
                 
                 # كتابة البيانات
                 for income in self.current_incomes:
-                    f.write(f"{income['id']},{income['income_type']},{income['amount']},"
-                           f"{income['description']},{income['income_date']},{income['school_name']},"
+                    f.write(f"{income['id']},{income['income_type']},{income['description']},"
+                           f"{income['amount']},{income['category']},{income['income_date']},{income['school_name'] or 'عام'},"
                            f"\"{income['notes'] or ''}\"\n")
             
             QMessageBox.information(self, "نجح", f"تم تصدير التقرير بنجاح:\n{filename}")
