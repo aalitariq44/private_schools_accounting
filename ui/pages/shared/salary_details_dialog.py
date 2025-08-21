@@ -11,7 +11,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QDateEdit, QDoubleSpinBox, QTextEdit, QGroupBox,
-    QGridLayout, QSpacerItem, QSizePolicy
+    QGridLayout, QSpacerItem, QSizePolicy, QFormLayout,
+    QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QFont
@@ -29,64 +30,190 @@ class SalaryDetailsDialog(QDialog):
         self.person_id = person_id
         self.person_name = person_name
         self.salaries_data = []
+        self.person_data = {}
         
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
+        self.load_person_data()
         self.load_salary_data()
         
         log_user_action(f"فتح تفاصيل رواتب {self.person_type} {person_name}")
 
     def setup_ui(self):
-        """إعداد واجهة المستخدم"""
+        """إعداد واجهة المستخدم بتصميم عصري مشابه لـ add_salary_dialog"""
         self.setWindowTitle(f"تفاصيل رواتب {self.person_name}")
         self.setModal(True)
-        self.resize(1400, 600)
+        self.resize(1600, 800)
+        self.setMinimumWidth(1200)
         
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        # التخطيط الرئيسي
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Scroll area لدعم الشاشات الصغيرة
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setSpacing(20)
+        content_layout.setContentsMargins(25, 25, 25, 25)
         
         # عنوان النافذة
-        self.create_header(layout)
+        self.create_header(content_layout)
+        
+        # قسم الإحصائيات
+        self.create_statistics_section(content_layout)
         
         # تخطيط أفقي للجدول ونموذج الإضافة
-        content_layout = QHBoxLayout()
+        content_main_layout = QHBoxLayout()
         
         # جدول الرواتب
-        self.create_salaries_table(content_layout)
+        self.create_salaries_table(content_main_layout)
         
         # نموذج إضافة راتب
-        self.create_add_salary_form(content_layout)
+        self.create_add_salary_form(content_main_layout)
         
-        layout.addLayout(content_layout)
+        content_layout.addLayout(content_main_layout)
         
         # أزرار النافذة
-        self.create_dialog_buttons(layout)
+        self.create_dialog_buttons(content_layout)
+
+        scroll_area.setWidget(content_widget)
+        main_layout.addWidget(scroll_area)
 
     def create_header(self, layout):
-        """إنشاء رأس النافذة"""
-        header_frame = QFrame()
-        header_frame.setObjectName("headerFrame")
-        header_layout = QVBoxLayout(header_frame)
-        
+        """إنشاء رأس النافذة بتصميم عصري"""
+        # عنوان النافذة الرئيسي
         title_label = QLabel(f"تفاصيل رواتب: {self.person_name}")
-        title_label.setObjectName("titleLabel")
         title_label.setAlignment(Qt.AlignCenter)
-        header_layout.addWidget(title_label)
+        title_label.setStyleSheet("""
+            QLabel {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #3498db, stop:1 #2980b9);
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+        """)
+        layout.addWidget(title_label)
         
+        # معلومات الشخص
+        info_frame = QFrame()
+        info_frame.setObjectName("headerFrame")
+        info_layout = QHBoxLayout(info_frame)
+        info_layout.setContentsMargins(20, 15, 20, 15)
+        
+        # النوع
         type_label = QLabel(f"النوع: {'معلم' if self.person_type == 'teacher' else 'موظف'}")
-        type_label.setObjectName("subtitleLabel")
-        type_label.setAlignment(Qt.AlignCenter)
-        header_layout.addWidget(type_label)
+        type_label.setObjectName("infoLabel")
+        info_layout.addWidget(type_label)
         
-        layout.addWidget(header_frame)
+        info_layout.addStretch()
+        
+        # المدرسة
+        self.school_label = QLabel("المدرسة: جاري التحميل...")
+        self.school_label.setObjectName("infoLabel")
+        info_layout.addWidget(self.school_label)
+        
+        info_layout.addStretch()
+        
+        # الراتب المسجل
+        self.registered_salary_label = QLabel("الراتب المسجل: جاري التحميل...")
+        self.registered_salary_label.setObjectName("salaryInfoLabel")
+        info_layout.addWidget(self.registered_salary_label)
+        
+        layout.addWidget(info_frame)
+
+    def create_statistics_section(self, layout):
+        """إنشاء قسم الإحصائيات التفصيلية"""
+        stats_group = QGroupBox("إحصائيات الرواتب")
+        stats_layout = QHBoxLayout(stats_group)
+        stats_layout.setContentsMargins(15, 20, 15, 15)
+        
+        # العمود الأول - إحصائيات العدد
+        count_frame = QFrame()
+        count_frame.setObjectName("statsFrame")
+        count_layout = QVBoxLayout(count_frame)
+        
+        count_title = QLabel("إحصائيات العدد")
+        count_title.setObjectName("statsTitle")
+        count_layout.addWidget(count_title)
+        
+        self.total_salaries_count_label = QLabel("إجمالي عدد الرواتب: 0")
+        self.total_salaries_count_label.setObjectName("statLabel")
+        count_layout.addWidget(self.total_salaries_count_label)
+        
+        self.current_year_count_label = QLabel("رواتب هذا العام: 0")
+        self.current_year_count_label.setObjectName("statLabel")
+        count_layout.addWidget(self.current_year_count_label)
+        
+        self.current_month_count_label = QLabel("رواتب هذا الشهر: 0")
+        self.current_month_count_label.setObjectName("statLabel")
+        count_layout.addWidget(self.current_month_count_label)
+        
+        stats_layout.addWidget(count_frame)
+        
+        # العمود الثاني - إحصائيات المبالغ
+        amount_frame = QFrame()
+        amount_frame.setObjectName("statsFrame")
+        amount_layout = QVBoxLayout(amount_frame)
+        
+        amount_title = QLabel("إحصائيات المبالغ")
+        amount_title.setObjectName("statsTitle")
+        amount_layout.addWidget(amount_title)
+        
+        self.total_amount_label = QLabel("إجمالي المبالغ: 0.00 د.ع")
+        self.total_amount_label.setObjectName("amountLabel")
+        amount_layout.addWidget(self.total_amount_label)
+        
+        self.current_year_amount_label = QLabel("مبالغ هذا العام: 0.00 د.ع")
+        self.current_year_amount_label.setObjectName("statLabel")
+        amount_layout.addWidget(self.current_year_amount_label)
+        
+        self.current_month_amount_label = QLabel("مبالغ هذا الشهر: 0.00 د.ع")
+        self.current_month_amount_label.setObjectName("statLabel")
+        amount_layout.addWidget(self.current_month_amount_label)
+        
+        stats_layout.addWidget(amount_frame)
+        
+        # العمود الثالث - متوسطات وتفاصيل أخرى
+        avg_frame = QFrame()
+        avg_frame.setObjectName("statsFrame")
+        avg_layout = QVBoxLayout(avg_frame)
+        
+        avg_title = QLabel("متوسطات وتفاصيل")
+        avg_title.setObjectName("statsTitle")
+        avg_layout.addWidget(avg_title)
+        
+        self.average_salary_label = QLabel("متوسط الراتب: 0.00 د.ع")
+        self.average_salary_label.setObjectName("statLabel")
+        avg_layout.addWidget(self.average_salary_label)
+        
+        self.last_salary_date_label = QLabel("آخر راتب: --")
+        self.last_salary_date_label.setObjectName("statLabel")
+        avg_layout.addWidget(self.last_salary_date_label)
+        
+        self.highest_salary_label = QLabel("أعلى راتب: 0.00 د.ع")
+        self.highest_salary_label.setObjectName("statLabel")
+        avg_layout.addWidget(self.highest_salary_label)
+        
+        stats_layout.addWidget(avg_frame)
+        
+        layout.addWidget(stats_group)
 
     def create_salaries_table(self, layout):
-        """إنشاء جدول الرواتب"""
+        """إنشاء جدول الرواتب بتصميم محسن"""
         table_frame = QFrame()
         table_frame.setObjectName("tableFrame")
         table_layout = QVBoxLayout(table_frame)
+        table_layout.setContentsMargins(0, 0, 0, 0)
         
         table_title = QLabel("سجل الرواتب")
         table_title.setObjectName("sectionTitle")
@@ -95,7 +222,7 @@ class SalaryDetailsDialog(QDialog):
         self.salaries_table = QTableWidget()
         self.salaries_table.setObjectName("salariesTable")
         
-        columns = ["المعرف", "التاريخ", "المبلغ", "الراتب الأساسي", "من تاريخ", "إلى تاريخ", "عدد الأيام", "الملاحظات"]
+        columns = ["المعرف", "تاريخ الدفع", "المبلغ المدفوع", "الراتب الأساسي", "من تاريخ", "إلى تاريخ", "عدد الأيام", "الملاحظات"]
         self.salaries_table.setColumnCount(len(columns))
         self.salaries_table.setHorizontalHeaderLabels(columns)
         
@@ -107,79 +234,64 @@ class SalaryDetailsDialog(QDialog):
         # إخفاء عمود المعرف
         self.salaries_table.setColumnHidden(0, True)
         
+        # تحسين عرض الأعمدة
         header = self.salaries_table.horizontalHeader()
         header.setStretchLastSection(True)
+        
+        # تعيين عرض الأعمدة
+        self.salaries_table.setColumnWidth(1, 120)  # تاريخ الدفع
+        self.salaries_table.setColumnWidth(2, 150)  # المبلغ المدفوع
+        self.salaries_table.setColumnWidth(3, 150)  # الراتب الأساسي
+        self.salaries_table.setColumnWidth(4, 120)  # من تاريخ
+        self.salaries_table.setColumnWidth(5, 120)  # إلى تاريخ
+        self.salaries_table.setColumnWidth(6, 100)  # عدد الأيام
         
         table_layout.addWidget(self.salaries_table)
         layout.addWidget(table_frame)
 
     def create_add_salary_form(self, layout):
-        """إنشاء نموذج إضافة راتب"""
+        """إنشاء نموذج إضافة راتب بتصميم مشابه لـ add_salary_dialog"""
         form_frame = QFrame()
         form_frame.setObjectName("formFrame")
-        form_frame.setMaximumWidth(350)
+        form_frame.setMaximumWidth(400)
+        form_frame.setMinimumWidth(350)
         form_layout = QVBoxLayout(form_frame)
+        form_layout.setSpacing(20)
+        form_layout.setContentsMargins(15, 15, 15, 15)
         
+        # عنوان النموذج
         form_title = QLabel("إضافة راتب جديد")
-        form_title.setObjectName("sectionTitle")
+        form_title.setAlignment(Qt.AlignCenter)
+        form_title.setStyleSheet("""
+            QLabel {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #27ae60, stop:1 #229954);
+                color: white;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: bold;
+                margin-bottom: 15px;
+            }
+        """)
         form_layout.addWidget(form_title)
         
-        # نموذج الإدخال
-        grid_layout = QGridLayout()
-        grid_layout.setSpacing(10)
+        # مجموعة تفاصيل الراتب
+        salary_group = self.create_salary_details_group()
+        form_layout.addWidget(salary_group)
         
-        # التاريخ
-        grid_layout.addWidget(QLabel("التاريخ:"), 0, 0)
-        self.date_edit = QDateEdit()
-        self.date_edit.setDate(QDate.currentDate())
-        self.date_edit.setCalendarPopup(True)
-        grid_layout.addWidget(self.date_edit, 0, 1)
+        # مجموعة فترة الراتب
+        period_group = self.create_period_details_group()
+        form_layout.addWidget(period_group)
         
-        # المبلغ المدفوع
-        grid_layout.addWidget(QLabel("المبلغ المدفوع:"), 1, 0)
-        self.amount_edit = QDoubleSpinBox()
-        self.amount_edit.setRange(0, 999999999)
-        self.amount_edit.setSuffix(" د.ع")
-        grid_layout.addWidget(self.amount_edit, 1, 1)
-        
-        # الراتب الأساسي
-        grid_layout.addWidget(QLabel("الراتب الأساسي:"), 2, 0)
-        self.base_salary_edit = QDoubleSpinBox()
-        self.base_salary_edit.setRange(0, 999999999)
-        self.base_salary_edit.setSuffix(" د.ع")
-        grid_layout.addWidget(self.base_salary_edit, 2, 1)
-        
-        # من تاريخ
-        grid_layout.addWidget(QLabel("من تاريخ:"), 3, 0)
-        self.from_date_edit = QDateEdit()
-        self.from_date_edit.setDate(QDate.currentDate().addDays(-30))
-        self.from_date_edit.setCalendarPopup(True)
-        grid_layout.addWidget(self.from_date_edit, 3, 1)
-        
-        # إلى تاريخ
-        grid_layout.addWidget(QLabel("إلى تاريخ:"), 4, 0)
-        self.to_date_edit = QDateEdit()
-        self.to_date_edit.setDate(QDate.currentDate())
-        self.to_date_edit.setCalendarPopup(True)
-        grid_layout.addWidget(self.to_date_edit, 4, 1)
-        
-        # عدد الأيام
-        grid_layout.addWidget(QLabel("عدد الأيام:"), 5, 0)
-        self.days_edit = QLineEdit()
-        self.days_edit.setText("30")
-        grid_layout.addWidget(self.days_edit, 5, 1)
-        
-        # الملاحظات
-        grid_layout.addWidget(QLabel("الملاحظات:"), 6, 0)
-        self.notes_edit = QTextEdit()
-        self.notes_edit.setMaximumHeight(80)
-        grid_layout.addWidget(self.notes_edit, 6, 1)
-        
-        form_layout.addLayout(grid_layout)
+        # مجموعة الملاحظات
+        notes_group = self.create_notes_details_group()
+        form_layout.addWidget(notes_group)
         
         # زر الإضافة
         self.add_salary_button = QPushButton("إضافة راتب")
-        self.add_salary_button.setObjectName("addButton")
+        self.add_salary_button.setObjectName("addSalaryButton")
+        self.add_salary_button.setMinimumSize(120, 40)
         form_layout.addWidget(self.add_salary_button)
         
         # مساحة فارغة
@@ -187,138 +299,377 @@ class SalaryDetailsDialog(QDialog):
         
         layout.addWidget(form_frame)
 
+    def create_salary_details_group(self):
+        """إنشاء مجموعة تفاصيل الراتب"""
+        group = QGroupBox("تفاصيل الراتب")
+        layout = QFormLayout()
+        layout.setSpacing(10)
+        
+        # المبلغ المدفوع
+        self.amount_edit = QDoubleSpinBox()
+        self.amount_edit.setRange(0, 999999999)
+        self.amount_edit.setDecimals(2)
+        self.amount_edit.setSuffix(" د.ع")
+        self.amount_edit.setMinimumWidth(150)
+        layout.addRow("المبلغ المدفوع:", self.amount_edit)
+        
+        # تاريخ الدفع
+        self.date_edit = QDateEdit()
+        self.date_edit.setDate(QDate.currentDate())
+        self.date_edit.setCalendarPopup(True)
+        self.date_edit.setMinimumWidth(150)
+        layout.addRow("تاريخ الدفع:", self.date_edit)
+        
+        # الراتب الأساسي (يتم تعبئته تلقائياً)
+        self.base_salary_edit = QDoubleSpinBox()
+        self.base_salary_edit.setRange(0, 999999999)
+        self.base_salary_edit.setDecimals(2)
+        self.base_salary_edit.setSuffix(" د.ع")
+        self.base_salary_edit.setMinimumWidth(150)
+        layout.addRow("الراتب الأساسي:", self.base_salary_edit)
+        
+        group.setLayout(layout)
+        return group
+
+    def create_period_details_group(self):
+        """إنشاء مجموعة فترة الراتب"""
+        group = QGroupBox("فترة الراتب")
+        layout = QFormLayout()
+        layout.setSpacing(10)
+        
+        # من تاريخ
+        self.from_date_edit = QDateEdit()
+        self.from_date_edit.setDate(QDate.currentDate().addDays(-30))
+        self.from_date_edit.setCalendarPopup(True)
+        self.from_date_edit.setMinimumWidth(150)
+        layout.addRow("من تاريخ:", self.from_date_edit)
+        
+        # إلى تاريخ
+        self.to_date_edit = QDateEdit()
+        self.to_date_edit.setDate(QDate.currentDate())
+        self.to_date_edit.setCalendarPopup(True)
+        self.to_date_edit.setMinimumWidth(150)
+        layout.addRow("إلى تاريخ:", self.to_date_edit)
+        
+        # عدد الأيام (محسوب تلقائياً)
+        self.days_count_label = QLabel("30 يوم")
+        self.days_count_label.setObjectName("daysLabel")
+        layout.addRow("عدد الأيام:", self.days_count_label)
+        
+        group.setLayout(layout)
+        return group
+
+    def create_notes_details_group(self):
+        """إنشاء مجموعة الملاحظات"""
+        group = QGroupBox("ملاحظات")
+        layout = QVBoxLayout()
+        layout.setSpacing(5)
+        
+        self.notes_edit = QTextEdit()
+        self.notes_edit.setMaximumHeight(80)
+        self.notes_edit.setPlaceholderText("أدخل أي ملاحظات إضافية...")
+        layout.addWidget(self.notes_edit)
+        
+        group.setLayout(layout)
+        return group
+
     def create_dialog_buttons(self, layout):
-        """إنشاء أزرار النافذة"""
+        """إنشاء أزرار النافذة بتصميم محسن"""
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         
+        # زر طباعة التقرير
+        self.print_report_button = QPushButton("طباعة تقرير الرواتب")
+        self.print_report_button.setObjectName("printButton")
+        self.print_report_button.setMinimumSize(160, 35)
+        buttons_layout.addWidget(self.print_report_button)
+        
+        # زر تحديث
         self.refresh_button = QPushButton("تحديث")
         self.refresh_button.setObjectName("secondaryButton")
+        self.refresh_button.setMinimumSize(100, 35)
         buttons_layout.addWidget(self.refresh_button)
         
+        # زر إغلاق
         self.close_button = QPushButton("إغلاق")
         self.close_button.setObjectName("closeButton")
+        self.close_button.setMinimumSize(100, 35)
         buttons_layout.addWidget(self.close_button)
         
         layout.addLayout(buttons_layout)
 
     def setup_styles(self):
-        """إعداد الأنماط"""
+        """إعداد الأنماط بتصميم عصري مشابه لـ add_salary_dialog"""
         style = """
             QDialog {
-                background-color: #F8F9FA;
-                font-family: 'Cairo', Arial;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #f8f9ff, stop:1 #e8f0ff);
+                font-family: 'Segoe UI', 'Cairo', Arial, sans-serif;
                 font-size: 14px;
             }
+            
             #headerFrame {
                 background-color: white;
-                border: 1px solid #E9ECEF;
-                border-radius: 8px;
+                border: 2px solid #bdc3c7;
+                border-radius: 12px;
                 padding: 15px;
                 margin-bottom: 10px;
             }
-            #titleLabel {
-                font-size: 18px;
+            
+            #infoLabel {
+                color: #2c3e50;
                 font-weight: bold;
-                color: #2C3E50;
-                margin-bottom: 5px;
-            }
-            #subtitleLabel {
                 font-size: 14px;
-                color: #7F8C8D;
+                padding: 5px;
             }
-            #tableFrame, #formFrame {
+            
+            #salaryInfoLabel {
+                color: #27ae60;
+                font-weight: bold;
+                font-size: 16px;
+                padding: 5px;
+            }
+            
+            QGroupBox {
+                font-weight: bold;
+                font-size: 16px;
+                color: #2c3e50;
+                border: 2px solid #bdc3c7;
+                border-radius: 12px;
+                margin: 15px 0px;
+                padding-top: 20px;
+            }
+
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 20px;
+                padding: 0 10px 0 10px;
+                background-color: #3498db;
+                color: white;
+                border-radius: 6px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            #statsFrame {
                 background-color: white;
-                border: 1px solid #E9ECEF;
+                border: 1px solid #e9ecef;
                 border-radius: 8px;
                 padding: 15px;
                 margin: 5px;
             }
+            
+            #statsTitle {
+                font-size: 16px;
+                font-weight: bold;
+                color: #2c3e50;
+                margin-bottom: 10px;
+                padding-bottom: 8px;
+                border-bottom: 2px solid #3498db;
+            }
+            
+            #statLabel {
+                font-size: 14px;
+                color: #34495e;
+                margin: 5px 0px;
+                padding: 3px;
+            }
+            
+            #amountLabel {
+                font-size: 16px;
+                font-weight: bold;
+                color: #27ae60;
+                margin: 5px 0px;
+                padding: 5px;
+            }
+            
+            #tableFrame, #formFrame {
+                background-color: white;
+                border: 2px solid #bdc3c7;
+                border-radius: 12px;
+                padding: 15px;
+                margin: 5px;
+            }
+            
             #sectionTitle {
                 font-size: 16px;
                 font-weight: bold;
-                color: #2C3E50;
+                color: #2c3e50;
                 margin-bottom: 10px;
                 padding-bottom: 5px;
-                border-bottom: 2px solid #3498DB;
+                border-bottom: 2px solid #3498db;
             }
+            
             #salariesTable {
                 background-color: white;
-                border: 1px solid #E9ECEF;
+                border: 1px solid #e9ecef;
                 border-radius: 6px;
                 font-size: 13px;
+                gridline-color: #e9ecef;
             }
+            
             #salariesTable::item {
-                padding: 8px;
-                border-bottom: 1px solid #E9ECEF;
-            }
-            #salariesTable::item:selected {
-                background-color: #3498DB;
-                color: white;
-            }
-            QHeaderView::section {
-                background-color: #3498DB;
-                color: white;
                 padding: 10px;
-                border: none;
-                font-weight: bold;
-                font-size: 13px;
+                border-bottom: 1px solid #e9ecef;
             }
-            QLabel {
-                font-size: 14px;
-                color: #2C3E50;
+            
+            #salariesTable::item:selected {
+                background-color: #3498db;
+                color: white;
             }
-            QLineEdit, QDoubleSpinBox, QDateEdit, QTextEdit {
-                padding: 8px;
-                border: 1px solid #BDC3C7;
-                border-radius: 4px;
-                font-size: 14px;
-                background-color: white;
+            
+            #salariesTable::item:alternate {
+                background-color: #f8f9fa;
             }
-            #addButton {
-                background-color: #27AE60;
-                border: none;
+            
+            QHeaderView::section {
+                background-color: #3498db;
                 color: white;
                 padding: 12px;
-                border-radius: 6px;
+                border: none;
+                font-weight: bold;
+                font-size: 13px;
+            }
+            
+            QLabel {
+                color: #2c3e50;
                 font-weight: bold;
                 font-size: 14px;
+                margin: 5px 0px;
             }
-            #addButton:hover {
-                background-color: #229954;
+            
+            QLineEdit, QDoubleSpinBox, QDateEdit, QTextEdit {
+                padding: 12px 15px;
+                border: 2px solid #bdc3c7;
+                border-radius: 10px;
+                background-color: white;
+                font-size: 14px;
+                min-height: 25px;
+                margin: 5px 0px;
             }
+
+            QLineEdit:focus, QDoubleSpinBox:focus, QDateEdit:focus, QTextEdit:focus {
+                border-color: #3498db;
+                background-color: #f8fbff;
+            }
+            
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3498db, stop:1 #2980b9);
+                color: white;
+                border: none;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: bold;
+                font-size: 14px;
+                min-width: 100px;
+                margin: 8px 4px;
+            }
+
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #5dade2, stop:1 #3498db);
+            }
+
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2980b9, stop:1 #1f618d);
+            }
+            
+            #addSalaryButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #27ae60, stop:1 #229954);
+            }
+            
+            #addSalaryButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2ecc71, stop:1 #27ae60);
+            }
+            
+            #printButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #9b59b6, stop:1 #8e44ad);
+            }
+            
+            #printButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #af7ac5, stop:1 #9b59b6);
+            }
+            
             #secondaryButton {
-                background-color: #3498DB;
-                border: none;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 6px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3498db, stop:1 #2980b9);
+            }
+            
+            #closeButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #95a5a6, stop:1 #7f8c8d);
+            }
+            
+            #closeButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #bdc3c7, stop:1 #95a5a6);
+            }
+            
+            #daysLabel {
+                color: #e74c3c;
                 font-weight: bold;
                 font-size: 14px;
             }
-            #closeButton {
-                background-color: #95A5A6;
+            
+            QScrollArea {
                 border: none;
-                color: white;
-                padding: 10px 20px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 14px;
+                background-color: transparent;
             }
         """
         self.setStyleSheet(style)
 
     def setup_connections(self):
-        """ربط الإشارات"""
+        """ربط الإشارات والأحداث"""
         self.add_salary_button.clicked.connect(self.add_salary)
         self.refresh_button.clicked.connect(self.load_salary_data)
         self.close_button.clicked.connect(self.accept)
+        self.print_report_button.clicked.connect(self.print_salary_report)
         
         # ربط حساب الراتب تلقائياً
         self.base_salary_edit.valueChanged.connect(self.calculate_salary)
-        self.days_edit.textChanged.connect(self.calculate_salary)
         self.from_date_edit.dateChanged.connect(self.calculate_days)
         self.to_date_edit.dateChanged.connect(self.calculate_days)
+
+    def load_person_data(self):
+        """تحميل بيانات الشخص (معلم أو موظف)"""
+        try:
+            table_name = "teachers" if self.person_type == "teacher" else "employees"
+            
+            query = f"""
+                SELECT name, monthly_salary, school_id,
+                       (SELECT name_ar FROM schools WHERE id = {table_name}.school_id) as school_name
+                FROM {table_name}
+                WHERE id = ?
+            """
+            
+            result = db_manager.execute_query(query, (self.person_id,))
+            
+            if result:
+                self.person_data = result[0]
+                # تحديث معلومات الرأس
+                self.school_label.setText(f"المدرسة: {self.person_data.get('school_name', 'غير محدد')}")
+                salary = self.person_data.get('monthly_salary', 0) or 0
+                self.registered_salary_label.setText(f"الراتب المسجل: {salary:,.2f} د.ع")
+                
+                # تعبئة الراتب الأساسي في النموذج
+                self.base_salary_edit.setValue(salary)
+                self.amount_edit.setValue(salary)  # كقيمة افتراضية
+            else:
+                self.person_data = {}
+                self.school_label.setText("المدرسة: غير محدد")
+                self.registered_salary_label.setText("الراتب المسجل: 0.00 د.ع")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحميل بيانات الشخص: {e}")
+            self.person_data = {}
+            self.school_label.setText("المدرسة: خطأ في التحميل")
+            self.registered_salary_label.setText("الراتب المسجل: خطأ في التحميل")
 
     def load_salary_data(self):
         """تحميل بيانات الرواتب"""
@@ -335,10 +686,97 @@ class SalaryDetailsDialog(QDialog):
             
             self.salaries_data = db_manager.execute_query(query, (staff_type, self.person_id))
             self.populate_salaries_table()
+            self.update_statistics()
             
         except Exception as e:
             logging.error(f"خطأ في تحميل بيانات الرواتب: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في تحميل بيانات الرواتب:\n{str(e)}")
+
+    def update_statistics(self):
+        """تحديث الإحصائيات التفصيلية"""
+        try:
+            if not self.salaries_data:
+                # إذا لم توجد بيانات، اعرض القيم الافتراضية
+                self.total_salaries_count_label.setText("إجمالي عدد الرواتب: 0")
+                self.current_year_count_label.setText("رواتب هذا العام: 0")
+                self.current_month_count_label.setText("رواتب هذا الشهر: 0")
+                self.total_amount_label.setText("إجمالي المبالغ: 0.00 د.ع")
+                self.current_year_amount_label.setText("مبالغ هذا العام: 0.00 د.ع")
+                self.current_month_amount_label.setText("مبالغ هذا الشهر: 0.00 د.ع")
+                self.average_salary_label.setText("متوسط الراتب: 0.00 د.ع")
+                self.last_salary_date_label.setText("آخر راتب: --")
+                self.highest_salary_label.setText("أعلى راتب: 0.00 د.ع")
+                return
+            
+            # تواريخ مهمة للحسابات
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # متغيرات للحسابات
+            total_count = len(self.salaries_data)
+            total_amount = 0
+            current_year_count = 0
+            current_year_amount = 0
+            current_month_count = 0
+            current_month_amount = 0
+            highest_salary = 0
+            last_salary_date = None
+            
+            for salary in self.salaries_data:
+                amount = float(salary.get('paid_amount', 0) or 0)
+                total_amount += amount
+                
+                if amount > highest_salary:
+                    highest_salary = amount
+                
+                # تحليل التاريخ
+                payment_date_str = salary.get('payment_date', '')
+                if payment_date_str:
+                    try:
+                        if isinstance(payment_date_str, str):
+                            payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d')
+                        else:
+                            payment_date = payment_date_str
+                        
+                        # أحدث راتب
+                        if last_salary_date is None or payment_date > last_salary_date:
+                            last_salary_date = payment_date
+                        
+                        # رواتب هذا العام
+                        if payment_date.year == current_year:
+                            current_year_count += 1
+                            current_year_amount += amount
+                            
+                            # رواتب هذا الشهر
+                            if payment_date.month == current_month:
+                                current_month_count += 1
+                                current_month_amount += amount
+                                
+                    except Exception as e:
+                        logging.debug(f"خطأ في تحليل التاريخ {payment_date_str}: {e}")
+            
+            # حساب المتوسط
+            average_salary = total_amount / total_count if total_count > 0 else 0
+            
+            # تحديث عرض الإحصائيات
+            self.total_salaries_count_label.setText(f"إجمالي عدد الرواتب: {total_count}")
+            self.current_year_count_label.setText(f"رواتب هذا العام: {current_year_count}")
+            self.current_month_count_label.setText(f"رواتب هذا الشهر: {current_month_count}")
+            
+            self.total_amount_label.setText(f"إجمالي المبالغ: {total_amount:,.2f} د.ع")
+            self.current_year_amount_label.setText(f"مبالغ هذا العام: {current_year_amount:,.2f} د.ع")
+            self.current_month_amount_label.setText(f"مبالغ هذا الشهر: {current_month_amount:,.2f} د.ع")
+            
+            self.average_salary_label.setText(f"متوسط الراتب: {average_salary:,.2f} د.ع")
+            self.highest_salary_label.setText(f"أعلى راتب: {highest_salary:,.2f} د.ع")
+            
+            if last_salary_date:
+                self.last_salary_date_label.setText(f"آخر راتب: {last_salary_date.strftime('%Y-%m-%d')}")
+            else:
+                self.last_salary_date_label.setText("آخر راتب: --")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحديث الإحصائيات: {e}")
 
     def populate_salaries_table(self):
         """ملء جدول الرواتب"""
@@ -398,34 +836,38 @@ class SalaryDetailsDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الرواتب: {e}")
 
+    def validate_salary_inputs(self):
+        """التحقق من صحة البيانات المدخلة"""
+        # التحقق من المبلغ المدفوع
+        if self.amount_edit.value() <= 0:
+            QMessageBox.warning(self, "تحذير", "يرجى إدخال مبلغ صحيح")
+            return False
+        
+        # التحقق من الراتب الأساسي
+        if self.base_salary_edit.value() <= 0:
+            QMessageBox.warning(self, "تحذير", "يرجى إدخال راتب أساسي صحيح")
+            return False
+        
+        # التحقق من صحة التواريخ
+        from_date = self.from_date_edit.date()
+        to_date = self.to_date_edit.date()
+        
+        if from_date > to_date:
+            QMessageBox.warning(self, "تحذير", "تاريخ البداية يجب أن يكون قبل تاريخ النهاية")
+            return False
+        
+        return True
+
     def add_salary(self):
-        """إضافة راتب جديد"""
+        """إضافة راتب جديد بأسلوب مشابه لـ add_salary_dialog"""
         try:
-            # التحقق من صحة البيانات
-            if self.amount_edit.value() <= 0:
-                QMessageBox.warning(self, "خطأ", "يرجى إدخال مبلغ مدفوع صحيح")
-                return
-            
-            if self.base_salary_edit.value() <= 0:
-                QMessageBox.warning(self, "خطأ", "يرجى إدخال راتب أساسي صحيح")
-                return
-            
-            if not self.days_edit.text().strip():
-                QMessageBox.warning(self, "خطأ", "يرجى إدخال عدد الأيام")
-                return
-            
-            try:
-                days_count = int(self.days_edit.text())
-                if days_count <= 0:
-                    raise ValueError()
-            except ValueError:
-                QMessageBox.warning(self, "خطأ", "يرجى إدخال عدد أيام صحيح")
+            if not self.validate_salary_inputs():
                 return
             
             # تأكيد الإضافة
             reply = QMessageBox.question(
                 self, "تأكيد الإضافة",
-                f"هل تريد إضافة راتب بمبلغ {self.amount_edit.value():,.0f} د.ع؟",
+                f"هل تريد إضافة راتب بمبلغ {self.amount_edit.value():,.2f} د.ع؟",
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.Yes
             )
@@ -433,48 +875,50 @@ class SalaryDetailsDialog(QDialog):
             if reply != QMessageBox.Yes:
                 return
             
-            # الحصول على school_id من المعلم أو الموظف
+            # حساب عدد الأيام
+            from_date_q = self.from_date_edit.date()
+            to_date_q = self.to_date_edit.date()
+            days_count = from_date_q.daysTo(to_date_q) + 1
+            
+            # تحضير البيانات
             staff_type = "teacher" if self.person_type == "teacher" else "employee"
-            table_name = "teachers" if self.person_type == "teacher" else "employees"
+            school_id = self.person_data.get('school_id')
             
-            school_query = f"SELECT school_id FROM {table_name} WHERE id = ?"
-            school_result = db_manager.execute_query(school_query, (self.person_id,))
-            
-            if not school_result:
-                QMessageBox.warning(self, "خطأ", "لم يتم العثور على المعلم/الموظف")
-                return
-            
-            school_id = school_result[0]['school_id']
+            from_date = from_date_q.toString(Qt.ISODate)
+            to_date = to_date_q.toString(Qt.ISODate)
+            payment_date = self.date_edit.date().toString(Qt.ISODate)
+            payment_time = datetime.now().strftime("%H:%M:%S")
             
             # إدراج البيانات في قاعدة البيانات
-            query = """
-                INSERT INTO salaries (staff_type, staff_id, base_salary, paid_amount, 
-                                    from_date, to_date, days_count, payment_date, notes, school_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """
+            with db_manager.get_cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO salaries 
+                    (staff_type, staff_id, base_salary, paid_amount, 
+                     from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    staff_type,
+                    self.person_id,
+                    self.base_salary_edit.value(),
+                    self.amount_edit.value(),
+                    from_date,
+                    to_date,
+                    days_count,
+                    payment_date,
+                    payment_time,
+                    self.notes_edit.toPlainText().strip() or None,
+                    school_id
+                ))
             
-            params = (
-                staff_type,
-                self.person_id,
-                self.base_salary_edit.value(),
-                self.amount_edit.value(),
-                self.from_date_edit.date().toString('yyyy-MM-dd'),
-                self.to_date_edit.date().toString('yyyy-MM-dd'),
-                days_count,
-                self.date_edit.date().toString('yyyy-MM-dd'),
-                self.notes_edit.toPlainText().strip(),
-                school_id
+            # تسجيل العملية
+            log_user_action(
+                f"إضافة راتب {staff_type}",
+                f"الاسم: {self.person_name}, المبلغ: {self.amount_edit.value()}, المدرسة: {self.person_data.get('school_name', 'غير محدد')}"
             )
             
-            affected_rows = db_manager.execute_update(query, params)
-            
-            if affected_rows > 0:
-                QMessageBox.information(self, "نجح", "تم إضافة الراتب بنجاح")
-                self.clear_form()
-                self.load_salary_data()
-                log_user_action(f"إضافة راتب جديد للـ{self.person_type} {self.person_name}", "نجح")
-            else:
-                QMessageBox.warning(self, "خطأ", "فشل في إضافة الراتب")
+            QMessageBox.information(self, "نجح", "تم إضافة الراتب بنجاح")
+            self.clear_form()
+            self.load_salary_data()
             
         except Exception as e:
             logging.error(f"خطأ في إضافة راتب: {e}")
@@ -483,22 +927,31 @@ class SalaryDetailsDialog(QDialog):
     def clear_form(self):
         """مسح نموذج الإدخال"""
         self.date_edit.setDate(QDate.currentDate())
-        self.amount_edit.setValue(0)
-        self.base_salary_edit.setValue(0)
+        # استخدام الراتب المسجل كقيمة افتراضية
+        base_salary = self.person_data.get('monthly_salary', 0) or 0
+        self.amount_edit.setValue(base_salary)
+        self.base_salary_edit.setValue(base_salary)
         self.from_date_edit.setDate(QDate.currentDate().addDays(-30))
         self.to_date_edit.setDate(QDate.currentDate())
-        self.days_edit.setText("30")
         self.notes_edit.clear()
+        self.calculate_days()
 
     def calculate_days(self):
-        """حساب عدد الأيام بناءً على التواريخ"""
+        """حساب عدد الأيام بناءً على التواريخ مع تحديث العرض"""
         try:
-            from_date = self.from_date_edit.date().toPyDate()
-            to_date = self.to_date_edit.date().toPyDate()
+            from_date = self.from_date_edit.date()
+            to_date = self.to_date_edit.date()
             
-            if to_date >= from_date:
-                days = (to_date - from_date).days + 1
-                self.days_edit.setText(str(days))
+            if from_date <= to_date:
+                days = from_date.daysTo(to_date) + 1  # +1 لتضمين اليوم الأخير
+                self.days_count_label.setText(f"{days} يوم")
+                self.days_count_label.setStyleSheet("color: #27ae60; font-weight: bold;")
+                
+                # حساب الراتب التلقائي
+                self.calculate_salary()
+            else:
+                self.days_count_label.setText("تاريخ غير صحيح!")
+                self.days_count_label.setStyleSheet("color: #e74c3c; font-weight: bold;")
             
         except Exception as e:
             logging.debug(f"خطأ في حساب الأيام: {e}")
@@ -507,20 +960,50 @@ class SalaryDetailsDialog(QDialog):
         """حساب الراتب بناءً على الراتب الأساسي وعدد الأيام"""
         try:
             base_salary = self.base_salary_edit.value()
-            days_text = self.days_edit.text().strip()
             
-            if not days_text or base_salary <= 0:
-                return
+            # استخراج عدد الأيام من النص
+            days_text = self.days_count_label.text().replace(" يوم", "").replace("تاريخ غير صحيح!", "0")
             
-            days = int(days_text)
-            if days <= 0:
-                return
+            try:
+                days = int(days_text)
+            except ValueError:
+                days = 30  # قيمة افتراضية
             
-            # حساب الراتب اليومي (الراتب الشهري / 30)
-            daily_salary = base_salary / 30
-            calculated_amount = daily_salary * days
-            
-            self.amount_edit.setValue(calculated_amount)
+            if base_salary > 0 and days > 0:
+                # حساب الراتب اليومي (الراتب الشهري / 30)
+                daily_salary = base_salary / 30
+                calculated_amount = daily_salary * days
+                
+                # تحديث المبلغ المدفوع فقط إذا كان فارغاً أو يساوي الحساب السابق
+                current_amount = self.amount_edit.value()
+                if current_amount == 0 or abs(current_amount - calculated_amount) < 0.01:
+                    self.amount_edit.setValue(calculated_amount)
             
         except (ValueError, ZeroDivisionError) as e:
             logging.debug(f"خطأ في حساب الراتب: {e}")
+
+    def print_salary_report(self):
+        """طباعة تقرير مفصل عن رواتب الشخص"""
+        try:
+            from ui.components.printing.salary_report_printer import SalaryReportPrinter
+            
+            printer = SalaryReportPrinter()
+            printer.print_person_salary_report(
+                person_type=self.person_type,
+                person_id=self.person_id,
+                person_name=self.person_name,
+                person_data=self.person_data,
+                salaries_data=self.salaries_data
+            )
+            
+        except ImportError:
+            # في حالة عدم وجود وحدة الطباعة، اعرض رسالة
+            QMessageBox.information(
+                self, "معلومات", 
+                "ميزة طباعة التقارير ستكون متاحة قريباً.\n"
+                f"إجمالي الرواتب: {len(self.salaries_data)}\n"
+                f"المجموع الكلي: {sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data):,.2f} د.ع"
+            )
+        except Exception as e:
+            logging.error(f"خطأ في طباعة التقرير: {e}")
+            QMessageBox.warning(self, "خطأ", f"فشل في طباعة التقرير:\n{str(e)}")
