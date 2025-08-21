@@ -237,7 +237,7 @@ class StudentIDGenerator:
     def draw_student_card(self, student_data: Dict, 
                          card_x: float, card_y: float,
                          school_name: str, custom_title: str):
-        """رسم هوية طالب واحد"""
+        """رسم هوية طالب واحد مع التصميم المحسّن"""
         
         # رسم حدود البطاقة (خفيفة للمرجع)
         self.canvas.setStrokeColor(Color(0.8, 0.8, 0.8))
@@ -247,15 +247,19 @@ class StudentIDGenerator:
         # رسم عناصر البطاقة
         for element_name, element_config in TEMPLATE_ELEMENTS.items():
             if element_name == "school_name":
-                self.draw_school_name(card_x, card_y, element_config, school_name)
+                # استخدام اسم مدرسة الطالب الفردية إذا توفرت، وإلا اسم المدرسة العامة
+                student_school = student_data.get('school_name', school_name)
+                self.draw_school_name(card_x, card_y, element_config, student_school)
             elif element_name == "id_title":
-                self.draw_text_element(card_x, card_y, element_config, custom_title)
+                # استخدام النص الثابت من التكوين
+                title_text = element_config.get('text', 'هوية طالب')
+                self.draw_text_element(card_x, card_y, element_config, title_text)
             elif element_name == "student_name":
                 student_name = student_data.get('name', 'اسم الطالب')
                 self.draw_text_element(card_x, card_y, element_config, student_name)
             elif element_name == "student_grade":
                 grade = student_data.get('grade', '')
-                grade_text = f"{element_config.get('label', 'الصف: ')}{grade}"
+                grade_text = f"{element_config.get('label', '')}{grade}"
                 self.draw_text_element(card_x, card_y, element_config, grade_text)
             elif element_name == "academic_year":
                 year_text = element_config.get('text', 'العام الدراسي: 2025 - 2026')
@@ -266,6 +270,18 @@ class StudentIDGenerator:
                 self.draw_qr_box(card_x, card_y, element_config)
             elif element_name == "birth_date_box":
                 self.draw_birth_date_box(card_x, card_y, element_config)
+            elif element_name.endswith('_label'):
+                # رسم التسميات (العناوين الفرعية)
+                label_text = element_config.get('text', '')
+                if label_text:
+                    self.draw_text_element(card_x, card_y, element_config, label_text)
+            elif element_name.endswith('_line') or element_config.get('type') == 'line':
+                # رسم الخطوط الفاصلة
+                self.draw_line_element(card_x, card_y, element_config)
+            elif element_name == "id_number":
+                # رسم رقم الهوية (يمكن تخصيصه لاحقاً)
+                id_text = f"رقم الهوية: {student_data.get('id', 'AUTO')}"
+                self.draw_text_element(card_x, card_y, element_config, id_text)
     
     def draw_text_element(self, card_x: float, card_y: float, 
                          element_config: Dict, text: str):
@@ -329,8 +345,19 @@ class StudentIDGenerator:
         if school_name:
             self.draw_text_element(card_x, card_y, element_config, school_name)
     
+    def draw_line_element(self, card_x: float, card_y: float, element_config: Dict):
+        """رسم خط فاصل"""
+        
+        abs_x, abs_y = get_element_absolute_position(element_config, card_x, card_y)
+        width = element_config.get('width', 0.9) * ID_WIDTH
+        height = element_config.get('height', 0.01) * ID_HEIGHT
+        color = element_config.get('color', black)
+        
+        self.canvas.setFillColor(color)
+        self.canvas.rect(abs_x, abs_y, width, height, fill=1, stroke=0)
+    
     def draw_photo_box(self, card_x: float, card_y: float, element_config: Dict):
-        """رسم مربع الصورة"""
+        """رسم مربع الصورة مع التصميم المحسّن"""
         
         abs_x, abs_y = get_element_absolute_position(element_config, card_x, card_y)
         width, height = get_element_absolute_size(element_config)
@@ -348,12 +375,13 @@ class StudentIDGenerator:
         # إضافة نص "صورة" في الوسط
         label = element_config.get('label', 'صورة')
         label_font_size = element_config.get('label_font_size', 6)
+        label_color = element_config.get('label_color', Color(0.6, 0.6, 0.6))
         
         # استخدام الخط العربي إذا كان متوفراً
         font_name = getattr(self, 'arabic_font', 'Helvetica')
         
         self.canvas.setFont(font_name, label_font_size)
-        self.canvas.setFillColor(Color(0.6, 0.6, 0.6))
+        self.canvas.setFillColor(label_color)
         
         # تشكيل النص العربي
         shaped_label = self.reshape_arabic_text(label)
@@ -364,7 +392,7 @@ class StudentIDGenerator:
         self.canvas.drawCentredString(center_x, center_y, shaped_label)
     
     def draw_qr_box(self, card_x: float, card_y: float, element_config: Dict):
-        """رسم مربع QR مؤقت"""
+        """رسم مربع QR مع التصميم المحسّن"""
         
         abs_x, abs_y = get_element_absolute_position(element_config, card_x, card_y)
         width, height = get_element_absolute_size(element_config)
@@ -382,16 +410,17 @@ class StudentIDGenerator:
         # إضافة نص "QR"
         label = element_config.get('label', 'QR')
         label_font_size = element_config.get('label_font_size', 5)
+        label_color = element_config.get('label_color', Color(0.6, 0.6, 0.6))
         
         self.canvas.setFont('Helvetica', label_font_size)
-        self.canvas.setFillColor(Color(0.6, 0.6, 0.6))
+        self.canvas.setFillColor(label_color)
         
         center_x = abs_x + width / 2
         center_y = abs_y + height / 2
         self.canvas.drawCentredString(center_x, center_y, label)
     
     def draw_birth_date_box(self, card_x: float, card_y: float, element_config: Dict):
-        """رسم خانة تاريخ الميلاد"""
+        """رسم خانة تاريخ الميلاد مع التصميم المحسّن"""
         
         abs_x, abs_y = get_element_absolute_position(element_config, card_x, card_y)
         width, height = get_element_absolute_size(element_config)
@@ -411,12 +440,13 @@ class StudentIDGenerator:
         label_font_size = element_config.get('label_font_size', 6)
         label_x = element_config.get('label_x', 0.1)
         label_y = element_config.get('label_y', 0.18)
+        label_color = element_config.get('label_color', black)
         
         # استخدام الخط العربي إذا كان متوفراً
         font_name = getattr(self, 'arabic_font', 'Helvetica')
         
         self.canvas.setFont(font_name, label_font_size)
-        self.canvas.setFillColor(black)
+        self.canvas.setFillColor(label_color)
         
         # تشكيل النص العربي
         shaped_label = self.reshape_arabic_text(label)

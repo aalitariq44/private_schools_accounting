@@ -31,110 +31,176 @@ CARD_SPACING_X = 8 * mm   # مسافة أفقية كافية للقطع
 CARD_SPACING_Y = 10 * mm  # مسافة عمودية كافية للقطع
 
 # قالب العناصر داخل الهوية (إحداثيات نسبية من 0 إلى 1)
+# تصميم محسّن وأجمل مع ترتيب أفضل
 TEMPLATE_ELEMENTS = {
-    # اسم المدرسة ونص "هوية طالب" في الأعلى (محاذاة إلى اليمين)
-    "school_name": {
-        "x": 0.96,         # يمين البطاقة
-        "y": 0.90,         # في الأعلى
-        "font_size": 9,
-        "font_name": "Helvetica-Bold",
-        "alignment": "right",
-        "color": black,
-        "max_width": 0.95   # 95% من عرض البطاقة
-    },
-    
+    # عنوان "هوية طالب" في الأعلى - ثابت وبارز
     "id_title": {
-        "x": 0.96,         # يمين البطاقة
-        "y": 0.82,
-        "font_size": 7,
-        "font_name": "Helvetica",
-        "alignment": "right",
-        "color": black,
+        "x": 0.50,         # في الوسط
+        "y": 0.92,         # في أعلى البطاقة
+        "font_size": 14,   # خط كبير وبارز
+        "font_name": "Helvetica-Bold",
+        "alignment": "center",
+        "color": Color(0.1, 0.3, 0.6),  # أزرق أنيق
         "text": "هوية طالب"
     },
     
-    # اسم الطالب
+    # اسم المدرسة تحت العنوان مباشرة
+    "school_name": {
+        "x": 0.50,         # في الوسط
+        "y": 0.84,         # تحت العنوان
+        "font_size": 12,   # خط كبير ومقروء
+        "font_name": "Helvetica-Bold",
+        "alignment": "center",
+        "color": Color(0.2, 0.2, 0.2),  # رمادي داكن أنيق
+        "max_width": 0.95   # 95% من عرض البطاقة
+    },
+    
+    # خط فاصل تحت المعلومات العلوية
+    "header_line": {
+        "x": 0.05,
+        "y": 0.78,
+        "width": 0.90,
+        "height": 0.01,
+        "color": Color(0.1, 0.3, 0.6),
+        "type": "line"
+    },
+    
+    # اسم الطالب - مع تسمية واضحة
+    "student_name_label": {
+        "x": 0.96,
+        "y": 0.70,
+        "font_size": 8,
+        "font_name": "Helvetica",
+        "alignment": "right",
+        "color": Color(0.4, 0.4, 0.4),
+        "text": "اسم الطالب:"
+    },
+    
     "student_name": {
         "x": 0.96,         # بجانب مربع الصورة من اليمين
-        "y": 0.68,
-        "font_size": 10,
+        "y": 0.65,         # تحت التسمية
+        "font_size": 12,   # خط أكبر للاسم
         "font_name": "Helvetica-Bold",
         "alignment": "right",
         "color": black,
         "max_width": 0.52  # المساحة المتبقية بعد مربع الصورة
     },
     
-    # صف الطالب
-    "student_grade": {
+    # صف الطالب مع تسمية
+    "student_grade_label": {
         "x": 0.96,
-        "y": 0.58,
+        "y": 0.56,
         "font_size": 8,
         "font_name": "Helvetica",
         "alignment": "right",
-        "color": black,
-        "label": "الصف: "
+        "color": Color(0.4, 0.4, 0.4),
+        "text": "الصف الدراسي:"
     },
     
-    # العام الدراسي
-    "academic_year": {
+    "student_grade": {
         "x": 0.96,
-        "y": 0.48,
-        "font_size": 7,
+        "y": 0.51,
+        "font_size": 10,
+        "font_name": "Helvetica-Bold",
+        "alignment": "right",
+        "color": Color(0.1, 0.3, 0.6),
+        "label": ""  # بدون تسمية إضافية
+    },
+    
+    # العام الدراسي مع تحسين التصميم
+    "academic_year_label": {
+        "x": 0.96,
+        "y": 0.42,
+        "font_size": 8,
         "font_name": "Helvetica",
         "alignment": "right",
-        "color": black,
-        "text": "العام الدراسي: 2025 - 2026"
+        "color": Color(0.4, 0.4, 0.4),
+        "text": "العام الدراسي:"
     },
     
-    # مربع الصورة (فارغ للتركيب اليدوي)
+    "academic_year": {
+        "x": 0.96,
+        "y": 0.37,
+        "font_size": 9,
+        "font_name": "Helvetica",
+        "alignment": "right",
+        "color": Color(0.2, 0.2, 0.2),
+        "text": "2025 - 2026"
+    },
+    
+    # مربع الصورة محسّن مع إطار أنيق
     "photo_box": {
         "x": 0.04,
         "y": 0.40,
         "width": 0.30,
         "height": 0.54,
-        "border_color": black,
+        "border_color": Color(0.1, 0.3, 0.6),  # إطار أزرق أنيق
+        "border_width": 2,  # إطار أكثر بروزاً
+        "fill_color": Color(0.95, 0.95, 0.95),  # خلفية رمادية فاتحة
+        "label": "صورة الطالب",
+        "label_font_size": 7,
+        "label_color": Color(0.5, 0.5, 0.5)
+    },
+    
+    # مربع QR محسّن ومتناسق
+    "qr_box": {
+        "x": 0.74,
+        "y": 0.08,
+        "width": 0.22,
+        "height": 0.28,
+        "border_color": Color(0.1, 0.3, 0.6),
         "border_width": 1.5,
         "fill_color": white,
-        "label": "صورة",
-        "label_font_size": 7
+        "label": "QR Code",
+        "label_font_size": 6,
+        "label_color": Color(0.5, 0.5, 0.5)
     },
     
-    # مربع QR (مؤقت)
-    "qr_box": {
-        "x": 0.76,
-        "y": 0.10,
-        "width": 0.20,
-        "height": 0.25,
-        "border_color": black,
-        "border_width": 1,
-        "fill_color": white,
-        "label": "QR",
-        "label_font_size": 5
+    # خانة تاريخ الميلاد محسّنة
+    "birth_date_label": {
+        "x": 0.32,
+        "y": 0.22,
+        "font_size": 8,
+        "font_name": "Helvetica",
+        "alignment": "right",
+        "color": Color(0.4, 0.4, 0.4),
+        "text": "تاريخ الميلاد:"
     },
     
-    # خانة المواليد (فارغة للكتابة اليدوية)
     "birth_date_box": {
         "x": 0.04,
-        "y": 0.10,
+        "y": 0.08,
         "width": 0.65,
-        "height": 0.25,
-        "border_color": black,
-        "border_width": 0.5,
-        "fill_color": white,
-        "label": "تاريخ الميلاد: _______________",
-        "label_font_size": 7,
+        "height": 0.28,
+        "border_color": Color(0.7, 0.7, 0.7),
+        "border_width": 1,
+        "fill_color": Color(0.98, 0.98, 0.98),
+        "label": "_____ / _____ / _________",
+        "label_font_size": 8,
         "label_x": 0.06,
-        "label_y": 0.20
+        "label_y": 0.16,
+        "label_color": Color(0.6, 0.6, 0.6)
     },
-    # إضافة نص 'تاريخ الميلاد' يمين المربع
-    "birth_date_label": {
-        "x": 0.71,             # بعد طرف المربع
-        "y": 0.15,             # على مستوى نص التاريخ
+    
+    # خط فاصل سفلي للتصميم
+    "footer_line": {
+        "x": 0.05,
+        "y": 0.04,
+        "width": 0.90,
+        "height": 0.01,
+        "color": Color(0.1, 0.3, 0.6),
+        "type": "line"
+    },
+    
+    # رقم الهوية (اختياري)
+    "id_number": {
+        "x": 0.96,
+        "y": 0.28,
         "font_size": 7,
         "font_name": "Helvetica",
-        "alignment": "left",
-        "color": black,
-        "text": "تاريخ الميلاد"
+        "alignment": "right",
+        "color": Color(0.5, 0.5, 0.5),
+        "text": "رقم الهوية: AUTO"
     }
 }
 
