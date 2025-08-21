@@ -225,6 +225,16 @@ class StudentInfoWidget(QWidget):
             self.gender_label.setText(str(student_data[7]))  # gender
             self.phone_label.setText(str(student_data[8] or "--"))  # phone
             self.status_label.setText(str(student_data[13]))  # status
+            # تغيير لون خلفية حقل الحالة بناءً على النص
+            status_text = self.status_label.text()
+            if status_text == "منتقل":
+                self.status_label.setStyleSheet("background-color: #FF0000;")
+            elif status_text == "منقطع":
+                self.status_label.setStyleSheet("background-color: #8B0000; color: white;")
+            elif status_text == "متخرج":
+                self.status_label.setStyleSheet("background-color: #FFFF00;")
+            else:
+                self.status_label.setStyleSheet("")
             self.start_date_label.setText(str(student_data['start_date'] or "--"))  # start_date
             
             # تحديث الملاحظات باستخدام اسم العمود notes
