@@ -17,17 +17,18 @@ ID_HEIGHT = 53.98 * mm  # تحويل إلى نقاط ReportLab
 A4_WIDTH = 210 * mm
 A4_HEIGHT = 297 * mm
 
-# تخطيط الشبكة على صفحة A4 (2 عمود × 5 صفوف = 10 هويات)
+# تخطيط الشبكة على صفحة A4 (2 عمود × 4 صفوف = 8 هويات)
+# تم تقليل الصفوف من 5 إلى 4 لضمان دخول جميع البطاقات في الصفحة
 GRID_COLS = 2
-GRID_ROWS = 5
+GRID_ROWS = 4
 
 # هوامش الصفحة
-PAGE_MARGIN_X = 15 * mm
-PAGE_MARGIN_Y = 20 * mm
+PAGE_MARGIN_X = 15 * mm  # هامش جانبي معقول
+PAGE_MARGIN_Y = 20 * mm  # هامش علوي وسفلي معقول
 
-# مسافات بين البطاقات
-CARD_SPACING_X = 10 * mm
-CARD_SPACING_Y = 8 * mm
+# مسافات بين البطاقات  
+CARD_SPACING_X = 8 * mm   # مسافة أفقية كافية للقطع
+CARD_SPACING_Y = 10 * mm  # مسافة عمودية كافية للقطع
 
 # قالب العناصر داخل الهوية (إحداثيات نسبية من 0 إلى 1)
 TEMPLATE_ELEMENTS = {
@@ -164,8 +165,58 @@ COLORS = {
 def get_card_position(row, col):
     """حساب موقع البطاقة في الشبكة"""
     x = PAGE_MARGIN_X + col * (ID_WIDTH + CARD_SPACING_X)
-    y = A4_HEIGHT - PAGE_MARGIN_Y - (row + 1) * (ID_HEIGHT + CARD_SPACING_Y)
+    # تصحيح حساب الموقع Y لتجنب خروج البطاقات من الصفحة
+    y = A4_HEIGHT - PAGE_MARGIN_Y - row * (ID_HEIGHT + CARD_SPACING_Y) - ID_HEIGHT
     return x, y
+
+def verify_layout_fits():
+    """التحقق من أن التخطيط يتسع في صفحة A4"""
+    # حساب المساحة المطلوبة
+    total_width = PAGE_MARGIN_X * 2 + GRID_COLS * ID_WIDTH + (GRID_COLS - 1) * CARD_SPACING_X
+    total_height = PAGE_MARGIN_Y * 2 + GRID_ROWS * ID_HEIGHT + (GRID_ROWS - 1) * CARD_SPACING_Y
+    
+    width_fits = total_width <= A4_WIDTH
+    height_fits = total_height <= A4_HEIGHT
+    
+    return {
+        'width_fits': width_fits,
+        'height_fits': height_fits,
+        'total_width': total_width,
+        'total_height': total_height,
+        'a4_width': A4_WIDTH,
+        'a4_height': A4_HEIGHT,
+        'width_margin': A4_WIDTH - total_width,
+        'height_margin': A4_HEIGHT - total_height
+    }
+
+def get_optimized_layout():
+    """حساب تخطيط محسّن يضمن وضع جميع البطاقات ضمن الصفحة"""
+    verification = verify_layout_fits()
+    
+    if not verification['width_fits'] or not verification['height_fits']:
+        # إذا كان التخطيط لا يتسع، نحسب هوامش ومسافات جديدة
+        available_width = A4_WIDTH
+        available_height = A4_HEIGHT
+        
+        # حساب الهوامش والمسافات المثلى
+        min_margin = 10 * mm  # حد أدنى للهامش
+        
+        # للعرض
+        remaining_width = available_width - 2 * min_margin - GRID_COLS * ID_WIDTH
+        optimal_spacing_x = remaining_width / (GRID_COLS - 1) if GRID_COLS > 1 else 0
+        
+        # للارتفاع
+        remaining_height = available_height - 2 * min_margin - GRID_ROWS * ID_HEIGHT
+        optimal_spacing_y = remaining_height / (GRID_ROWS - 1) if GRID_ROWS > 1 else 0
+        
+        return {
+            'page_margin_x': min_margin,
+            'page_margin_y': min_margin,
+            'card_spacing_x': max(optimal_spacing_x, 3 * mm),  # حد أدنى 3mm
+            'card_spacing_y': max(optimal_spacing_y, 3 * mm)   # حد أدنى 3mm
+        }
+    
+    return None  # التخطيط الحالي مناسب
 
 def get_element_absolute_position(element_config, card_x, card_y):
     """تحويل الإحداثيات النسبية إلى مطلقة"""

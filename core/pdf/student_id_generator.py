@@ -32,7 +32,8 @@ from templates.id_template import (
     TEMPLATE_ELEMENTS, ID_WIDTH, ID_HEIGHT, A4_WIDTH, A4_HEIGHT,
     GRID_COLS, GRID_ROWS, PAGE_MARGIN_X, PAGE_MARGIN_Y,
     CARD_SPACING_X, CARD_SPACING_Y, CUT_MARKS,
-    get_card_position, get_element_absolute_position, get_element_absolute_size
+    get_card_position, get_element_absolute_position, get_element_absolute_size,
+    verify_layout_fits, get_optimized_layout
 )
 
 
@@ -145,6 +146,25 @@ class StudentIDGenerator:
             True إذا تم الإنشاء بنجاح، False في حالة الخطأ
         """
         try:
+            # التحقق من التخطيط قبل البدء
+            layout_check = verify_layout_fits()
+            if not layout_check['width_fits'] or not layout_check['height_fits']:
+                logging.warning(f"تحذير: التخطيط قد لا يتسع في الصفحة")
+                logging.warning(f"العرض المطلوب: {layout_check['total_width']:.2f}, المتاح: {layout_check['a4_width']:.2f}")
+                logging.warning(f"الارتفاع المطلوب: {layout_check['total_height']:.2f}, المتاح: {layout_check['a4_height']:.2f}")
+                
+                # محاولة استخدام تخطيط محسن
+                optimized = get_optimized_layout()
+                if optimized:
+                    logging.info("سيتم استخدام تخطيط محسن للصفحة")
+                    global PAGE_MARGIN_X, PAGE_MARGIN_Y, CARD_SPACING_X, CARD_SPACING_Y
+                    PAGE_MARGIN_X = optimized['page_margin_x']
+                    PAGE_MARGIN_Y = optimized['page_margin_y']
+                    CARD_SPACING_X = optimized['card_spacing_x'] 
+                    CARD_SPACING_Y = optimized['card_spacing_y']
+            else:
+                logging.info("التخطيط يتسع بشكل مناسب في صفحة A4")
+            
             # إنشاء canvas
             self.canvas = canvas.Canvas(output_path, pagesize=A4)
             
@@ -201,7 +221,18 @@ class StudentIDGenerator:
             
             if row < GRID_ROWS:  # التأكد من عدم تجاوز الصفوف
                 card_x, card_y = get_card_position(row, col)
-                self.draw_student_card(student, card_x, card_y, school_name, custom_title)
+                
+                # التحقق من أن البطاقة تقع ضمن حدود الصفحة
+                if (card_x >= 0 and card_x + ID_WIDTH <= A4_WIDTH and 
+                    card_y >= 0 and card_y + ID_HEIGHT <= A4_HEIGHT):
+                    self.draw_student_card(student, card_x, card_y, school_name, custom_title)
+                else:
+                    logging.warning(f"تحذير: البطاقة في الصف {row}, العمود {col} تتجاوز حدود الصفحة")
+                    logging.warning(f"موقع البطاقة: x={card_x:.2f}, y={card_y:.2f}")
+                    logging.warning(f"حدود الصفحة: width={A4_WIDTH:.2f}, height={A4_HEIGHT:.2f}")
+            else:
+                logging.warning(f"تحذير: تجاوز عدد الصفوف المسموح - الصف {row} للطالب رقم {idx + 1}")
+    
     
     def draw_student_card(self, student_data: Dict, 
                          card_x: float, card_y: float,
