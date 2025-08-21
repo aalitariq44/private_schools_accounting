@@ -86,8 +86,6 @@ class StudentIDsPage(QWidget):
         layout.setSpacing(10)
         layout.setContentsMargins(10, 10, 10, 10)
         
-        # عنوان الصفحة
-        self.create_header(layout)
         
         # خيارات الفلترة والاختيار
         self.create_filter_section(layout)
@@ -98,34 +96,7 @@ class StudentIDsPage(QWidget):
         # أزرار الإجراءات
         self.create_action_buttons(layout)
     
-    def create_header(self, layout):
-        """إنشاء رأس الصفحة"""
-        header_frame = QFrame()
-        header_frame.setObjectName("headerFrame")
-        header_layout = QHBoxLayout(header_frame)
-        
-        # أيقونة ومعلومات الصفحة
-        title_layout = QVBoxLayout()
-        
-        title = QLabel("إنشاء هويات الطلاب")
-        title.setObjectName("pageTitle")
-        title_layout.addWidget(title)
-        
-        subtitle = QLabel("إنشاء PDF لهويّات طلابية قابلة للطباعة")
-        subtitle.setObjectName("pageSubtitle")
-        title_layout.addWidget(subtitle)
-        
-        header_layout.addLayout(title_layout)
-        header_layout.addStretch()
-        
-        # زر المساعدة
-        help_btn = QPushButton("؟")
-        help_btn.setObjectName("helpButton")
-        help_btn.setFixedSize(30, 30)
-        help_btn.clicked.connect(self.show_help)
-        header_layout.addWidget(help_btn)
-        
-        layout.addWidget(header_frame)
+    # Header removed as per request
     
 
     
