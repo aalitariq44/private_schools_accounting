@@ -62,6 +62,58 @@ class NumericTableWidgetItem(QTableWidgetItem):
             return super().__lt__(other)
 
 
+class GradeTableWidgetItem(QTableWidgetItem):
+    """عنصر جدول مخصص لترتيب الصفوف الدراسية"""
+    
+    def __init__(self, text):
+        super().__init__(text)
+        # تحويل النص إلى قيمة رقمية للترتيب
+        self.setData(Qt.UserRole, self.get_grade_sort_value(text))
+    
+    def get_grade_sort_value(self, grade_text):
+        """تحويل اسم الصف إلى قيمة رقمية للترتيب"""
+        if not grade_text:
+            return 999  # قيمة عالية للصفوف غير المعرفة
+        
+        grade_mapping = {
+            # المرحلة الابتدائية (1-6)
+            "الأول الابتدائي": 1,
+            "الثاني الابتدائي": 2,
+            "الثالث الابتدائي": 3,
+            "الرابع الابتدائي": 4,
+            "الخامس الابتدائي": 5,
+            "السادس الابتدائي": 6,
+            
+            # المرحلة المتوسطة (7-9)
+            "الأول المتوسط": 7,
+            "الثاني المتوسط": 8,
+            "الثالث المتوسط": 9,
+            
+            # المرحلة الإعدادية (10-15)
+            "الرابع العلمي": 10,
+            "الرابع الأدبي": 11,
+            "الخامس العلمي": 12,
+            "الخامس الأدبي": 13,
+            "السادس العلمي": 14,
+            "السادس الأدبي": 15
+        }
+        
+        return grade_mapping.get(grade_text, 999)
+    
+    def __lt__(self, other):
+        """مقارنة مخصصة للترتيب حسب الصف"""
+        try:
+            self_data = self.data(Qt.UserRole)
+            other_data = other.data(Qt.UserRole)
+            
+            if self_data is not None and other_data is not None:
+                return self_data < other_data
+            
+            return super().__lt__(other)
+        except:
+            return super().__lt__(other)
+
+
 class ArabicTableWidgetItem(QTableWidgetItem):
     """عنصر جدول مخصص للترتيب الأبجدي العربي"""
     
@@ -262,7 +314,7 @@ class StudentsPage(QWidget):
             
             self.search_input = QLineEdit()
             self.search_input.setObjectName("searchInput")
-            self.search_input.setPlaceholderText("ابحث في أسماء الطلاب...")
+            self.search_input.setPlaceholderText("ابحث في أسماء الطلاب أو المعرف...")
             self.search_input.setMinimumWidth(300)
             actions_layout.addWidget(self.search_input)
             
@@ -534,8 +586,14 @@ class StudentsPage(QWidget):
             # فلتر البحث
             search_text = self.search_input.text().strip()
             if search_text:
-                query += " AND s.name LIKE ?"
-                params.append(f"%{search_text}%")
+                # التحقق إذا كان النص رقماً (معرف الطالب)
+                if search_text.isdigit():
+                    query += " AND (s.name LIKE ? OR s.id = ?)"
+                    params.append(f"%{search_text}%")
+                    params.append(int(search_text))
+                else:
+                    query += " AND s.name LIKE ?"
+                    params.append(f"%{search_text}%")
             
             query += " GROUP BY s.id, s.name, sc.name_ar, s.grade, s.section, s.gender, s.phone, s.status, s.start_date, s.total_fee"
             
@@ -601,7 +659,9 @@ class StudentsPage(QWidget):
                         item = NumericTableWidgetItem(item_text, student['id'])
                     elif col_idx in [1]:  # عمود الاسم - ترتيب أبجدي عربي
                         item = ArabicTableWidgetItem(item_text)
-                    elif col_idx in [3, 4]:  # الصف والشعبة - ترتيب أبجدي عربي
+                    elif col_idx == 3:  # عمود الصف - ترتيب مخصص للصفوف
+                        item = GradeTableWidgetItem(item_text)
+                    elif col_idx in [4]:  # عمود الشعبة - ترتيب أبجدي عربي
                         item = ArabicTableWidgetItem(item_text)
                     elif col_idx in [8, 9, 10]:  # أعمدة المبالغ (الرسوم، المدفوع، المتبقي)
                         # استخراج القيمة الرقمية من النص
@@ -773,7 +833,10 @@ class StudentsPage(QWidget):
                 filters.append(f"حالة الدفع: {payment}")
             search = self.search_input.text().strip()
             if search:
-                filters.append(f"بحث: {search}")
+                if search.isdigit():
+                    filters.append(f"بحث بالمعرف: {search}")
+                else:
+                    filters.append(f"بحث بالاسم: {search}")
             filter_info = "؛ ".join(filters) if filters else None
             
             # استدعاء دالة الطباعة مع المعاينة
@@ -876,7 +939,13 @@ class StudentsPage(QWidget):
             
             if sorted_column >= 0 and sorted_column < len(column_names):
                 sort_direction = "تصاعدي" if sort_order == Qt.AscendingOrder else "تنازلي"
-                filter_text += f" - مرتب حسب: {column_names[sorted_column]} ({sort_direction})"
+                column_name = column_names[sorted_column]
+                # إضافة ملاحظة خاصة لعمود الصف
+                if sorted_column == 3:  # عمود الصف
+                    sort_note = " (ابتدائي → متوسط → إعدادي)"
+                    filter_text += f" - مرتب حسب: {column_name} ({sort_direction}){sort_note}"
+                else:
+                    filter_text += f" - مرتب حسب: {column_name} ({sort_direction})"
             
             # طباعة القائمة
             from core.printing.print_manager import print_students_list
@@ -896,7 +965,12 @@ class StudentsPage(QWidget):
             if logical_index >= 0 and logical_index < len(column_names):
                 column_name = column_names[logical_index]
                 sort_direction = "تصاعدي" if order == Qt.AscendingOrder else "تنازلي"
-                self.sort_indicator_label.setText(f"الترتيب: {column_name} ({sort_direction})")
+                # إضافة ملاحظة خاصة لعمود الصف
+                if logical_index == 3:  # عمود الصف
+                    sort_note = " (ابتدائي → متوسط → إعدادي)"
+                    self.sort_indicator_label.setText(f"الترتيب: {column_name} ({sort_direction}){sort_note}")
+                else:
+                    self.sort_indicator_label.setText(f"الترتيب: {column_name} ({sort_direction})")
             else:
                 self.sort_indicator_label.setText("الترتيب: افتراضي")
                 
