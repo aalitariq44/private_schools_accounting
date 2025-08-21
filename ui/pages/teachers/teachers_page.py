@@ -21,6 +21,7 @@ from core.utils.logger import log_user_action, log_database_operation
 # استيراد نوافذ إدارة المعلمين
 from .add_teacher_dialog import AddTeacherDialog
 from .edit_teacher_dialog import EditTeacherDialog
+from ..shared.salary_details_dialog import SalaryDetailsDialog
 
 
 class TeachersPage(QWidget):
@@ -115,6 +116,7 @@ class TeachersPage(QWidget):
 
             self.teachers_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.teachers_table.customContextMenuRequested.connect(self.show_context_menu)
+            self.teachers_table.doubleClicked.connect(self.show_teacher_details)
 
             table_layout.addWidget(self.teachers_table)
             layout.addWidget(table_frame)
@@ -355,9 +357,6 @@ class TeachersPage(QWidget):
             self.school_combo.currentTextChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
             
-            self.teachers_table.setContextMenuPolicy(Qt.CustomContextMenu)
-            self.teachers_table.customContextMenuRequested.connect(self.show_context_menu)
-            
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
 
@@ -543,12 +542,20 @@ class TeachersPage(QWidget):
                 return
 
             teacher_id_item = self.teachers_table.item(current_row, 0)
-            if not teacher_id_item:
+            teacher_name_item = self.teachers_table.item(current_row, 1)
+            if not teacher_id_item or not teacher_name_item:
                 return
             
             teacher_id = int(teacher_id_item.text())
+            teacher_name = teacher_name_item.text()
             
             menu = QMenu(self)
+            
+            details_action = QAction("عرض تفاصيل الرواتب", self)
+            details_action.triggered.connect(lambda: self.show_teacher_salary_details(teacher_id, teacher_name))
+            menu.addAction(details_action)
+            
+            menu.addSeparator()
             
             edit_action = QAction("تعديل", self)
             edit_action.triggered.connect(lambda: self.edit_teacher_by_id(teacher_id))
@@ -585,3 +592,33 @@ class TeachersPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في طباعة قائمة المعلمين: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في طباعة قائمة المعلمين:\n{e}")
+
+    def show_teacher_details(self):
+        """عرض تفاصيل المعلم عند الضغط المزدوج"""
+        try:
+            current_row = self.teachers_table.currentRow()
+            if current_row < 0:
+                return
+            
+            teacher_id_item = self.teachers_table.item(current_row, 0)
+            teacher_name_item = self.teachers_table.item(current_row, 1)
+            
+            if not teacher_id_item or not teacher_name_item:
+                return
+            
+            teacher_id = int(teacher_id_item.text())
+            teacher_name = teacher_name_item.text()
+            
+            self.show_teacher_salary_details(teacher_id, teacher_name)
+            
+        except Exception as e:
+            logging.error(f"خطأ في عرض تفاصيل المعلم: {e}")
+
+    def show_teacher_salary_details(self, teacher_id, teacher_name):
+        """عرض نافذة تفاصيل رواتب المعلم"""
+        try:
+            dialog = SalaryDetailsDialog("teacher", teacher_id, teacher_name, self)
+            dialog.exec_()
+        except Exception as e:
+            logging.error(f"خطأ في عرض تفاصيل رواتب المعلم: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في عرض تفاصيل الرواتب:\n{e}")

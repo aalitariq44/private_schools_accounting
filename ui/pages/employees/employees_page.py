@@ -21,6 +21,7 @@ from core.utils.logger import log_user_action, log_database_operation
 # استيراد نوافذ إدارة الموظفين
 from .add_employee_dialog import AddEmployeeDialog
 from .edit_employee_dialog import EditEmployeeDialog
+from ..shared.salary_details_dialog import SalaryDetailsDialog
 
 
 class EmployeesPage(QWidget):
@@ -105,6 +106,7 @@ class EmployeesPage(QWidget):
 
             self.employees_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.employees_table.customContextMenuRequested.connect(self.show_context_menu)
+            self.employees_table.doubleClicked.connect(self.show_employee_details)
 
             table_layout.addWidget(self.employees_table)
             layout.addWidget(table_frame)
@@ -517,8 +519,16 @@ class EmployeesPage(QWidget):
             employee_id_item = self.employees_table.item(current_row, 0)
             if not employee_id_item: return
             employee_id = int(employee_id_item.text())
+            employee_name = self.employees_table.item(current_row, 1).text()
             
             menu = QMenu(self)
+            
+            details_action = QAction("عرض تفاصيل الرواتب", self)
+            details_action.triggered.connect(lambda: self.show_employee_salary_details(employee_id, employee_name))
+            menu.addAction(details_action)
+            
+            menu.addSeparator()
+            
             edit_action = QAction("تعديل", self)
             edit_action.triggered.connect(lambda: self.edit_employee_by_id(employee_id))
             menu.addAction(edit_action)
@@ -551,3 +561,33 @@ class EmployeesPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في طباعة قائمة الموظفين: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في طباعة قائمة الموظفين:\n{e}")
+
+    def show_employee_details(self):
+        """عرض تفاصيل الموظف عند الضغط المزدوج"""
+        try:
+            current_row = self.employees_table.currentRow()
+            if current_row < 0:
+                return
+            
+            employee_id_item = self.employees_table.item(current_row, 0)
+            employee_name_item = self.employees_table.item(current_row, 1)
+            
+            if not employee_id_item or not employee_name_item:
+                return
+            
+            employee_id = int(employee_id_item.text())
+            employee_name = employee_name_item.text()
+            
+            self.show_employee_salary_details(employee_id, employee_name)
+            
+        except Exception as e:
+            logging.error(f"خطأ في عرض تفاصيل الموظف: {e}")
+
+    def show_employee_salary_details(self, employee_id, employee_name):
+        """عرض نافذة تفاصيل رواتب الموظف"""
+        try:
+            dialog = SalaryDetailsDialog("employee", employee_id, employee_name, self)
+            dialog.exec_()
+        except Exception as e:
+            logging.error(f"خطأ في عرض تفاصيل رواتب الموظف: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في عرض تفاصيل الرواتب:\n{e}")
