@@ -6,6 +6,9 @@
 
 import logging
 import json
+import os
+from pathlib import Path
+
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
@@ -19,6 +22,7 @@ from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 from .add_school_dialog import AddSchoolDialog
 from .edit_school_dialog import EditSchoolDialog
+import config
 
 
 class SchoolsPage(QWidget):
@@ -120,7 +124,7 @@ class SchoolsPage(QWidget):
             self.schools_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
             
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "المدير", "الهاتف", "الإجراءات"]
+            columns = ["المعرف", "الشعار", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "المدير", "الهاتف"]
             self.schools_table.setColumnCount(len(columns))
             self.schools_table.setHorizontalHeaderLabels(columns)
             
@@ -134,14 +138,18 @@ class SchoolsPage(QWidget):
             header = self.schools_table.horizontalHeader()
             header.setStretchLastSection(True)
             header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # المعرف
-            header.setSectionResizeMode(1, QHeaderView.Stretch)  # الاسم بالعربية
-            header.setSectionResizeMode(2, QHeaderView.Stretch)  # الاسم بالإنجليزية
-            header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # نوع المدرسة
-            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # المدير
-            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الهاتف
+            header.setSectionResizeMode(1, QHeaderView.Fixed)  # الشعار
+            header.setSectionResizeMode(2, QHeaderView.Stretch)  # الاسم بالعربية
+            header.setSectionResizeMode(3, QHeaderView.Stretch)  # الاسم بالإنجليزية
+            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # نوع المدرسة
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # المدير
+            header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # الهاتف
             
-            # زيادة ارتفاع الصفوف لسهولة القراءة
-            self.schools_table.verticalHeader().setDefaultSectionSize(40)
+            # تحديد عرض عمود الشعار
+            self.schools_table.setColumnWidth(1, 80)  # عرض عمود الشعار
+            
+            # زيادة ارتفاع الصفوف لعرض الشعار بشكل مناسب
+            self.schools_table.verticalHeader().setDefaultSectionSize(60)
             # ربط إشارات الجدول
             self.schools_table.cellDoubleClicked.connect(self.edit_school)
             self.schools_table.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -191,7 +199,7 @@ class SchoolsPage(QWidget):
             # استعلام جميع المدارس
             query = """
                 SELECT id, name_ar, name_en, school_types, principal_name, 
-                       phone, address, created_at
+                       phone, address, logo_path, created_at
                 FROM schools 
                 ORDER BY id
             """
@@ -207,36 +215,37 @@ class SchoolsPage(QWidget):
                 id_item.setFlags(id_item.flags() & ~Qt.ItemIsEditable)
                 self.schools_table.setItem(row_idx, 0, id_item)
                 
+                # الشعار
+                logo_widget = self.create_logo_widget(school['logo_path'])
+                self.schools_table.setCellWidget(row_idx, 1, logo_widget)
+                
                 # الاسم بالعربية
                 name_ar_item = QTableWidgetItem(school['name_ar'] or "")
                 name_ar_item.setFlags(name_ar_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 1, name_ar_item)
+                self.schools_table.setItem(row_idx, 2, name_ar_item)
                 
                 # الاسم بالإنجليزية
                 name_en_item = QTableWidgetItem(school['name_en'] or "")
                 name_en_item.setFlags(name_en_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 2, name_en_item)
+                self.schools_table.setItem(row_idx, 3, name_en_item)
                 
                 # نوع المدرسة
                 school_types = self.parse_school_types(school['school_types'])
                 types_text = ", ".join(school_types)
                 types_item = QTableWidgetItem(types_text)
                 types_item.setFlags(types_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 3, types_item)
+                self.schools_table.setItem(row_idx, 4, types_item)
                 
                 # المدير
                 principal_item = QTableWidgetItem(school['principal_name'] or "")
                 principal_item.setFlags(principal_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 4, principal_item)
+                self.schools_table.setItem(row_idx, 5, principal_item)
                 
                 # الهاتف
                 phone_item = QTableWidgetItem(school['phone'] or "")
                 phone_item.setFlags(phone_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 5, phone_item)
+                self.schools_table.setItem(row_idx, 6, phone_item)
                 
-                # أزرار الإجراءات
-                actions_widget = self.create_actions_widget(school['id'])
-                self.schools_table.setCellWidget(row_idx, 6, actions_widget)
             
             # فرز حسب المعرف افتراضيا
             self.schools_table.sortItems(0, Qt.AscendingOrder)
@@ -267,30 +276,69 @@ class SchoolsPage(QWidget):
         except (json.JSONDecodeError, TypeError):
             return [types_json] if types_json else []
     
-    def create_actions_widget(self, school_id: int):
-        """إنشاء ويدجت الإجراءات لكل صف (للمستخدم العادي - تعديل فقط)"""
+    def create_logo_widget(self, logo_path: str) -> QLabel:
+        """إنشاء ويدجت عرض الشعار"""
         try:
-            widget = QWidget()
-            layout = QHBoxLayout(widget)
-            layout.setContentsMargins(5, 2, 5, 2)
-            layout.setSpacing(5)
+            logo_label = QLabel()
+            logo_label.setAlignment(Qt.AlignCenter)
+            logo_label.setStyleSheet("""
+                QLabel {
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    background-color: #f8f9fa;
+                    padding: 2px;
+                }
+            """)
             
-            # زر التعديل فقط للمستخدم العادي
-            edit_btn = QPushButton("تعديل")
-            edit_btn.setObjectName("editButton")
-            edit_btn.setMaximumSize(60, 25)
-            edit_btn.setStyleSheet("font-size:14px; padding:0px;")
-            edit_btn.clicked.connect(lambda: self.edit_school_by_id(school_id))
-            layout.addWidget(edit_btn)
+            # مسار الشعار الافتراضي
+            default_logo = config.RESOURCES_DIR / "images" / "logo.png"
             
-            # تم إزالة زر الحذف للمستخدم العادي
-            # الآن متوفر فقط في الإعدادات المتقدمة
+            # تحديد المسار المراد استخدامه
+            if logo_path and Path(logo_path).exists():
+                pixmap_path = logo_path
+            else:
+                pixmap_path = str(default_logo)
             
-            return widget
+            # تحميل وتحجيم الصورة
+            if Path(pixmap_path).exists():
+                pixmap = QPixmap(pixmap_path)
+                if not pixmap.isNull():
+                    scaled_pixmap = pixmap.scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    logo_label.setPixmap(scaled_pixmap)
+                else:
+                    logo_label.setText("لا يوجد شعار")
+                    logo_label.setStyleSheet("""
+                        QLabel {
+                            border: 1px solid #ddd;
+                            border-radius: 4px;
+                            background-color: #f8f9fa;
+                            color: #666;
+                            font-size: 10px;
+                            padding: 2px;
+                        }
+                    """)
+            else:
+                logo_label.setText("لا يوجد شعار")
+                logo_label.setStyleSheet("""
+                    QLabel {
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        background-color: #f8f9fa;
+                        color: #666;
+                        font-size: 10px;
+                        padding: 2px;
+                    }
+                """)
+                
+            return logo_label
             
         except Exception as e:
-            logging.error(f"خطأ في إنشاء ويدجت الإجراءات: {e}")
-            return QWidget()
+            logging.error(f"خطأ في إنشاء ويدجت الشعار: {e}")
+            # إرجاع label فارغ في حالة الخطأ
+            label = QLabel("خطأ")
+            label.setAlignment(Qt.AlignCenter)
+            return label
+    
     
     def show_context_menu(self, position):
         """عرض القائمة السياقية (للمستخدم العادي - بدون حذف)"""
@@ -334,10 +382,12 @@ class SchoolsPage(QWidget):
             search_text = self.search_input.text().strip().lower()
             
             for row in range(self.schools_table.rowCount()):
-                # البحث في جميع الأعمدة النصية
+                # البحث في جميع الأعمدة النصية (تخطي عمود الشعار)
                 row_visible = False
                 
-                for col in range(1, 6):  # من الاسم إلى الهاتف
+                # البحث في الأعمدة: 0=المعرف، 2=الاسم بالعربية، 3=الاسم بالإنجليزية، 4=نوع المدرسة، 5=المدير، 6=الهاتف
+                search_columns = [0, 2, 3, 4, 5, 6]
+                for col in search_columns:
                     item = self.schools_table.item(row, col)
                     if item and search_text in item.text().lower():
                         row_visible = True
