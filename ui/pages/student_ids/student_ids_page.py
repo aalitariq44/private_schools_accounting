@@ -155,6 +155,10 @@ class StudentIDsPage(QWidget):
         self.selected_count_label = QLabel("الطلاب المختارون: 0")
         self.selected_count_label.setObjectName("selectedCountLabel")
         selection_layout.addWidget(self.selected_count_label)
+        # Add label for total displayed students
+        self.displayed_count_label = QLabel("عدد الطلاب المعروضين: 0")
+        self.displayed_count_label.setObjectName("displayedCountLabel")
+        selection_layout.addWidget(self.displayed_count_label)
         
         filter_layout.addLayout(selection_layout)
         layout.addWidget(filter_frame)
@@ -352,6 +356,7 @@ class StudentIDsPage(QWidget):
         
         self.update_table()
         self.update_selected_count()
+        self.update_displayed_count()  # Update displayed students count
     
     def update_table(self):
         """تحديث جدول الطلاب"""
@@ -412,6 +417,11 @@ class StudentIDsPage(QWidget):
         
         # تمكين/تعطيل زر الإنشاء
         self.generate_btn.setEnabled(count > 0)
+    
+    def update_displayed_count(self):
+        """تحديث عداد الطلاب المعروضين"""
+        count = len(self.filtered_students)
+        self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {count}")
     
     def refresh_data(self):
         """تحديث البيانات"""
