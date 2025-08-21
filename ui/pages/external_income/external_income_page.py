@@ -298,7 +298,8 @@ class ExternalIncomePage(QWidget):
             self.income_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "النوع", "المبلغ", "الفئة", "الوصف", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            # Swap 'الوصف' and 'النوع' columns: description now second, type later
+            columns = ["المعرف", "الوصف", "المبلغ", "الفئة", "النوع", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
             self.income_table.setColumnCount(len(columns))
             self.income_table.setHorizontalHeaderLabels(columns)
 
@@ -442,7 +443,8 @@ class ExternalIncomePage(QWidget):
                 query += " AND (ei.income_type LIKE ? OR ei.notes LIKE ?)"
                 params.extend([f"%{search_text}%", f"%{search_text}%"])
             
-            query += " ORDER BY ei.income_date DESC, ei.created_at DESC"
+            # Default sort by newest entries first based on id
+            query += " ORDER BY ei.id DESC"
             
             # تنفيذ الاستعلام
             self.current_incomes = db_manager.execute_query(query, tuple(params))
@@ -471,13 +473,13 @@ class ExternalIncomePage(QWidget):
             for row_idx, income in enumerate(self.current_incomes):
                 self.income_table.insertRow(row_idx)
                 
-                # البيانات الأساسية
+                # البيانات الأساسية: id, الوصف, المبلغ, الفئة, النوع, التاريخ, المدرسة, الملاحظات
                 items = [
                     str(income['id']),
-                    income['income_type'] or "",
+                    income['description'] or "",
                     f"{income['amount']:,.2f} د.ع",
                     income['category'] or "",
-                    income['description'] or "",
+                    income['income_type'] or "",
                     income['income_date'] or "",
                     income['school_name'] or "",
                     (income['notes'] or "")[:50] + ("..." if len(income['notes'] or "") > 50 else "")
