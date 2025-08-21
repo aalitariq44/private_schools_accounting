@@ -261,7 +261,7 @@ class ExpensesPage(QWidget):
             self.expenses_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "النوع", "المبلغ", "الوصف", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            columns = ["المعرف", "الوصف", "المبلغ", "النوع", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
             self.expenses_table.setColumnCount(len(columns))
             self.expenses_table.setHorizontalHeaderLabels(columns)
 
@@ -434,9 +434,9 @@ class ExpensesPage(QWidget):
                 # البيانات الأساسية
                 items = [
                     str(expense['id']),
-                    expense['expense_type'] or "",
-                    f"{expense['amount']:,.2f} د.ع",
                     expense['description'] or "",
+                    f"{expense['amount']:,.2f} د.ع",
+                    expense['expense_type'] or "",
                     expense['expense_date'] or "",
                     expense['school_name'] or "",
                     (expense['notes'] or "")[:50] + ("..." if len(expense['notes'] or "") > 50 else "")
