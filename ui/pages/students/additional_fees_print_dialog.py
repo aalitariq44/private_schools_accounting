@@ -98,7 +98,7 @@ class AdditionalFeesPrintDialog(QDialog):
         selection_group = QGroupBox("اختيار الرسوم")
         selection_layout = QHBoxLayout()
         
-        self.select_all_checkbox = QCheckBox("تحديد آخر 3 رسوم")
+        self.select_all_checkbox = QCheckBox("تحديد آخر 3 رسوم (الأحدث)")
         self.select_all_checkbox.setChecked(True)
         selection_layout.addWidget(self.select_all_checkbox)
         
@@ -175,14 +175,14 @@ class AdditionalFeesPrintDialog(QDialog):
         # خانة اختيار الجميع
         self.select_all_checkbox.stateChanged.connect(self.toggle_select_all)
         
+        # جدول الرسوم - ربط تغيير العناصر للتحكم في الحد الأقصى للاختيار
+        self.fees_table.itemChanged.connect(self.on_item_changed)
+        
         # أزرار العمليات
         self.cancel_button.clicked.connect(self.reject)
         self.debug_button.clicked.connect(self.debug_data)
         self.preview_button.clicked.connect(self.preview_receipt)
         self.print_button.clicked.connect(self.print_receipt)
-        
-        # تحديث معلومات الاختيار عند تغيير التحديد
-        self.fees_table.itemChanged.connect(self.update_selection_info)
     
     def load_fees_data(self):
         """تحميل بيانات الرسوم الإضافية"""
@@ -218,9 +218,11 @@ class AdditionalFeesPrintDialog(QDialog):
             # لا نغلق النافذة، بل نعرض رسالة تحذير فقط
     
     def populate_table(self):
-        """ملء الجدول بالبيانات"""
+        """ملء الجدول بالبيانات مع التحسينات المطلوبة"""
         try:
             filtered_fees = self.get_filtered_fees()
+            
+            # تعيين عدد الصفوف بدلاً من إعادة إنشاء الجدول كاملاً
             self.fees_table.setRowCount(len(filtered_fees))
             
             logging.info(f"ملء الجدول بـ {len(filtered_fees)} رسم مفلتر")
@@ -230,6 +232,7 @@ class AdditionalFeesPrintDialog(QDialog):
                 self.fees_table.setRowCount(1)
                 no_data_item = QTableWidgetItem("لا توجد رسوم إضافية لعرضها")
                 no_data_item.setTextAlignment(Qt.AlignCenter)
+                no_data_item.setFlags(Qt.ItemIsEnabled)  # منع التحديد
                 # دمج جميع الأعمدة لعرض الرسالة
                 self.fees_table.setItem(0, 0, no_data_item)
                 self.fees_table.setSpan(0, 0, 1, 7)  # دمج جميع الأعمدة السبعة
@@ -245,19 +248,18 @@ class AdditionalFeesPrintDialog(QDialog):
                         logging.warning(f"بيانات رسم غير كاملة في الصف {row}: {fee}")
                         continue
                     
-                    # خانة الاختيار
-                    checkbox = QCheckBox()
-                    # تحديد آخر 3 رسوم مضافة بشكل افتراضي
-                    checkbox.setChecked(row < 3)
-                    # ربط الحدث بالدالة التي تفرض قيد التحديد
-                    checkbox.stateChanged.connect(
-                        lambda state, cb=checkbox: self.on_checkbox_state_changed(cb, state)
-                    )
-                    self.fees_table.setCellWidget(row, 0, checkbox)
+                    # خانة الاختيار باستخدام خاصية Qt.ItemIsUserCheckable
+                    check_item = QTableWidgetItem()
+                    check_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+                    # تحديد آخر 3 رسوم بشكل افتراضي (بدلاً من أول 3)
+                    check_item.setCheckState(Qt.Checked if row < 3 else Qt.Unchecked)
+                    self.fees_table.setItem(row, 0, check_item)
                     
                     # النوع
                     fee_type = str(fee[1]) if fee[1] else "غير محدد"
-                    self.fees_table.setItem(row, 1, QTableWidgetItem(fee_type))
+                    type_item = QTableWidgetItem(fee_type)
+                    type_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    self.fees_table.setItem(row, 1, type_item)
                     
                     # المبلغ
                     try:
@@ -266,6 +268,7 @@ class AdditionalFeesPrintDialog(QDialog):
                     except (ValueError, TypeError):
                         amount_item = QTableWidgetItem("0 د.ع")
                     amount_item.setTextAlignment(Qt.AlignCenter)
+                    amount_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                     self.fees_table.setItem(row, 2, amount_item)
                     
                     # الحالة
@@ -273,23 +276,30 @@ class AdditionalFeesPrintDialog(QDialog):
                     status = "مدفوع" if paid else "غير مدفوع"
                     status_item = QTableWidgetItem(status)
                     status_item.setTextAlignment(Qt.AlignCenter)
+                    status_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
                     if paid:
                         status_item.setBackground(QColor(144, 238, 144))  # لون أخضر فاتح
                     else:
                         status_item.setBackground(QColor(255, 255, 0))    # لون أصفر
                     self.fees_table.setItem(row, 3, status_item)
                     
-                    # تاريخ الإضافة
-                    created_date = str(fee[5]) if fee[5] else "--"
-                    self.fees_table.setItem(row, 4, QTableWidgetItem(created_date))
+                    # تاريخ الإضافة - تحسين عرض التاريخ
+                    created_date = self.format_date(fee[5]) if fee[5] else "--"
+                    created_item = QTableWidgetItem(created_date)
+                    created_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    self.fees_table.setItem(row, 4, created_item)
                     
-                    # تاريخ الدفع
-                    payment_date = str(fee[4]) if fee[4] and paid else "--"
-                    self.fees_table.setItem(row, 5, QTableWidgetItem(payment_date))
+                    # تاريخ الدفع - تحسين عرض التاريخ
+                    payment_date = self.format_date(fee[4]) if fee[4] and paid else "--"
+                    payment_item = QTableWidgetItem(payment_date)
+                    payment_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    self.fees_table.setItem(row, 5, payment_item)
                     
                     # الملاحظات
                     notes = str(fee[6]) if fee[6] else ""
-                    self.fees_table.setItem(row, 6, QTableWidgetItem(notes))
+                    notes_item = QTableWidgetItem(notes)
+                    notes_item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+                    self.fees_table.setItem(row, 6, notes_item)
                     
                     logging.debug(f"تم إضافة الصف {row}: {fee_type}, {amount}, {status}")
                     
@@ -309,8 +319,29 @@ class AdditionalFeesPrintDialog(QDialog):
             self.fees_table.setRowCount(1)
             error_item = QTableWidgetItem(f"خطأ في تحميل البيانات: {str(e)}")
             error_item.setTextAlignment(Qt.AlignCenter)
+            error_item.setFlags(Qt.ItemIsEnabled)
             self.fees_table.setItem(0, 0, error_item)
             self.fees_table.setSpan(0, 0, 1, 7)
+    
+    def format_date(self, date_str):
+        """تنسيق التاريخ ليظهر بصيغة dd/mm/yyyy"""
+        if not date_str:
+            return "--"
+        
+        try:
+            # محاولة تحويل التاريخ من صيغ مختلفة
+            if isinstance(date_str, str):
+                # إذا كان التاريخ بصيغة ISO (YYYY-MM-DD HH:MM:SS أو YYYY-MM-DD)
+                if len(date_str) >= 10:
+                    date_part = date_str[:10]  # أخذ الجزء الأول من التاريخ
+                    date_obj = datetime.strptime(date_part, '%Y-%m-%d')
+                    return date_obj.strftime('%d/%m/%Y')
+                else:
+                    return date_str  # إرجاع كما هو إذا لم نتمكن من تحويله
+            else:
+                return str(date_str)
+        except (ValueError, TypeError):
+            return str(date_str) if date_str else "--"
     
     def get_filtered_fees(self):
         """الحصول على الرسوم المفلترة حسب الاختيار"""
@@ -332,61 +363,63 @@ class AdditionalFeesPrintDialog(QDialog):
     
     def toggle_select_all(self, state):
         """تحديد أو إلغاء تحديد الرسوم (بحد أقصى 3)"""
-        # إيقاف الإشارات مؤقتاً لتجنب استدعاء on_checkbox_state_changed بشكل متكرر
-        for row in range(self.fees_table.rowCount()):
-            checkbox = self.fees_table.cellWidget(row, 0)
-            if checkbox:
-                checkbox.blockSignals(True)
+        # إيقاف الإشارات مؤقتاً لتجنب استدعاء on_item_changed بشكل متكرر
+        self.fees_table.blockSignals(True)
 
         if state == Qt.Checked:
-            # تحديد أول 3 رسوم فقط
+            # تحديد آخر 3 رسوم فقط (الأحدث حسب الترتيب)
             for row in range(self.fees_table.rowCount()):
-                checkbox = self.fees_table.cellWidget(row, 0)
-                if checkbox:
-                    checkbox.setChecked(row < 3)
+                item = self.fees_table.item(row, 0)
+                if item and hasattr(item, 'setCheckState'):
+                    item.setCheckState(Qt.Checked if row < 3 else Qt.Unchecked)
         else:
             # إلغاء تحديد الجميع
             for row in range(self.fees_table.rowCount()):
-                checkbox = self.fees_table.cellWidget(row, 0)
-                if checkbox:
-                    checkbox.setChecked(False)
+                item = self.fees_table.item(row, 0)
+                if item and hasattr(item, 'setCheckState'):
+                    item.setCheckState(Qt.Unchecked)
 
         # إعادة تفعيل الإشارات
-        for row in range(self.fees_table.rowCount()):
-            checkbox = self.fees_table.cellWidget(row, 0)
-            if checkbox:
-                checkbox.blockSignals(False)
+        self.fees_table.blockSignals(False)
         
         # تحديث معلومات التحديد يدوياً لأن الإشارات كانت معطلة
         self.update_selection_info()
 
-    def on_checkbox_state_changed(self, checkbox, state):
+    def on_item_changed(self, item):
         """
-        يتم استدعاؤه عند تغيير حالة أي خانة اختيار.
+        يتم استدعاؤه عند تغيير حالة أي عنصر في الجدول.
         يفرض قيد عدم تحديد أكثر من 3 رسوم.
         """
-        if state == Qt.Checked:
+        # التأكد أن التغيير في العمود الأول (خانة الاختيار)
+        if item.column() != 0:
+            return
+        
+        # إذا تم تحديد العنصر، التحقق من الحد الأقصى
+        if item.checkState() == Qt.Checked:
             selected_count = 0
             for row in range(self.fees_table.rowCount()):
-                cb = self.fees_table.cellWidget(row, 0)
-                if cb and cb.isChecked():
+                check_item = self.fees_table.item(row, 0)
+                if check_item and check_item.checkState() == Qt.Checked:
                     selected_count += 1
             
             if selected_count > 3:
                 QMessageBox.warning(self, "تنبيه", "لا يمكن تحديد أكثر من 3 رسوم للطباعة في الوصل الواحد.")
-                # منع التحديد بإلغاء تحديد الخانة مع حظر الإشارات لتجنب التكرار
-                checkbox.blockSignals(True)
-                checkbox.setChecked(False)
-                checkbox.blockSignals(False)
+                # منع التحديد بإلغاء تحديد العنصر مع حظر الإشارات لتجنب التكرار
+                item.setCheckState(Qt.Unchecked)
+                return
 
         # تحديث معلومات الملخص بعد أي تغيير
         self.update_selection_info()
     
     def update_selection_info(self):
-        """تحديث معلومات الاختيار"""
+        """تحديث معلومات الاختيار مع تفاصيل محسنة"""
         try:
             selected_count = 0
             selected_total = 0.0
+            paid_count = 0
+            unpaid_count = 0
+            paid_amount = 0.0
+            unpaid_amount = 0.0
             
             filtered_fees = self.get_filtered_fees()
             
@@ -396,31 +429,45 @@ class AdditionalFeesPrintDialog(QDialog):
                 self.select_all_checkbox.setCheckState(Qt.Unchecked)
                 return
             
-            # حساب الرسوم المحددة
+            # حساب الرسوم المحددة مع تفاصيل الدفع
             for row in range(self.fees_table.rowCount()):
-                checkbox = self.fees_table.cellWidget(row, 0)
-                if checkbox and checkbox.isChecked() and row < len(filtered_fees):
+                check_item = self.fees_table.item(row, 0)
+                if check_item and check_item.checkState() == Qt.Checked and row < len(filtered_fees):
                     selected_count += 1
                     try:
                         # التأكد من صحة البيانات قبل الإضافة
                         amount = float(filtered_fees[row][2]) if filtered_fees[row][2] else 0
                         selected_total += amount
+                        
+                        # التحقق من حالة الدفع
+                        is_paid = bool(filtered_fees[row][3]) if filtered_fees[row][3] is not None else False
+                        if is_paid:
+                            paid_count += 1
+                            paid_amount += amount
+                        else:
+                            unpaid_count += 1
+                            unpaid_amount += amount
+                            
                     except (ValueError, TypeError, IndexError):
                         logging.warning(f"مبلغ غير صحيح في الصف {row}")
                         continue
             
-            # عرض المعلومات
-            self.selection_info_label.setText(
-                f"المحدد: {selected_count} رسوم - المجموع: {selected_total:,.0f} د.ع"
-            )
+            # عرض المعلومات المحسنة
+            if selected_count == 0:
+                self.selection_info_label.setText("لم يتم تحديد أي رسوم")
+            else:
+                info_text = f"المحدد: {selected_count} رسوم - المجموع: {selected_total:,.0f} د.ع"
+                if paid_count > 0 or unpaid_count > 0:
+                    info_text += f" (مدفوع: {paid_count} - {paid_amount:,.0f} د.ع، غير مدفوع: {unpaid_count} - {unpaid_amount:,.0f} د.ع)"
+                self.selection_info_label.setText(info_text)
             
             # تحديث حالة خانة تحديد الجميع
             total_rows_with_checkboxes = sum(1 for row in range(self.fees_table.rowCount()) 
-                                           if self.fees_table.cellWidget(row, 0) is not None)
+                                           if self.fees_table.item(row, 0) is not None)
             
             if selected_count == 0:
                 self.select_all_checkbox.setCheckState(Qt.Unchecked)
-            elif selected_count == total_rows_with_checkboxes:
+            elif selected_count == min(3, total_rows_with_checkboxes):  # الحد الأقصى هو 3 أو عدد الرسوم المتاحة
                 self.select_all_checkbox.setCheckState(Qt.Checked)
             else:
                 self.select_all_checkbox.setCheckState(Qt.PartiallyChecked)
@@ -436,8 +483,8 @@ class AdditionalFeesPrintDialog(QDialog):
             filtered_fees = self.get_filtered_fees()
             
             for row in range(self.fees_table.rowCount()):
-                checkbox = self.fees_table.cellWidget(row, 0)
-                if checkbox and checkbox.isChecked() and row < len(filtered_fees):
+                check_item = self.fees_table.item(row, 0)
+                if check_item and check_item.checkState() == Qt.Checked and row < len(filtered_fees):
                     selected_fees.append(filtered_fees[row])
             
             return selected_fees
@@ -576,6 +623,14 @@ class AdditionalFeesPrintDialog(QDialog):
             
             debug_info.append(f"عدد صفوف الجدول: {self.fees_table.rowCount()}")
             debug_info.append(f"فلتر مختار: {self.filter_group.checkedId()}")
+            
+            # إحصائيات الاختيار
+            selected_count = 0
+            for row in range(self.fees_table.rowCount()):
+                check_item = self.fees_table.item(row, 0)
+                if check_item and check_item.checkState() == Qt.Checked:
+                    selected_count += 1
+            debug_info.append(f"عدد الرسوم المحددة: {selected_count}")
             
             # اختبار الاتصال بقاعدة البيانات
             try:
