@@ -6,7 +6,7 @@
 import logging
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QGridLayout, 
-    QTextEdit, QPushButton, QMessageBox
+    QTextEdit, QPushButton, QMessageBox, QDialog, QDialogButtonBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFontDatabase
@@ -45,9 +45,6 @@ class StudentInfoWidget(QWidget):
             
             # معلومات الطالب الأساسية
             self.create_basic_info_section(layout)
-            
-            # قسم الملاحظات
-            self.create_notes_section(layout)
             
             # الملخص المالي
             self.create_financial_summary(layout)
@@ -124,65 +121,39 @@ class StudentInfoWidget(QWidget):
             grid_layout.addWidget(QLabel("تاريخ المباشرة:"), 2, 2)
             grid_layout.addWidget(self.start_date_label, 2, 3)
             
+            # إضافة الملاحظات في نفس الصف مع تاريخ المباشرة
+            grid_layout.addWidget(QLabel("ملاحظات:"), 2, 4)
+            
+            # إنشاء حقل الملاحظات المصغر
+            self.notes_display = QLabel("--")
+            self.notes_display.setObjectName("notesDisplay")
+            self.notes_display.setWordWrap(True)
+            self.notes_display.setMaximumWidth(200)
+            self.notes_display.setMaximumHeight(40)
+            self.notes_display.setStyleSheet("""
+                QLabel#notesDisplay {
+                    background-color: #F8F9FA;
+                    border: 1px solid #DEE2E6;
+                    border-radius: 4px;
+                    padding: 5px;
+                    font-size: 10px;
+                    color: #6C757D;
+                    cursor: pointer;
+                }
+                QLabel#notesDisplay:hover {
+                    background-color: #E9ECEF;
+                    border-color: #ADB5BD;
+                }
+            """)
+            # إضافة إمكانية تعديل الملاحظات بالنقر المزدوج
+            self.notes_display.mouseDoubleClickEvent = self.edit_notes_dialog
+            grid_layout.addWidget(self.notes_display, 2, 5)
+            
             info_layout.addLayout(grid_layout)
             layout.addWidget(info_frame)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم المعلومات الأساسية: {e}")
-            raise
-    
-    def create_notes_section(self, layout):
-        """إنشاء قسم الملاحظات"""
-        try:
-            notes_frame = QFrame()
-            notes_frame.setObjectName("notesFrame")
-            
-            notes_layout = QVBoxLayout(notes_frame)
-            notes_layout.setContentsMargins(20, 15, 20, 15)
-            
-            # عنوان القسم مع أزرار التحكم
-            header_layout = QHBoxLayout()
-            
-            title_label = QLabel("ملاحظات الطالب")
-            title_label.setObjectName("sectionTitle")
-            header_layout.addWidget(title_label)
-            
-            header_layout.addStretch()
-            
-            # زر التعديل
-            self.edit_notes_button = QPushButton("تعديل")
-            self.edit_notes_button.setObjectName("editButton")
-            self.edit_notes_button.clicked.connect(self.toggle_notes_editing)
-            header_layout.addWidget(self.edit_notes_button)
-            
-            # زر الحفظ (مخفي في البداية)
-            self.save_notes_button = QPushButton("حفظ")
-            self.save_notes_button.setObjectName("saveButton")
-            self.save_notes_button.clicked.connect(self.save_notes)
-            self.save_notes_button.setVisible(False)
-            header_layout.addWidget(self.save_notes_button)
-            
-            # زر الإلغاء (مخفي في البداية)
-            self.cancel_notes_button = QPushButton("إلغاء")
-            self.cancel_notes_button.setObjectName("cancelButton")
-            self.cancel_notes_button.clicked.connect(self.cancel_notes_editing)
-            self.cancel_notes_button.setVisible(False)
-            header_layout.addWidget(self.cancel_notes_button)
-            
-            notes_layout.addLayout(header_layout)
-            
-            # منطقة النص
-            self.notes_text = QTextEdit()
-            self.notes_text.setObjectName("notesText")
-            self.notes_text.setMaximumHeight(120)
-            self.notes_text.setPlaceholderText("اكتب ملاحظات حول الطالب هنا...")
-            self.notes_text.setReadOnly(True)  # للقراءة فقط في البداية
-            notes_layout.addWidget(self.notes_text)
-            
-            layout.addWidget(notes_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء قسم الملاحظات: {e}")
             raise
     
     def create_financial_summary(self, layout):
@@ -246,7 +217,9 @@ class StudentInfoWidget(QWidget):
             
             # تحديث المعلومات
             self.name_label.setText(str(student_data[1]))  # name
-            self.school_label.setText(str(student_data[-3] or "--"))  # school_name
+            # إصلاح: استخدام الحقل الصحيح لاسم المدرسة (school_name هو أول حقل بعد s.*)
+            school_name_index = len(student_data) - 5  # school_name هو الحقل الأول بعد بيانات الطالب
+            self.school_label.setText(str(student_data[school_name_index] or "--"))  # school_name
             self.grade_label.setText(str(student_data[4]))  # grade
             self.section_label.setText(str(student_data[5]))  # section
             self.gender_label.setText(str(student_data[7]))  # gender
@@ -254,11 +227,13 @@ class StudentInfoWidget(QWidget):
             self.status_label.setText(str(student_data[13]))  # status
             self.start_date_label.setText(str(student_data[12]))  # start_date
             
-            # تحديث الملاحظات (العمود الجديد في آخر البيانات)
+            # تحديث الملاحظات (إصلاح: استخدام الحقل الصحيح للملاحظات)
             notes = ""
-            if len(student_data) > 17:  # العمود الجديد للملاحظات
-                notes = str(student_data[17] or "")
-            self.notes_text.setPlainText(notes)
+            if hasattr(student_data, '__len__') and len(student_data) > 17:
+                notes = str(student_data[17] or "")  # notes من جدول الطلاب
+            
+            # تحديث حقل الملاحظات المصغر
+            self.update_notes_display(notes)
             
             # تحديث القسط الكلي
             try:
@@ -327,13 +302,18 @@ class StudentInfoWidget(QWidget):
     
     def get_school_info(self):
         """الحصول على معلومات المدرسة"""
-        if not self.student_data or len(self.student_data) < 3:
+        if not self.student_data or len(self.student_data) < 10:
             return {"name": "", "address": "", "phone": ""}
         
+        # حساب الفهارس الصحيحة لمعلومات المدرسة
+        school_name_index = len(self.student_data) - 5  # school_name
+        school_address_index = len(self.student_data) - 3  # school_address
+        school_phone_index = len(self.student_data) - 2  # school_phone
+        
         return {
-            "name": self.school_label.text(),
-            "address": self.student_data[-2] if len(self.student_data) > 2 else "",
-            "phone": self.student_data[-1] if len(self.student_data) > 1 else ""
+            "name": str(self.student_data[school_name_index] or "") if school_name_index < len(self.student_data) else "",
+            "address": str(self.student_data[school_address_index] or "") if school_address_index < len(self.student_data) else "",
+            "phone": str(self.student_data[school_phone_index] or "") if school_phone_index < len(self.student_data) else ""
         }
     
     def get_basic_info(self):
@@ -353,104 +333,111 @@ class StudentInfoWidget(QWidget):
         """تعيين معرف الطالب"""
         self.student_id = student_id
     
-    def toggle_notes_editing(self):
-        """تبديل وضع تعديل الملاحظات"""
+    def edit_notes_dialog(self, event):
+        """فتح نافذة حوار لتعديل الملاحظات"""
         try:
             if not self.student_id:
                 QMessageBox.warning(self, "خطأ", "لا يوجد طالب محدد")
                 return
             
-            # تفعيل وضع التعديل
-            self.notes_text.setReadOnly(False)
-            self.notes_text.setFocus()
+            # إنشاء نافذة الحوار
+            dialog = QDialog(self)
+            dialog.setWindowTitle("تعديل ملاحظات الطالب")
+            dialog.setModal(True)
+            dialog.resize(400, 300)
             
-            # إظهار أزرار الحفظ والإلغاء
-            self.edit_notes_button.setVisible(False)
-            self.save_notes_button.setVisible(True)
-            self.cancel_notes_button.setVisible(True)
+            # تخطيط النافذة
+            layout = QVBoxLayout()
             
-            # تغيير شكل المربع النصي
-            self.notes_text.setStyleSheet("""
-                QTextEdit {
-                    border: 2px solid #3498DB;
-                    background-color: #FFFFFF;
-                    border-radius: 8px;
-                    padding: 10px;
-                    font-family: Arial;
-                    font-size: 12px;
-                }
-            """)
+            # عنوان
+            title_label = QLabel("ملاحظات الطالب:")
+            title_label.setStyleSheet("font-weight: bold; font-size: 14px; margin-bottom: 10px;")
+            layout.addWidget(title_label)
             
-        except Exception as e:
-            logging.error(f"خطأ في تفعيل وضع تعديل الملاحظات: {e}")
-    
-    def cancel_notes_editing(self):
-        """إلغاء تعديل الملاحظات"""
-        try:
-            # إعادة النص الأصلي
+            # مربع النص
+            notes_edit = QTextEdit()
+            notes_edit.setPlaceholderText("اكتب ملاحظات حول الطالب هنا...")
+            
+            # تحميل الملاحظات الحالية
+            current_notes = ""
             if self.student_data and len(self.student_data) > 17:
-                original_notes = str(self.student_data[17] or "")
-                self.notes_text.setPlainText(original_notes)
-            else:
-                self.notes_text.setPlainText("")
+                current_notes = str(self.student_data[17] or "")
+            notes_edit.setPlainText(current_notes)
             
-            # إلغاء وضع التعديل
-            self.notes_text.setReadOnly(True)
+            layout.addWidget(notes_edit)
             
-            # إخفاء أزرار الحفظ والإلغاء
-            self.edit_notes_button.setVisible(True)
-            self.save_notes_button.setVisible(False)
-            self.cancel_notes_button.setVisible(False)
+            # أزرار التحكم
+            button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+            button_box.button(QDialogButtonBox.Ok).setText("حفظ")
+            button_box.button(QDialogButtonBox.Cancel).setText("إلغاء")
+            layout.addWidget(button_box)
             
-            # إعادة تعيين شكل المربع النصي
-            self.notes_text.setStyleSheet("")
+            dialog.setLayout(layout)
             
-        except Exception as e:
-            logging.error(f"خطأ في إلغاء تعديل الملاحظات: {e}")
-    
-    def save_notes(self):
-        """حفظ الملاحظات"""
-        try:
-            if not self.student_id:
-                QMessageBox.warning(self, "خطأ", "لا يوجد طالب محدد")
-                return
-            
-            notes_text = self.notes_text.toPlainText().strip()
-            
-            # تحديث البيانات في قاعدة البيانات
-            success = db_manager.execute_query(
-                "UPDATE students SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                (notes_text, self.student_id)
-            )
-            
-            if success is not False:
-                # تحديث البيانات المحلية
-                if self.student_data:
-                    # التأكد من وجود العمود وتحديثه
-                    student_data_list = list(self.student_data)
-                    if len(student_data_list) > 17:
-                        student_data_list[17] = notes_text
+            # ربط الأزرار
+            def save_notes():
+                try:
+                    notes_text = notes_edit.toPlainText().strip()
+                    
+                    # تحديث البيانات في قاعدة البيانات
+                    success = db_manager.execute_query(
+                        "UPDATE students SET notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                        (notes_text, self.student_id)
+                    )
+                    
+                    if success is not False:
+                        # تحديث البيانات المحلية
+                        if self.student_data:
+                            student_data_list = list(self.student_data)
+                            if len(student_data_list) > 17:
+                                student_data_list[17] = notes_text
+                            else:
+                                while len(student_data_list) < 18:
+                                    student_data_list.append("")
+                                student_data_list[17] = notes_text
+                            self.student_data = tuple(student_data_list)
+                        
+                        # تحديث العرض
+                        self.update_notes_display(notes_text)
+                        
+                        # إرسال إشارة التحديث
+                        self.notes_updated.emit()
+                        
+                        dialog.accept()
+                        QMessageBox.information(self, "نجح", "تم حفظ الملاحظات بنجاح")
                     else:
-                        # إضافة العمود إذا لم يكن موجوداً
-                        while len(student_data_list) < 18:
-                            student_data_list.append("")
-                        student_data_list[17] = notes_text
-                    self.student_data = tuple(student_data_list)
-                
-                # إلغاء وضع التعديل
-                self.cancel_notes_editing()
-                
-                # إرسال إشارة التحديث
-                self.notes_updated.emit()
-                
-                QMessageBox.information(self, "نجح", "تم حفظ الملاحظات بنجاح")
-            else:
-                QMessageBox.critical(self, "خطأ", "فشل في حفظ الملاحظات")
+                        QMessageBox.critical(self, "خطأ", "فشل في حفظ الملاحظات")
+                        
+                except Exception as e:
+                    logging.error(f"خطأ في حفظ الملاحظات: {e}")
+                    QMessageBox.critical(self, "خطأ", f"خطأ في حفظ الملاحظات: {str(e)}")
+            
+            button_box.accepted.connect(save_notes)
+            button_box.rejected.connect(dialog.reject)
+            
+            # عرض النافذة
+            dialog.exec_()
             
         except Exception as e:
-            logging.error(f"خطأ في حفظ الملاحظات: {e}")
-            QMessageBox.critical(self, "خطأ", f"خطأ في حفظ الملاحظات: {str(e)}")
+            logging.error(f"خطأ في فتح نافذة تعديل الملاحظات: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في فتح نافذة التعديل: {str(e)}")
+    
+    def update_notes_display(self, notes_text):
+        """تحديث عرض الملاحظات المصغر"""
+        try:
+            if notes_text and notes_text.strip():
+                # قطع النص إذا كان طويلاً
+                display_notes = notes_text[:50] + "..." if len(notes_text) > 50 else notes_text
+                self.notes_display.setText(display_notes)
+                self.notes_display.setToolTip(notes_text)  # إظهار النص الكامل عند التمرير
+            else:
+                self.notes_display.setText("لا توجد ملاحظات")
+                self.notes_display.setToolTip("")
+        except Exception as e:
+            logging.error(f"خطأ في تحديث عرض الملاحظات: {e}")
     
     def get_notes(self):
         """الحصول على الملاحظات الحالية"""
-        return self.notes_text.toPlainText()
+        if self.student_data and len(self.student_data) > 17:
+            return str(self.student_data[17] or "")
+        return ""
