@@ -152,6 +152,7 @@ class AdditionalFeesPrintManager:
         
         student_name = student.get('name', 'غير محدد')
         school_name = student.get('school_name', 'المدرسة')
+        school_name_en = student.get('school_name_en', '')
         school_logo_path = student.get('school_logo_path', '')
         grade = student.get('grade', '')
         section = student.get('section', '')
@@ -173,6 +174,11 @@ class AdditionalFeesPrintManager:
         c.setFont(self.arabic_bold_font, 13)
         school_text = self.reshape_arabic_text(school_name)
         c.drawRightString(self.page_width - self.margin - header_padding, header_y, school_text)
+        
+        # إضافة الاسم الإنجليزي تحت الاسم العربي (إذا وجد)
+        if school_name_en and school_name_en.strip():
+            c.setFont('Helvetica', 10)  # خط إنجليزي
+            c.drawRightString(self.page_width - self.margin - header_padding, header_y - 15, school_name_en.strip())
 
         # Center: School Logo
         circle_x = self.page_width / 2

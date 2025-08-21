@@ -153,6 +153,7 @@ class ReportLabPrintManager:
         payment_date = receipt_data.get('payment_date', datetime.now().strftime('%Y-%m-%d'))
         installment_number = receipt_data.get('installment_number', 1)
         school_name = receipt_data.get('school_name', 'المدرسة')
+        school_name_en = receipt_data.get('school_name_en', '')
         school_address = receipt_data.get('school_address', '')
         school_phone = receipt_data.get('school_phone', '')
         school_logo_path = receipt_data.get('school_logo_path', '')
@@ -173,6 +174,11 @@ class ReportLabPrintManager:
         c.setFont(self.arabic_bold_font, 13)
         school_text = self.reshape_arabic_text(school_name)
         c.drawRightString(self.page_width - self.margin - header_padding, header_y, school_text)
+        
+        # إضافة الاسم الإنجليزي تحت الاسم العربي (إذا وجد)
+        if school_name_en and school_name_en.strip():
+            c.setFont('Helvetica', 10)  # خط إنجليزي
+            c.drawRightString(self.page_width - self.margin - header_padding, header_y - 15, school_name_en.strip())
 
         # Center: School Logo
         circle_x = self.page_width / 2

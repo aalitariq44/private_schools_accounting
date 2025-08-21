@@ -494,7 +494,7 @@ class AdditionalFeesPrintDialog(QDialog):
         try:
             # الحصول على معلومات الطالب
             student_query = """
-                SELECT s.name, s.grade, s.section, sc.name_ar as school_name, sc.logo_path as school_logo_path
+                SELECT s.name, s.grade, s.section, sc.name_ar as school_name, sc.name_en as school_name_en, sc.logo_path as school_logo_path
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
                 WHERE s.id = ?
@@ -533,7 +533,8 @@ class AdditionalFeesPrintDialog(QDialog):
                     'grade': student[1],
                     'section': student[2],
                     'school_name': student[3],
-                    'school_logo_path': student[4] if len(student) > 4 else ''
+                    'school_name_en': student[4] if len(student) > 4 else '',
+                    'school_logo_path': student[5] if len(student) > 5 else ''
                 },
                 'fees': fees_for_print,
                 'summary': {
