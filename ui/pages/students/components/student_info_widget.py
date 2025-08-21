@@ -216,23 +216,19 @@ class StudentInfoWidget(QWidget):
                 return
             
             # تحديث المعلومات
-            self.name_label.setText(str(student_data[1]))  # name
-            # إصلاح: استخدام الحقل الصحيح لاسم المدرسة (school_name هو أول حقل بعد s.*)
-            school_name_index = len(student_data) - 5  # school_name هو الحقل الأول بعد بيانات الطالب
-            self.school_label.setText(str(student_data[school_name_index] or "--"))  # school_name
+            self.name_label.setText(str(student_data['name'] or "--"))  # name
+            # تحديث اسم المدرسة باستخدام اسم العمود school_name
+            school_name = student_data['school_name'] if 'school_name' in student_data.keys() else None
+            self.school_label.setText(str(school_name or "--"))  # school_name
             self.grade_label.setText(str(student_data[4]))  # grade
             self.section_label.setText(str(student_data[5]))  # section
             self.gender_label.setText(str(student_data[7]))  # gender
             self.phone_label.setText(str(student_data[8] or "--"))  # phone
             self.status_label.setText(str(student_data[13]))  # status
-            self.start_date_label.setText(str(student_data[12]))  # start_date
+            self.start_date_label.setText(str(student_data['start_date'] or "--"))  # start_date
             
-            # تحديث الملاحظات (إصلاح: استخدام الحقل الصحيح للملاحظات)
-            notes = ""
-            if hasattr(student_data, '__len__') and len(student_data) > 17:
-                notes = str(student_data[17] or "")  # notes من جدول الطلاب
-            
-            # تحديث حقل الملاحظات المصغر
+            # تحديث الملاحظات باستخدام اسم العمود notes
+            notes = student_data['notes'] if 'notes' in student_data.keys() else ""
             self.update_notes_display(notes)
             
             # تحديث القسط الكلي
