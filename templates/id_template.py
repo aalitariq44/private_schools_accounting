@@ -77,8 +77,8 @@ TEMPLATE_ELEMENTS = {
     },
     
     "student_name": {
-        "x": 0.96,         # بجانب مربع الصورة من اليمين
-        "y": 0.65,         # تحت التسمية
+        "x": 0.80,         # بجانب مربع الصورة من اليمين
+        "y": 0.70,         # على نفس سطر التسمية
         "font_size": 12,   # خط أكبر للاسم
         "font_name": "Helvetica-Bold",
         "alignment": "right",
@@ -98,8 +98,8 @@ TEMPLATE_ELEMENTS = {
     },
     
     "student_grade": {
-        "x": 0.96,
-        "y": 0.51,
+        "x": 0.75,
+        "y": 0.56   ,
         "font_size": 10,
         "font_name": "Helvetica-Bold",
         "alignment": "right",
@@ -119,8 +119,8 @@ TEMPLATE_ELEMENTS = {
     },
     
     "academic_year": {
-        "x": 0.96,
-        "y": 0.37,
+        "x": 0.75,
+        "y": 0.42,
         "font_size": 9,
         "font_name": "Helvetica",
         "alignment": "right",
