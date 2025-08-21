@@ -279,8 +279,8 @@ class StudentIDGenerator:
                 # رسم الخطوط الفاصلة
                 self.draw_line_element(card_x, card_y, element_config)
             elif element_name == "id_number":
-                # رسم رقم الهوية (يمكن تخصيصه لاحقاً)
-                id_text = f"رقم الهوية: {student_data.get('id', 'AUTO')}"
+                # رسم رقم الطالب (يمكن تخصيصه لاحقاً)
+                id_text = f"رقم الطالب: {student_data.get('id', 'AUTO')}"
                 self.draw_text_element(card_x, card_y, element_config, id_text)
     
     def draw_text_element(self, card_x: float, card_y: float, 
