@@ -718,9 +718,56 @@ class AdditionalFeesPage(QWidget):
             logging.error(f"خطأ في مسح الفلاتر: {e}")
     
     def show_context_menu(self, position):
-        """عرض قائمة السياق للجدول - تم تعطيلها"""
-        # تم تعطيل قائمة السياق بناء على الطلب
-        pass
+        """عرض قائمة السياق للجدول لتحويل الحالة بين مدفوع وغير مدفوع"""
+        index = self.fees_table.indexAt(position)
+        row = index.row()
+        if row < 0:
+            return
+        fee = self.current_fees[row]
+        fee_id = fee[0]
+        paid = fee[5]
+        # only allow marking unpaid fees as paid
+        if paid:
+            return
+        menu = QMenu(self)
+        mark_action = QAction("تعيين كمدفوع", self)
+        mark_action.triggered.connect(lambda _, fid=fee_id: self.change_payment_status(fid, True))
+        menu.addAction(mark_action)
+        menu.exec_(self.fees_table.viewport().mapToGlobal(position))
+    
+    def change_payment_status(self, fee_id, paid):
+        """تغيير حالة الدفع لرسم إضافي بعد التأكيد"""
+        action = "مدفوع" if paid else "غير مدفوع"
+        reply = QMessageBox.question(
+            self, "تأكيد",
+            f"هل أنت متأكد من تعيين الرسم #{fee_id} ك{action}؟",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        if reply != QMessageBox.Yes:
+            return
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            if paid:
+                payment_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                cursor.execute(
+                    "UPDATE additional_fees SET paid = 1, payment_date = ? WHERE id = ?",
+                    (payment_date, fee_id)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE additional_fees SET paid = 0, payment_date = NULL WHERE id = ?",
+                    (fee_id,)
+                )
+            conn.commit()
+            QMessageBox.information(self, "نجح", f"تم تحديث حالة الدفع بنجاح إلى {action}")
+            self.load_fees()
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حالة الدفع: {e}")
+            QMessageBox.critical(self, "خطأ", f"فشل في تغيير حالة الدفع: {e}")
+        finally:
+            conn.close()
     
     def export_fees(self):
         """تصدير تقرير الرسوم"""
