@@ -58,7 +58,7 @@ class TemplateType(Enum):
 # تحديد طريقة الطباعة المفضلة لكل نوع قالب
 TEMPLATE_PRINT_METHODS = {
     # التقارير البسيطة - HTML
-    TemplateType.STUDENT_REPORT: PrintMethod.REPORTLAB_CANVAS,
+    TemplateType.STUDENT_REPORT: PrintMethod.HTML_WEB_ENGINE,  # use HTML for student report like list
     TemplateType.STUDENT_LIST: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.STUDENTS_LIST: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.FINANCIAL_REPORT: PrintMethod.HTML_WEB_ENGINE,
@@ -144,10 +144,10 @@ class PrintConfig:
     
     def __init__(self):
         self.settings = PrintSettings()
-        # Use the configured resources directory for templates
-        resources_dir = Path(config.RESOURCES_DIR)
-        self.templates_path = str(resources_dir / 'print_templates')
-        # إنشاء مجلد القوالب إذا لم يكن موجوداً
+        # Use internal package templates directory
+        pkg_templates = Path(__file__).parent / 'templates'
+        self.templates_path = str(pkg_templates)
+        # ensure internal templates folder exists
         os.makedirs(self.templates_path, exist_ok=True)
     
     def get_template_path(self, template_type: TemplateType) -> str:

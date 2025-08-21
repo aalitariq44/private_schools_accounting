@@ -33,6 +33,21 @@
             font-size: 12px;
             color: #666;
         }
+        /* Table styling for borders */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -42,33 +57,91 @@
         <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
     </div>
     
-    <div class="student-info">
-        <h3>بيانات الطالب</h3>
-        <div class="info-row">
-            <strong>الاسم:</strong> {{ student.name }}
-        </div>
-        <div class="info-row">
-            <strong>المدرسة:</strong> {{ student.school_name }}
-        </div>
-        <div class="info-row">
-            <strong>الصف:</strong> {{ student.grade }}
-        </div>
-        <div class="info-row">
-            <strong>الشعبة:</strong> {{ student.section }}
-        </div>
-        <div class="info-row">
-            <strong>الجنس:</strong> {{ student.gender }}
-        </div>
-        <div class="info-row">
-            <strong>الهاتف:</strong> {{ student.phone }}
-        </div>
-        <div class="info-row">
-            <strong>الحالة:</strong> {{ student.status }}
-        </div>
-        <div class="info-row">
-            <strong>الرسوم الدراسية:</strong> {{ student.total_fee | currency }}
-        </div>
+    <h3>بيانات الطالب</h3>
+    <table class="student-table">
+        <tbody>
+            <tr><th>الاسم</th><td>{{ student.name }}</td></tr>
+            <tr><th>المدرسة</th><td>{{ student.school_name }}</td></tr>
+            <tr><th>الصف</th><td>{{ student.grade }}</td></tr>
+            <tr><th>الشعبة</th><td>{{ student.section }}</td></tr>
+            <tr><th>الجنس</th><td>{{ student.gender }}</td></tr>
+            <tr><th>الهاتف</th><td>{{ student.phone }}</td></tr>
+            <tr><th>الحالة</th><td>{{ student.status }}</td></tr>
+            <tr><th>الرسوم الدراسية</th><td>{{ student.total_fee | currency }}</td></tr>
+        </tbody>
+    </table>
+    
+    {# الأقساط المدفوعة #}
+    {% if installments %}
+    <div class="installments-section">
+        <h3>الأقساط المدفوعة</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>المبلغ</th><th>تاريخ الدفع</th><th>وقت الدفع</th><th>ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inst in installments %}
+                <tr>
+                    <td>{{ inst.amount | currency }}</td>
+                    <td>{{ inst.payment_date | date_ar }}</td>
+                    <td>{{ inst.payment_time }}</td>
+                    <td>{{ inst.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+    {% endif %}
+    
+    {# الملخص المالي #}
+    {% if financial_summary %}
+    <h3>الملخص المالي</h3>
+    <table class="summary-table">
+        <thead>
+            <tr><th>البند</th><th>القيمة</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>عدد الأقساط</td><td>{{ financial_summary.installments_count }}</td></tr>
+            <tr><td>إجمالي الأقساط</td><td>{{ financial_summary.installments_total | currency }}</td></tr>
+            <tr><td>المتبقي من الرسوم الدراسية</td><td>{{ financial_summary.school_fee_remaining | currency }}</td></tr>
+            <tr><td>عدد الرسوم الإضافية</td><td>{{ financial_summary.additional_fees_count }}</td></tr>
+            <tr><td>إجمالي الرسوم الإضافية</td><td>{{ financial_summary.additional_fees_total | currency }}</td></tr>
+            <tr><td>المدفوعة من الرسوم الإضافية</td><td>{{ financial_summary.additional_fees_paid_total | currency }}</td></tr>
+            <tr><td>المتبقية من الرسوم الإضافية</td><td>{{ financial_summary.additional_fees_unpaid_total | currency }}</td></tr>
+        </tbody>
+    </table>
+    {% endif %}
+    
+    {# الرسوم الإضافية #}
+    {% if additional_fees %}
+    <div class="fees-section">
+        <h3>الرسوم الإضافية</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>نوع الرسم</th>
+                    <th>المبلغ</th>
+                    <th>تاريخ الدفع</th>
+                    <th>تاريخ الإضافة</th>
+                    <th>ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in additional_fees %}
+                <tr>
+                    <td>{{ fee.fee_type }}</td>
+                    <td>{{ fee.amount | currency }}</td>
+                    <td>{{ fee.payment_date | date_ar }}</td>
+                    <td>{{ fee.created_at | date_ar }}</td>
+                    <td>{{ fee.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
     
     <div class="footer">
         <p>{{ company_name }} - {{ system_version }}</p>
