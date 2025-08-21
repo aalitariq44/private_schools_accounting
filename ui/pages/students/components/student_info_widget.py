@@ -354,10 +354,10 @@ class StudentInfoWidget(QWidget):
             notes_edit = QTextEdit()
             notes_edit.setPlaceholderText("اكتب ملاحظات حول الطالب هنا...")
             
-            # تحميل الملاحظات الحالية
+            # تحميل الملاحظات الحالية مباشرة من بيانات الطالب
             current_notes = ""
-            if self.student_data and len(self.student_data) > 17:
-                current_notes = str(self.student_data[17] or "")
+            if self.student_data and hasattr(self.student_data, 'keys') and 'notes' in self.student_data.keys():
+                current_notes = str(self.student_data['notes'] or "")
             notes_edit.setPlainText(current_notes)
             
             layout.addWidget(notes_edit)
