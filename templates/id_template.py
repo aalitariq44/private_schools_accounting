@@ -35,22 +35,22 @@ CARD_SPACING_Y = 10 * mm  # مسافة عمودية كافية للقطع
 TEMPLATE_ELEMENTS = {
     # عنوان "هوية طالب" في الأعلى - ثابت وبارز
     "id_title": {
-        "x": 0.50,         # في الوسط
+        "x": 0.96,         # يمين البطاقة بدلاً من الوسط
         "y": 0.92,         # في أعلى البطاقة
         "font_size": 14,   # خط كبير وبارز
         "font_name": "Helvetica-Bold",
-        "alignment": "center",
+        "alignment": "right",
         "color": Color(0.1, 0.3, 0.6),  # أزرق أنيق
         "text": "هوية طالب"
     },
     
     # اسم المدرسة تحت العنوان مباشرة
     "school_name": {
-        "x": 0.50,         # في الوسط
+        "x": 0.96,         # يمين البطاقة بدلاً من الوسط
         "y": 0.84,         # تحت العنوان
         "font_size": 12,   # خط كبير ومقروء
         "font_name": "Helvetica-Bold",
-        "alignment": "center",
+        "alignment": "right",
         "color": Color(0.2, 0.2, 0.2),  # رمادي داكن أنيق
         "max_width": 0.95   # 95% من عرض البطاقة
     },
