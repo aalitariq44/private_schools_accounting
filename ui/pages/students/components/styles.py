@@ -341,4 +341,80 @@ def get_student_details_styles(cairo_family="Arial"):
             font-size: 16px;
             font-family: {cairo_font};
         }}
+        
+        /* قسم الملاحظات */
+        #notesFrame {{
+            background-color: white;
+            border: 2px solid #E0E0E0;
+            border-radius: 15px;
+            margin: 8px 5px;
+            padding: 5px;
+        }}
+        
+        #notesText {{
+            background-color: #F8F9FA;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: {cairo_font};
+            font-size: 14px;
+            color: #2C3E50;
+            line-height: 1.5;
+        }}
+        
+        #notesText:read-only {{
+            background-color: #F8F9FA;
+            color: #7F8C8D;
+        }}
+        
+        #editButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #3498DB, stop:1 #2980B9);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: {cairo_font};
+        }}
+        
+        #editButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #2980B9, stop:1 #2471A3);
+        }}
+        
+        #saveButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #27AE60, stop:1 #229954);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: {cairo_font};
+        }}
+        
+        #saveButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #229954, stop:1 #1E8449);
+        }}
+        
+        #cancelButton {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #95A5A6, stop:1 #7F8C8D);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+            font-family: {cairo_font};
+        }}
+        
+        #cancelButton:hover {{
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, 
+                stop:0 #7F8C8D, stop:1 #707B7C);
+        }}
     """

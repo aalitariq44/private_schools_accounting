@@ -154,6 +154,7 @@ class StudentDetailsPage(QWidget):
             # إشارات المكونات
             self.installments_widget.installment_added.connect(self.on_installment_changed)
             self.installments_widget.installment_deleted.connect(self.on_installment_changed)
+            self.student_info_widget.notes_updated.connect(self.on_notes_updated)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -198,6 +199,9 @@ class StudentDetailsPage(QWidget):
                 student_name = str(self.student_data[1])
                 self.page_title.setText(f"تفاصيل الطالب: {student_name}")
             
+            # تعيين معرف الطالب لمكون المعلومات
+            self.student_info_widget.set_student_id(self.student_id)
+            
             # تحديث معلومات الطالب
             self.student_info_widget.update_student_info(self.student_data)
             
@@ -226,6 +230,20 @@ class StudentDetailsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في معالجة تغييرات الأقساط: {e}")
+    
+    def on_notes_updated(self):
+        """معالجة تحديث ملاحظات الطالب"""
+        try:
+            # إعادة تحميل بيانات الطالب لضمان التحديث
+            self.load_student_data()
+            
+            # إرسال إشارة التحديث
+            self.student_updated.emit()
+            
+            log_user_action(f"تحديث ملاحظات الطالب: {self.student_id}")
+            
+        except Exception as e:
+            logging.error(f"خطأ في معالجة تحديث الملاحظات: {e}")
     
     def show_additional_fees_popup(self):
         """عرض نافذة الرسوم الإضافية المنبثقة"""
