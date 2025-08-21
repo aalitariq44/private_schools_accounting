@@ -97,38 +97,42 @@ class AdditionalFeesPrintDialog(QDialog):
         """إنشاء مجموعة خيارات الاختيار"""
         selection_group = QGroupBox("اختيار الرسوم")
         selection_layout = QHBoxLayout()
-        
+
+        # Checkbox to select last 3 fees
         self.select_all_checkbox = QCheckBox("تحديد آخر 3 رسوم (الأحدث)")
+        self.select_all_checkbox.setTristate(True)
         self.select_all_checkbox.setChecked(True)
         selection_layout.addWidget(self.select_all_checkbox)
-        
+
+        # Spacer between checkbox and info label
         selection_layout.addStretch()
-        
-        # معلومات الاختيار
+
+        # Selection info label
         self.selection_info_label = QLabel("المحدد: 0 رسوم - المجموع: 0 د.ع")
         self.selection_info_label.setObjectName("selectionInfo")
         selection_layout.addWidget(self.selection_info_label)
-        
+
         selection_group.setLayout(selection_layout)
         layout.addWidget(selection_group)
-    
+
     def create_fees_table(self, layout):
         """إنشاء جدول الرسوم"""
         self.fees_table = QTableWidget()
         self.fees_table.setObjectName("feesTable")
-        
+
         # إعداد الأعمدة
         columns = ["اختيار", "النوع", "المبلغ", "الحالة", "تاريخ الإضافة", "تاريخ الدفع", "الملاحظات"]
         self.fees_table.setColumnCount(len(columns))
         self.fees_table.setHorizontalHeaderLabels(columns)
-        
+
         # إعداد خصائص الجدول
         self.fees_table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.fees_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.fees_table.setAlternatingRowColors(True)
         self.fees_table.verticalHeader().setVisible(False)
-        self.fees_table.setEditTriggers(QAbstractItemView.NoEditTriggers)  # منع التحرير إلا للاختيار
-        
+        # Allow editing triggers so checkbox states can be toggled by user
+        self.fees_table.setEditTriggers(QAbstractItemView.AllEditTriggers)
+
         # إعداد حجم الأعمدة
         header = self.fees_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.Fixed)  # اختيار - حجم ثابت
@@ -139,7 +143,7 @@ class AdditionalFeesPrintDialog(QDialog):
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # تاريخ الإضافة
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # تاريخ الدفع
         header.setSectionResizeMode(6, QHeaderView.Stretch)          # الملاحظات
-        
+
         layout.addWidget(self.fees_table)
     
     def create_action_buttons(self, layout):
@@ -475,12 +479,15 @@ class AdditionalFeesPrintDialog(QDialog):
             total_rows_with_checkboxes = sum(1 for row in range(self.fees_table.rowCount()) 
                                            if self.fees_table.item(row, 0) is not None)
             
+            # Update the select-all checkbox without triggering its handler
+            self.select_all_checkbox.blockSignals(True)
             if selected_count == 0:
                 self.select_all_checkbox.setCheckState(Qt.Unchecked)
             elif selected_count == min(3, total_rows_with_checkboxes):  # الحد الأقصى هو 3 أو عدد الرسوم المتاحة
                 self.select_all_checkbox.setCheckState(Qt.Checked)
             else:
                 self.select_all_checkbox.setCheckState(Qt.PartiallyChecked)
+            self.select_all_checkbox.blockSignals(False)
                 
         except Exception as e:
             logging.error(f"خطأ في تحديث معلومات الاختيار: {e}")
