@@ -155,6 +155,7 @@ class ReportLabPrintManager:
         school_name = receipt_data.get('school_name', 'المدرسة')
         school_address = receipt_data.get('school_address', '')
         school_phone = receipt_data.get('school_phone', '')
+        school_logo_path = receipt_data.get('school_logo_path', '')
         receipt_number = receipt_data.get('receipt_number', f'R{datetime.now().strftime("%Y%m%d%H%M%S")}')
         installment_id = receipt_data.get('installment_id', '') # Get installment_id from data
 
@@ -176,9 +177,18 @@ class ReportLabPrintManager:
         # Center: School Logo
         circle_x = self.page_width / 2
         circle_y = header_y - 10
+        
+        # تحديد مسار الشعار - أولوية لشعار المدرسة ثم الافتراضي
+        logo_path = None
+        if school_logo_path and Path(school_logo_path).exists():
+            logo_path = Path(school_logo_path)
+        else:
+            default_logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
+            if default_logo_path.exists():
+                logo_path = default_logo_path
+        
         # Load and draw actual logo image
-        logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
-        if logo_path.exists():
+        if logo_path and logo_path.exists():
             img_size = 49  # in points, adjust as needed
             c.drawImage(
                 str(logo_path),

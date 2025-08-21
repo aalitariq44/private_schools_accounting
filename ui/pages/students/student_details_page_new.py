@@ -163,7 +163,7 @@ class StudentDetailsPage(QWidget):
         try:
             # تحميل المعلومات الأساسية
             query = """
-                SELECT s.*, sc.name_ar as school_name, sc.address as school_address, sc.phone as school_phone
+                SELECT s.*, sc.name_ar as school_name, sc.address as school_address, sc.phone as school_phone, sc.logo_path as school_logo_path
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
                 WHERE s.id = ?

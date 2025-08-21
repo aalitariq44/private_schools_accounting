@@ -152,6 +152,7 @@ class AdditionalFeesPrintManager:
         
         student_name = student.get('name', 'غير محدد')
         school_name = student.get('school_name', 'المدرسة')
+        school_logo_path = student.get('school_logo_path', '')
         grade = student.get('grade', '')
         section = student.get('section', '')
         receipt_number = data.get('receipt_number', f'AF{datetime.now().strftime("%Y%m%d%H%M%S")}')
@@ -176,8 +177,17 @@ class AdditionalFeesPrintManager:
         # Center: School Logo
         circle_x = self.page_width / 2
         circle_y = header_y - 10
-        logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
-        if logo_path.exists():
+        
+        # تحديد مسار الشعار - أولوية لشعار المدرسة ثم الافتراضي
+        logo_path = None
+        if school_logo_path and Path(school_logo_path).exists():
+            logo_path = Path(school_logo_path)
+        else:
+            default_logo_path = Path(config.RESOURCES_DIR) / 'images' / 'logo.png'
+            if default_logo_path.exists():
+                logo_path = default_logo_path
+        
+        if logo_path and logo_path.exists():
             img_size = 49
             c.drawImage(str(logo_path), circle_x - img_size / 2, circle_y - img_size / 2, width=img_size, height=img_size, preserveAspectRatio=True, mask='auto')
         else:

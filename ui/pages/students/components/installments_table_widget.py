@@ -297,6 +297,7 @@ class InstallmentsTableWidget(QWidget):
                 'school_name': school_info["name"],
                 'school_address': school_info["address"],
                 'school_phone': school_info["phone"],
+                'school_logo_path': school_info["logo_path"],
                 'grade': str(self.student_data[4]),
                 'section': str(self.student_data[5]),
                 'payment_date': f"{inst[2]} {inst[3] or ''}",
@@ -340,13 +341,14 @@ class InstallmentsTableWidget(QWidget):
     
     def get_school_info(self):
         """الحصول على معلومات المدرسة"""
-        if not self.student_data or len(self.student_data) < 3:
-            return {"name": "", "address": "", "phone": ""}
+        if not self.student_data or len(self.student_data) < 4:
+            return {"name": "", "address": "", "phone": "", "logo_path": ""}
         
         return {
-            "name": str(self.student_data[-3] or ""),  # school_name
-            "address": str(self.student_data[-2] or ""),  # school_address
-            "phone": str(self.student_data[-1] or "")  # school_phone
+            "name": str(self.student_data[-4] or ""),  # school_name
+            "address": str(self.student_data[-3] or ""),  # school_address
+            "phone": str(self.student_data[-2] or ""),  # school_phone
+            "logo_path": str(self.student_data[-1] or "")  # school_logo_path
         }
     
     def get_installments_data(self):
