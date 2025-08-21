@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QDateEdit, QAction, QDialog,
-    QSpinBox, QTextEdit, QFormLayout, QGroupBox
+    QSpinBox, QTextEdit, QFormLayout, QGroupBox, QFileDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
@@ -652,28 +652,84 @@ class ExternalIncomePage(QWidget):
         """تصدير تقرير الواردات"""
         try:
             from datetime import datetime
+            from PyQt5.QtWidgets import QFileDialog
+            import csv
             import os
             
-            # إنشاء مجلد التصدير إذا لم يكن موجوداً
-            export_dir = "data/exports/reports"
-            os.makedirs(export_dir, exist_ok=True)
+            if not self.current_incomes:
+                QMessageBox.warning(self, "تحذير", "لا توجد بيانات للتصدير")
+                return
             
-            # اسم الملف
+            # تحديد اسم الملف الافتراضي
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{export_dir}/external_income_report_{timestamp}.csv"
+            default_filename = f"External_Income_Report_{timestamp}.csv"
             
-            # إنشاء التقرير
-            with open(filename, 'w', encoding='utf-8-sig') as f:
-                # كتابة الرأس
-                f.write("المعرف,عنوان الوارد,الوصف,المبلغ,الفئة,التاريخ,المدرسة,الملاحظات\n")
+            # فتح نافذة حفظ الملف
+            filename, _ = QFileDialog.getSaveFileName(
+                self,
+                "حفظ تقرير الواردات الخارجية",
+                default_filename,
+                "CSV Files (*.csv);;All Files (*)"
+            )
+            
+            if not filename:
+                return  # المستخدم ألغى العملية
+            
+            # التأكد من امتداد الملف
+            if not filename.lower().endswith('.csv'):
+                filename += '.csv'
+            
+            # إنشاء التقرير بتنسيق محسن للـ Excel
+            with open(filename, 'w', encoding='utf-8-sig', newline='') as f:
+                writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                
+                # كتابة معلومات التقرير
+                writer.writerow([f"تقرير الواردات الخارجية - {datetime.now().strftime('%Y-%m-%d %H:%M')}"])
+                writer.writerow([f"إجمالي عدد الواردات: {len(self.current_incomes)}"])
+                writer.writerow([f"إجمالي المبلغ: {sum(income['amount'] for income in self.current_incomes):,.2f} د.ع"])
+                writer.writerow([])  # سطر فارغ
+                
+                # كتابة رأس الجدول
+                headers = ["ID", "Income Type", "Description", "Amount (IQD)", "Category", "Date", "School", "Notes"]
+                writer.writerow(headers)
                 
                 # كتابة البيانات
                 for income in self.current_incomes:
-                    f.write(f"{income['id']},{income['income_type']},{income['description']},"
-                           f"{income['amount']},{income['category']},{income['income_date']},{income['school_name'] or 'عام'},"
-                           f"\"{income['notes'] or ''}\"\n")
+                    row = [
+                        income['id'],
+                        income['income_type'] or '',
+                        income['description'] or '',
+                        f"{income['amount']:,.2f}",
+                        income['category'] or '',
+                        income['income_date'] or '',
+                        income['school_name'] or 'General',
+                        income['notes'] or ''
+                    ]
+                    writer.writerow(row)
+                
+                # إضافة إحصائيات في النهاية
+                writer.writerow([])  # سطر فارغ
+                writer.writerow(['Statistics:'])
+                writer.writerow(['Total Records:', len(self.current_incomes)])
+                writer.writerow(['Total Amount:', f"{sum(income['amount'] for income in self.current_incomes):,.2f} IQD"])
+                writer.writerow(['Average Amount:', f"{sum(income['amount'] for income in self.current_incomes) / len(self.current_incomes):,.2f} IQD"])
+                writer.writerow(['Max Amount:', f"{max(income['amount'] for income in self.current_incomes):,.2f} IQD"])
+                writer.writerow(['Min Amount:', f"{min(income['amount'] for income in self.current_incomes):,.2f} IQD"])
             
-            QMessageBox.information(self, "نجح", f"تم تصدير التقرير بنجاح:\n{filename}")
+            # إظهار رسالة نجح مع خيار فتح الملف
+            reply = QMessageBox.question(
+                self, "تم بنجاح", 
+                f"تم تصدير التقرير بنجاح إلى:\n{filename}\n\nهل تريد فتح الملف الآن؟",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+            
+            if reply == QMessageBox.Yes:
+                try:
+                    os.startfile(filename)  # فتح الملف بالبرنامج الافتراضي (Excel)
+                except:
+                    QMessageBox.information(self, "معلومات", f"تم حفظ الملف في:\n{filename}")
+            
             log_user_action("تصدير تقرير الواردات الخارجية", "نجح")
             
         except Exception as e:

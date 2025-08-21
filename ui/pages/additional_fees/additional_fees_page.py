@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QDateEdit, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QTextEdit, QAction, QDialog
+    QCheckBox, QTextEdit, QAction, QDialog, QFileDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase
@@ -772,11 +772,107 @@ class AdditionalFeesPage(QWidget):
     def export_fees(self):
         """تصدير تقرير الرسوم"""
         try:
-            self.show_info_message("قيد التطوير", "ميزة تصدير تقرير الرسوم قيد التطوير")
-            log_user_action("طلب تصدير تقرير الرسوم")
+            from datetime import datetime
+            import csv
+            import os
+            
+            if not self.current_fees:
+                QMessageBox.warning(self, "تحذير", "لا توجد بيانات للتصدير")
+                return
+            
+            # تحديد اسم الملف الافتراضي
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            default_filename = f"Additional_Fees_Report_{timestamp}.csv"
+            
+            # فتح نافذة حفظ الملف
+            filename, _ = QFileDialog.getSaveFileName(
+                self,
+                "حفظ تقرير الرسوم الإضافية",
+                default_filename,
+                "CSV Files (*.csv);;All Files (*)"
+            )
+            
+            if not filename:
+                return  # المستخدم ألغى العملية
+            
+            # التأكد من امتداد الملف
+            if not filename.lower().endswith('.csv'):
+                filename += '.csv'
+            
+            # حساب الإحصائيات
+            total_amount = sum(fee[4] or 0 for fee in self.current_fees)
+            paid_fees = [fee for fee in self.current_fees if fee[5]]  # الرسوم المدفوعة
+            unpaid_fees = [fee for fee in self.current_fees if not fee[5]]  # الرسوم غير المدفوعة
+            total_paid = sum(fee[4] or 0 for fee in paid_fees)
+            total_unpaid = sum(fee[4] or 0 for fee in unpaid_fees)
+            
+            # إنشاء التقرير بتنسيق محسن للـ Excel
+            with open(filename, 'w', encoding='utf-8-sig', newline='') as f:
+                writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                
+                # كتابة معلومات التقرير
+                writer.writerow([f"تقرير الرسوم الإضافية - {datetime.now().strftime('%Y-%m-%d %H:%M')}"])
+                writer.writerow([f"إجمالي عدد الرسوم: {len(self.current_fees)}"])
+                writer.writerow([f"إجمالي المبلغ: {total_amount:,.2f} د.ع"])
+                writer.writerow([f"المبلغ المدفوع: {total_paid:,.2f} د.ع"])
+                writer.writerow([f"المبلغ المتبقي: {total_unpaid:,.2f} د.ع"])
+                writer.writerow([])  # سطر فارغ
+                
+                # كتابة رأس الجدول
+                headers = ["ID", "Student Name", "School", "Fee Type", "Amount (IQD)", "Status", "Payment Date", "Notes", "Created Date"]
+                writer.writerow(headers)
+                
+                # كتابة البيانات
+                for fee in self.current_fees:
+                    # (id, student_name, school_name, fee_type, amount, paid, payment_date, notes, created_at)
+                    row = [
+                        fee[0] or '',  # ID
+                        fee[1] or '',  # Student Name
+                        fee[2] or 'General',  # School
+                        fee[3] or '',  # Fee Type
+                        f"{fee[4] or 0:,.2f}",  # Amount
+                        "Paid" if fee[5] else "Unpaid",  # Status
+                        fee[6] or '',  # Payment Date
+                        fee[7] or '',  # Notes
+                        fee[8] or ''   # Created Date
+                    ]
+                    writer.writerow(row)
+                
+                # إضافة إحصائيات في النهاية
+                writer.writerow([])  # سطر فارغ
+                writer.writerow(['Statistics:'])
+                writer.writerow(['Total Records:', len(self.current_fees)])
+                writer.writerow(['Total Amount:', f"{total_amount:,.2f} IQD"])
+                writer.writerow(['Paid Amount:', f"{total_paid:,.2f} IQD"])
+                writer.writerow(['Unpaid Amount:', f"{total_unpaid:,.2f} IQD"])
+                writer.writerow(['Paid Fees Count:', len(paid_fees)])
+                writer.writerow(['Unpaid Fees Count:', len(unpaid_fees)])
+                if self.current_fees:
+                    avg_amount = total_amount / len(self.current_fees)
+                    writer.writerow(['Average Amount:', f"{avg_amount:,.2f} IQD"])
+                    amounts = [fee[4] or 0 for fee in self.current_fees]
+                    writer.writerow(['Max Amount:', f"{max(amounts):,.2f} IQD"])
+                    writer.writerow(['Min Amount:', f"{min(amounts):,.2f} IQD"])
+            
+            # إظهار رسالة نجح مع خيار فتح الملف
+            reply = QMessageBox.question(
+                self, "تم بنجاح", 
+                f"تم تصدير التقرير بنجاح إلى:\n{filename}\n\nهل تريد فتح الملف الآن؟",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes
+            )
+            
+            if reply == QMessageBox.Yes:
+                try:
+                    os.startfile(filename)  # فتح الملف بالبرنامج الافتراضي (Excel)
+                except:
+                    QMessageBox.information(self, "معلومات", f"تم حفظ الملف في:\n{filename}")
+            
+            log_user_action("تصدير تقرير الرسوم الإضافية", "نجح")
             
         except Exception as e:
             logging.error(f"خطأ في تصدير التقرير: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في تصدير التقرير:\n{str(e)}")
     
     def show_info_message(self, title: str, message: str):
         """عرض رسالة معلومات"""
