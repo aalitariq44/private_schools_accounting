@@ -299,8 +299,7 @@ class ExternalIncomePage(QWidget):
             self.income_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
 
             # إعداد أعمدة الجدول
-            # تغيير ترتيب الأعمدة: عنوان الوارد، الوصف، المبلغ، الفئة، التاريخ، المدرسة، الملاحظات
-            columns = ["المعرف", "عنوان الوارد", "الوصف", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات", "الإجراءات"]
+            columns = ["المعرف", "عنوان الوارد", "الوصف", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات"]
             self.income_table.setColumnCount(len(columns))
             self.income_table.setHorizontalHeaderLabels(columns)
 
@@ -501,9 +500,6 @@ class ExternalIncomePage(QWidget):
                     
                     self.income_table.setItem(row_idx, col_idx, item)
                 
-                # أزرار الإجراءات
-                actions_widget = self.create_actions_widget(income['id'])
-                self.income_table.setCellWidget(row_idx, 8, actions_widget)
             
             # تحديث العداد
             self.displayed_count_label.setText(f"عدد الواردات المعروضة: {len(self.current_incomes)}")
@@ -511,33 +507,6 @@ class ExternalIncomePage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الواردات: {e}")
     
-    def create_actions_widget(self, income_id):
-        """إنشاء ويدجت الإجراءات لكل صف"""
-        try:
-            widget = QWidget()
-            layout = QHBoxLayout(widget)
-            layout.setContentsMargins(5, 2, 5, 2)
-            layout.setSpacing(5)
-
-            # زر التعديل
-            edit_btn = QPushButton("تعديل")
-            edit_btn.setObjectName("editButton")
-            edit_btn.setFixedSize(80, 30)
-            edit_btn.clicked.connect(lambda: self.edit_income_by_id(income_id))
-            layout.addWidget(edit_btn)
-
-            # زر الحذف
-            delete_btn = QPushButton("حذف")
-            delete_btn.setObjectName("deleteButton")
-            delete_btn.setFixedSize(80, 30)
-            delete_btn.clicked.connect(lambda: self.delete_income(income_id))
-            layout.addWidget(delete_btn)
-
-            return widget
-
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء ويدجت الإجراءات: {e}")
-            return QWidget()
     
     def update_stats(self):
         """تحديث الإحصائيات"""
