@@ -81,9 +81,15 @@ class EditEmployeeDialog(QDialog):
             
             # المهنة
             self.job_combo = QComboBox()
-            self.job_combo.addItem("عامل", "عامل")
-            self.job_combo.addItem("حارس", "حارس")
-            self.job_combo.addItem("كاتب", "كاتب")
+            # default job types for schools
+            for job in [
+                # default job types for schools
+                "محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق",
+                "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر",
+                "مشرف", "مرشد طلابي", "أمينة مكتبة", "أمين مكتبة", "ممرض"
+            ]:
+                self.job_combo.addItem(job, job)
+            # custom job type
             self.job_combo.addItem("مخصص", "مخصص")
             form_layout.addRow("المهنة *:", self.job_combo)
 
@@ -258,7 +264,11 @@ class EditEmployeeDialog(QDialog):
                 
                 # تحديد المهنة أو المهنة المخصصة
                 job = employee['job_type']
-                default_jobs = ["عامل", "حارس", "كاتب"]
+                default_jobs = [
+                    "محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق",
+                    "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر",
+                    "مشرف", "مرشد طلابي", "أمينة مكتبة", "أمين مكتبة", "ممرض"
+                ]
                 if job in default_jobs:
                     for i in range(self.job_combo.count()):
                         if self.job_combo.itemData(i) == job:

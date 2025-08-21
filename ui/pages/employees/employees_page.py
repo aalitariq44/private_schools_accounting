@@ -140,7 +140,14 @@ class EmployeesPage(QWidget):
             self.job_combo = QComboBox()
             self.job_combo.setObjectName("filterCombo")
             self.job_combo.setMinimumWidth(150)
-            self.job_combo.addItems(["جميع المهن", "عامل", "حارس", "كاتب", "مخصص"])
+            # expanded job filters
+            self.job_combo.addItems([
+                "جميع المهن",
+                "محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق",
+                "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر", "مشرف", "مرشد طلابي",
+                "أمينة مكتبة", "أمين مكتبة", "ممرض",
+                "مخصص"
+            ])
             filters_layout.addWidget(self.job_combo)
             
             filters_layout.addStretch()
@@ -383,8 +390,15 @@ class EmployeesPage(QWidget):
             selected_job = self.job_combo.currentText()
             if selected_job and selected_job != "جميع المهن":
                 if selected_job == 'مخصص':
-                    query += " AND e.job_type NOT IN (?, ?, ?)"
-                    params.extend(['عامل', 'حارس', 'كاتب'])
+                    # عرض الموظفين الذين مهنتهم غير موجودة ضمن الوظائف الافتراضية
+                    default_jobs = [
+                        "محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق",
+                        "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر", "مشرف", "مرشد طلابي",
+                        "أمينة مكتبة", "أمين مكتبة", "ممرض"
+                    ]
+                    placeholders = ", ".join("?" for _ in default_jobs)
+                    query += f" AND e.job_type NOT IN ({placeholders})"
+                    params.extend(default_jobs)
                 else:
                     query += " AND e.job_type = ?"
                     params.append(selected_job)
