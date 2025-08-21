@@ -31,23 +31,23 @@ CARD_SPACING_Y = 8 * mm
 
 # قالب العناصر داخل الهوية (إحداثيات نسبية من 0 إلى 1)
 TEMPLATE_ELEMENTS = {
-    # اسم المدرسة ونص "هوية طالب" في الأعلى
+    # اسم المدرسة ونص "هوية طالب" في الأعلى (محاذاة إلى اليمين)
     "school_name": {
-        "x": 0.5,          # وسط العرض
+        "x": 0.96,         # يمين البطاقة
         "y": 0.90,         # في الأعلى
         "font_size": 9,
         "font_name": "Helvetica-Bold",
-        "alignment": "center",
+        "alignment": "right",
         "color": black,
         "max_width": 0.95   # 95% من عرض البطاقة
     },
     
     "id_title": {
-        "x": 0.5,
+        "x": 0.96,         # يمين البطاقة
         "y": 0.82,
         "font_size": 7,
         "font_name": "Helvetica",
-        "alignment": "center",
+        "alignment": "right",
         "color": black,
         "text": "هوية طالب"
     },
@@ -124,6 +124,16 @@ TEMPLATE_ELEMENTS = {
         "label_font_size": 7,
         "label_x": 0.06,
         "label_y": 0.20
+    },
+    # إضافة نص 'تاريخ الميلاد' يمين المربع
+    "birth_date_label": {
+        "x": 0.71,             # بعد طرف المربع
+        "y": 0.15,             # على مستوى نص التاريخ
+        "font_size": 7,
+        "font_name": "Helvetica",
+        "alignment": "left",
+        "color": black,
+        "text": "تاريخ الميلاد"
     }
 }
 
