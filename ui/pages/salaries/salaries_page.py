@@ -463,7 +463,7 @@ class SalariesPage(QWidget):
                 query += " AND (t.name LIKE ? OR e.name LIKE ?)"
                 params.extend([f"%{search_text}%", f"%{search_text}%"])
 
-            query += " ORDER BY s.payment_date DESC"
+            query += " ORDER BY s.id DESC"
             
             self.current_salaries = db_manager.execute_query(query, tuple(params))
             self.populate_table()
