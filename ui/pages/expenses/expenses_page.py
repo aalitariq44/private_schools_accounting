@@ -402,7 +402,7 @@ class ExpensesPage(QWidget):
                 query += " AND (e.expense_type LIKE ? OR e.notes LIKE ?)"
                 params.extend([f"%{search_text}%", f"%{search_text}%"])
             
-            query += " ORDER BY e.expense_date DESC, e.created_at DESC"
+            query += " ORDER BY e.id DESC"
             
             # تنفيذ الاستعلام
             self.current_expenses = db_manager.execute_query(query, tuple(params))
