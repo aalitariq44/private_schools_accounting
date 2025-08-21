@@ -26,6 +26,16 @@ from .add_expense_dialog import AddExpenseDialog
 from .edit_expense_dialog import EditExpenseDialog
 
 
+class NumericTableWidgetItem(QTableWidgetItem):
+    """QTableWidgetItem subclass for numeric sorting based on integer value."""
+    def __lt__(self, other):
+        # Compare based on integer value if possible, fallback to string
+        try:
+            return int(self.text()) < int(other.text())
+        except ValueError:
+            return self.text() < other.text()
+
+
 class ExpensesPage(QWidget):
     """صفحة إدارة المصروفات"""
     
@@ -450,7 +460,11 @@ class ExpensesPage(QWidget):
                 ]
                 
                 for col_idx, item_text in enumerate(items):
-                    item = QTableWidgetItem(item_text)
+                    # Use numeric sorting for the ID column
+                    if col_idx == 0:
+                        item = NumericTableWidgetItem(item_text)
+                    else:
+                        item = QTableWidgetItem(item_text)
                     item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                     
                     # تنسيق خاص للمبلغ
