@@ -219,6 +219,12 @@ from ui.widgets.column_selection_dialog import ColumnSelectionDialog
 def print_students_list(students, filter_info=None, parent=None, use_web_engine=True):
     """طباعة قائمة الطلاب مع معاينة"""
     
+    logging.debug(f"print_students_list: استُدعيت مع {len(students)} طلاب")
+    
+    # تسجيل عينة من البيانات
+    for i, student in enumerate(students[:3]):  # أول 3 طلاب
+        logging.debug(f"print_students_list: الطالب {i+1}: {student}")
+    
     columns = {
         'id': 'المعرف',
         'name': 'الاسم',
@@ -235,6 +241,8 @@ def print_students_list(students, filter_info=None, parent=None, use_web_engine=
     dialog = ColumnSelectionDialog(columns, parent=parent)
     if dialog.exec_() == ColumnSelectionDialog.Accepted:
         selected_columns = dialog.get_selected_columns()
+        
+        logging.debug(f"print_students_list: الأعمدة المحددة: {selected_columns}")
         
         pm = PrintManager(parent, use_web_engine)
         data = {

@@ -790,19 +790,22 @@ class StudentsPage(QWidget):
             # تحضير بيانات الطلاب مع الحقول الإضافية
             students_for_print = []
             for student in self.current_students:
-                total_fee = student['total_fee'] if student['total_fee'] else 0
-                total_paid = student['total_paid'] if student['total_paid'] else 0
+                # تحويل sqlite3.Row إلى قاموس إذا لزم الأمر
+                student_dict = dict(student) if hasattr(student, 'keys') else student
+                
+                total_fee = student_dict.get('total_fee', 0) if student_dict.get('total_fee') else 0
+                total_paid = student_dict.get('total_paid', 0) if student_dict.get('total_paid') else 0
                 remaining = total_fee - total_paid
                 
                 student_data = {
-                    'id': student['id'],
-                    'name': student['name'],
-                    'school_name': student['school_name'],
-                    'grade': student['grade'],
-                    'section': student['section'],
-                    'gender': student['gender'],
-                    'phone': student['phone'],
-                    'status': student['status'],
+                    'id': student_dict.get('id'),
+                    'name': student_dict.get('name') or "",
+                    'school_name': student_dict.get('school_name') or "",
+                    'grade': student_dict.get('grade') or "",
+                    'section': student_dict.get('section') or "",
+                    'gender': student_dict.get('gender') or "",
+                    'phone': student_dict.get('phone') or "",
+                    'status': student_dict.get('status') or "",
                     'total_fee': f"{total_fee:,.0f} د.ع",
                     'total_paid': f"{total_paid:,.0f} د.ع",
                     'remaining': f"{remaining:,.0f} د.ع"
@@ -885,28 +888,41 @@ class StudentsPage(QWidget):
         try:
             ordered_students = []
             
+            logging.debug(f"get_students_in_current_order: عدد صفوف الجدول: {self.students_table.rowCount()}")
+            logging.debug(f"get_students_in_current_order: عدد الطلاب في current_students: {len(self.current_students)}")
+            
             # المرور عبر صفوف الجدول بالترتيب الحالي
             for row in range(self.students_table.rowCount()):
                 # الحصول على معرف الطالب من العمود الأول
                 id_item = self.students_table.item(row, 0)
                 if id_item:
                     student_id = int(id_item.text())
+                    logging.debug(f"get_students_in_current_order: الصف {row}, معرف الطالب: {student_id}")
                     
                     # البحث عن بيانات الطالب الكاملة
                     student_data = None
                     for student in self.current_students:
                         if student['id'] == student_id:
-                            student_data = student.copy()
+                            # تحويل sqlite3.Row إلى قاموس عادي
+                            student_data = dict(student)
+                            logging.debug(f"get_students_in_current_order: وُجد الطالب {student_id}: {student_data.get('name', 'بدون اسم')}")
                             break
                     
                     if student_data:
                         ordered_students.append(student_data)
+                    else:
+                        logging.warning(f"get_students_in_current_order: لم يتم العثور على بيانات الطالب {student_id}")
             
+            logging.debug(f"get_students_in_current_order: عدد الطلاب المُرتبين: {len(ordered_students)}")
             return ordered_students
             
         except Exception as e:
             logging.error(f"خطأ في الحصول على الطلاب بالترتيب الحالي: {e}")
-            return self.current_students  # إرجاع القائمة الأصلية في حالة الخطأ
+            # تحويل current_students إلى قواميس عادية قبل الإرجاع
+            try:
+                return [dict(student) for student in self.current_students]
+            except:
+                return []
     
     def print_students_list_ordered(self):
         """طباعة قائمة الطلاب بالترتيب الحالي"""
@@ -914,9 +930,38 @@ class StudentsPage(QWidget):
             # الحصول على الطلاب بالترتيب الحالي
             ordered_students = self.get_students_in_current_order()
             
+            logging.debug(f"print_students_list_ordered: عدد الطلاب المُحصل عليهم: {len(ordered_students)}")
+            
             if not ordered_students:
                 QMessageBox.information(self, "تنبيه", "لا توجد بيانات طلاب للطباعة")
                 return
+            
+            # تحضير بيانات الطلاب مع التنسيق المناسب للطباعة
+            students_for_print = []
+            for i, student in enumerate(ordered_students):
+                logging.debug(f"print_students_list_ordered: تحضير الطالب {i+1}: ID={student.get('id')}, Name='{student.get('name', 'بدون اسم')}'")
+                
+                total_fee = student.get('total_fee', 0) if student.get('total_fee') else 0
+                total_paid = student.get('total_paid', 0) if student.get('total_paid') else 0
+                remaining = total_fee - total_paid
+                
+                student_data = {
+                    'id': student.get('id'),
+                    'name': student.get('name') or "",  # التأكد من عدم وجود None
+                    'school_name': student.get('school_name') or "",
+                    'grade': student.get('grade') or "",
+                    'section': student.get('section') or "",
+                    'gender': student.get('gender') or "",
+                    'phone': student.get('phone') or "",
+                    'status': student.get('status') or "",
+                    'total_fee': f"{total_fee:,.0f} د.ع",
+                    'total_paid': f"{total_paid:,.0f} د.ع",
+                    'remaining': f"{remaining:,.0f} د.ع"
+                }
+                students_for_print.append(student_data)
+                logging.debug(f"print_students_list_ordered: بيانات الطالب المُحضرة: {student_data}")
+            
+            logging.debug(f"print_students_list_ordered: عدد الطلاب المُحضرين للطباعة: {len(students_for_print)}")
             
             # تحضير معلومات الفلتر المطبق
             filter_info = []
@@ -928,6 +973,16 @@ class StudentsPage(QWidget):
                 filter_info.append(f"الشعبة: {self.section_combo.currentText()}")
             if self.status_combo.currentText() != "جميع الحالات":
                 filter_info.append(f"الحالة: {self.status_combo.currentText()}")
+            if self.gender_combo.currentText() != "جميع الطلاب":
+                filter_info.append(f"الجنس: {self.gender_combo.currentText()}")
+            if self.payment_combo.currentText() != "الجميع":
+                filter_info.append(f"حالة الدفع: {self.payment_combo.currentText()}")
+            search = self.search_input.text().strip()
+            if search:
+                if search.isdigit():
+                    filter_info.append(f"بحث بالمعرف: {search}")
+                else:
+                    filter_info.append(f"بحث بالاسم: {search}")
             
             filter_text = " - ".join(filter_info) if filter_info else "بدون فلاتر"
             
@@ -947,14 +1002,19 @@ class StudentsPage(QWidget):
                 else:
                     filter_text += f" - مرتب حسب: {column_name} ({sort_direction})"
             
-            # طباعة القائمة
+            logging.debug(f"print_students_list_ordered: معلومات الفلتر: {filter_text}")
+            
+            # طباعة القائمة مع البيانات المنسقة
             from core.printing.print_manager import print_students_list
-            print_students_list(ordered_students, filter_text, self)
+            logging.debug("print_students_list_ordered: استدعاء print_students_list")
+            print_students_list(students_for_print, filter_text, self)
             
             log_user_action("طباعة قائمة الطلاب مع الترتيب المخصص")
             
         except Exception as e:
             logging.error(f"خطأ في طباعة قائمة الطلاب المرتبة: {e}")
+            import traceback
+            logging.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ أثناء طباعة قائمة الطلاب:\n{str(e)}")
     
     def update_sort_indicator(self, logical_index, order):
