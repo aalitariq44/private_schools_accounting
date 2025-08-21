@@ -131,6 +131,11 @@ class StudentIDsPage(QWidget):
         filter_options_layout.addWidget(search_label)
         filter_options_layout.addWidget(self.search_input)
         
+        # زر لمسح الفلاتر
+        clear_filters_btn = QPushButton("مسح الفلاتر")
+        clear_filters_btn.clicked.connect(self.clear_filters)
+        filter_options_layout.addWidget(clear_filters_btn)
+        
         filter_options_layout.addStretch()
         filter_layout.addLayout(filter_options_layout)
         
@@ -423,6 +428,15 @@ class StudentIDsPage(QWidget):
         """تحديث عداد الطلاب المعروضين"""
         count = len(self.filtered_students)
         self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {count}")
+    
+    def clear_filters(self):
+        """إعادة تعيين جميع الفلاتر"""
+        # إعادة تعيين فلتر المدرسة والصف وحق البحث
+        self.school_filter.setCurrentIndex(0)
+        self.grade_filter.setCurrentIndex(0)
+        self.search_input.clear()
+        # إعادة تطبيق الفلاتر
+        self.apply_filters()
     
     def refresh_data(self):
         """تحديث البيانات"""
