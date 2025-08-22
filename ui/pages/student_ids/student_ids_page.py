@@ -430,33 +430,125 @@ class StudentIDsPage(QWidget):
             self.students_table.setItem(row, 4, QTableWidgetItem(student['section']))
             self.students_table.setItem(row, 5, QTableWidgetItem(student['phone']))
             
-            # عمود تاريخ الميلاد القابل للتعديل
-            birthdate_edit = QDateEdit()
-            birthdate_edit.setObjectName("birthdateEdit")
-            birthdate_edit.setCalendarPopup(True)
-            birthdate_edit.setDisplayFormat("yyyy-MM-dd")
-            birthdate_edit.setMaximumDate(QDate.currentDate())
+            # عمود تاريخ الميلاد مع زر لتعديل التاريخ
+            # استخدام QLabel لعرض التاريخ أو فراغ
+            birthdate_label = QLabel()
+            birthdate_label.setObjectName("birthdateLabel")
+            birthdate_label.setStyleSheet("padding: 4px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;")
             
-            # تعيين تاريخ الميلاد إن وجد
+            # عرض التاريخ إن وجد، وإلا عرض فراغ
             if student['birthdate']:
-                try:
-                    date = QDate.fromString(student['birthdate'], "yyyy-MM-dd")
-                    if date.isValid():
-                        birthdate_edit.setDate(date)
-                    else:
-                        birthdate_edit.setDate(QDate.currentDate().addYears(-10))
-                except:
-                    birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+                birthdate_label.setText(student['birthdate'])
             else:
-                birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+                birthdate_label.setText("")
             
-            # ربط تغيير التاريخ بتحديث البيانات
-            birthdate_edit.dateChanged.connect(
-                lambda date, student_id=student['id']: self.update_student_birthdate(student_id, date)
+            # زر تعديل التاريخ
+            edit_btn = QPushButton("✏")
+            edit_btn.setFixedWidth(25)
+            edit_btn.clicked.connect(
+                lambda _, student_id=student['id'], row_idx=row: self.edit_birthdate(student_id, row_idx)
             )
             
-            self.students_table.setCellWidget(row, 6, birthdate_edit)
+            # تجميع ويدجت الخلية
+            container = QWidget()
+            h_layout = QHBoxLayout(container)
+            h_layout.setContentsMargins(0, 0, 0, 0)
+            h_layout.addWidget(birthdate_label)
+            h_layout.addWidget(edit_btn)
+            self.students_table.setCellWidget(row, 6, container)
     
+    def edit_birthdate(self, student_id, row_idx):
+        """فتح نافذة تعديل تاريخ الميلاد"""
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QDialogButtonBox
+        
+        # البحث عن بيانات الطالب
+        student = None
+        for s in self.filtered_students:
+            if s['id'] == student_id:
+                student = s
+                break
+        
+        if not student:
+            return
+        
+        # إنشاء نافذة التعديل
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"تعديل تاريخ ميلاد: {student['name']}")
+        dialog.setModal(True)
+        dialog.resize(300, 150)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # حقل تاريخ الميلاد
+        birthdate_edit = QDateEdit()
+        birthdate_edit.setCalendarPopup(True)
+        birthdate_edit.setDisplayFormat("yyyy-MM-dd")
+        birthdate_edit.setMaximumDate(QDate.currentDate())
+        
+        # تعيين التاريخ الحالي إن وجد
+        if student['birthdate']:
+            try:
+                date = QDate.fromString(student['birthdate'], "yyyy-MM-dd")
+                if date.isValid():
+                    birthdate_edit.setDate(date)
+                else:
+                    birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+            except:
+                birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+        else:
+            birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+        
+        layout.addWidget(QLabel("تاريخ الميلاد:"))
+        layout.addWidget(birthdate_edit)
+        
+        # أزرار الحفظ والإلغاء
+        button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        button_box.accepted.connect(dialog.accept)
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+        
+        # عرض النافذة
+        if dialog.exec_() == QDialog.Accepted:
+            new_date = birthdate_edit.date()
+            self.update_student_birthdate_from_dialog(student_id, new_date, row_idx)
+    
+    def update_student_birthdate_from_dialog(self, student_id, date, row_idx):
+        """تحديث تاريخ ميلاد الطالب من نافذة التعديل"""
+        try:
+            birthdate_str = date.toString("yyyy-MM-dd")
+            
+            # تحديث قاعدة البيانات
+            update_query = "UPDATE students SET birthdate = ? WHERE id = ?"
+            result = db_manager.execute_update(update_query, (birthdate_str, student_id))
+            
+            if result:
+                # تحديث البيانات في الذاكرة
+                for student in self.students_data:
+                    if student['id'] == student_id:
+                        student['birthdate'] = birthdate_str
+                        break
+                
+                for student in self.filtered_students:
+                    if student['id'] == student_id:
+                        student['birthdate'] = birthdate_str
+                        break
+                
+                # تحديث عرض الجدول
+                container = self.students_table.cellWidget(row_idx, 6)
+                if container:
+                    label = container.findChild(QLabel)
+                    if label:
+                        label.setText(birthdate_str)
+                
+                log_user_action(f"تحديث تاريخ ميلاد الطالب {student_id} إلى {birthdate_str}")
+                QMessageBox.information(self, "نجح", "تم تحديث تاريخ الميلاد بنجاح")
+            else:
+                QMessageBox.warning(self, "خطأ", "فشل في تحديث تاريخ الميلاد")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحديث تاريخ الميلاد: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في تحديث تاريخ الميلاد: {str(e)}")
+
     def update_student_birthdate(self, student_id, date):
         """تحديث تاريخ ميلاد الطالب في قاعدة البيانات والذاكرة"""
         try:
@@ -481,7 +573,7 @@ class StudentIDsPage(QWidget):
                 log_user_action(f"تحديث تاريخ ميلاد الطالب {student_id} إلى {birthdate_str}")
             else:
                 QMessageBox.warning(self, "خطأ", "فشل في تحديث تاريخ الميلاد")
-                
+            
         except Exception as e:
             logging.error(f"خطأ في تحديث تاريخ الميلاد: {e}")
             QMessageBox.critical(self, "خطأ", f"خطأ في تحديث تاريخ الميلاد: {str(e)}")
