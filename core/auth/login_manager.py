@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 إدارة تسجيل الدخول والمصادقة
+ملاحظة: كلمات المرور يتم تخزينها كنص عادي (بدون تشفير)
 """
 
 import hashlib
@@ -25,43 +26,20 @@ class AuthManager:
         self.session_timeout = config.SESSION_TIMEOUT
     
     def hash_password(self, password: str) -> str:
-        """تشفير كلمة المرور"""
+        """تخزين كلمة المرور كنص عادي"""
         try:
-            # إنشاء salt عشوائي
-            salt = secrets.token_hex(32)
-            
-            # تشفير كلمة المرور مع salt
-            password_hash = hashlib.pbkdf2_hmac(
-                'sha256',
-                password.encode('utf-8'),
-                salt.encode('utf-8'),
-                100000  # عدد التكرارات
-            )
-            
-            # دمج salt مع hash
-            return salt + password_hash.hex()
+            # إرجاع كلمة المرور كما هي بدون تشفير
+            return password
             
         except Exception as e:
-            logging.error(f"خطأ في تشفير كلمة المرور: {e}")
+            logging.error(f"خطأ في معالجة كلمة المرور: {e}")
             raise
     
-    def verify_password(self, password: str, stored_hash: str) -> bool:
-        """التحقق من كلمة المرور"""
+    def verify_password(self, password: str, stored_password: str) -> bool:
+        """التحقق من كلمة المرور بالمقارنة المباشرة"""
         try:
-            # استخراج salt (أول 64 حرف)
-            salt = stored_hash[:64]
-            stored_password_hash = stored_hash[64:]
-            
-            # تشفير كلمة المرور المدخلة
-            password_hash = hashlib.pbkdf2_hmac(
-                'sha256',
-                password.encode('utf-8'),
-                salt.encode('utf-8'),
-                100000
-            )
-            
-            # مقارنة النتيجة
-            return password_hash.hex() == stored_password_hash
+            # مقارنة كلمة المرور المدخلة مع المخزنة مباشرة
+            return password == stored_password
             
         except Exception as e:
             logging.error(f"خطأ في التحقق من كلمة المرور: {e}")
@@ -95,16 +73,16 @@ class AuthManager:
                 auth_logger.log_security_event("محاولة إنشاء مستخدم أول مع وجود مستخدمين")
                 return False
             
-            # تشفير كلمة المرور
-            password_hash = self.hash_password(password)
+            # تخزين كلمة المرور كنص عادي
+            password_plain = self.hash_password(password)
             
             # إدخال المستخدم
             query = """
-                INSERT INTO users (username, password_hash)
+                INSERT INTO users (username, password)
                 VALUES (?, ?)
             """
             
-            user_id = db_manager.execute_insert(query, ('admin', password_hash))
+            user_id = db_manager.execute_insert(query, ('admin', password_plain))
             
             if user_id:
                 auth_logger.log_security_event("تم إنشاء المستخدم الأول", f"معرف المستخدم: {user_id}")
@@ -122,7 +100,7 @@ class AuthManager:
         """مصادقة المستخدم"""
         try:
             # البحث عن المستخدم
-            query = "SELECT id, password_hash FROM users WHERE username = ?"
+            query = "SELECT id, password FROM users WHERE username = ?"
             result = db_manager.execute_query(query, (username,))
             
             if not result:
@@ -132,7 +110,7 @@ class AuthManager:
             user = result[0]
             
             # التحقق من كلمة المرور
-            if self.verify_password(password, user['password_hash']):
+            if self.verify_password(password, user['password']):
                 # تسجيل دخول ناجح
                 self.current_user = {
                     'id': user['id'],
@@ -215,15 +193,15 @@ class AuthManager:
             user_id = self.current_user['id']
             username = self.current_user['username']
             
-            query = "SELECT password_hash FROM users WHERE id = ?"
+            query = "SELECT password FROM users WHERE id = ?"
             result = db_manager.execute_query(query, (user_id,))
             
             if not result:
                 return False
             
-            stored_hash = result[0]['password_hash']
+            stored_password = result[0]['password']
             
-            if not self.verify_password(old_password, stored_hash):
+            if not self.verify_password(old_password, stored_password):
                 auth_logger.log_security_event("محاولة تغيير كلمة مرور بكلمة قديمة خاطئة", username)
                 return False
             
@@ -231,17 +209,17 @@ class AuthManager:
             if not self.validate_password(new_password):
                 return False
             
-            # تشفير كلمة المرور الجديدة
-            new_password_hash = self.hash_password(new_password)
+            # تخزين كلمة المرور الجديدة كنص عادي
+            new_password_plain = self.hash_password(new_password)
             
             # تحديث كلمة المرور
             update_query = """
                 UPDATE users 
-                SET password_hash = ?, updated_at = CURRENT_TIMESTAMP 
+                SET password = ?, updated_at = CURRENT_TIMESTAMP 
                 WHERE id = ?
             """
             
-            affected_rows = db_manager.execute_update(update_query, (new_password_hash, user_id))
+            affected_rows = db_manager.execute_update(update_query, (new_password_plain, user_id))
             
             if affected_rows > 0:
                 auth_logger.log_password_change(username)
