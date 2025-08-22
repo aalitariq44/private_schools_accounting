@@ -5,6 +5,8 @@
 """
 
 import logging
+import json
+import config
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QMessageBox
@@ -71,11 +73,71 @@ class MobilePasswordDialog(QDialog):
         if pwd != conf:
             QMessageBox.warning(self, "تحذير", "كلمة المرور غير متطابقة")
             return
+        
+        # حفظ محلياً
         if settings_manager.set_mobile_password(pwd):
-            QMessageBox.information(self, "نجح", "تم حفظ كلمة المرور")
-            self.accept()
+            # رفع إلى Supabase
+            if self._upload_to_supabase(pwd):
+                QMessageBox.information(self, "نجح", "تم حفظ كلمة المرور ورفعها إلى التخزين السحابي")
+                self.accept()
+            else:
+                QMessageBox.warning(self, "تحذير", "تم حفظ كلمة المرور محلياً ولكن فشل في رفعها إلى التخزين السحابي")
+                self.accept()
         else:
             QMessageBox.critical(self, "خطأ", "فشل في حفظ كلمة المرور")
+
+    def _upload_to_supabase(self, password):
+        """رفع كلمة المرور إلى Supabase كملف JSON"""
+        try:
+            from supabase import create_client
+            
+            # إنشاء اتصال Supabase
+            supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+            bucket = config.SUPABASE_BUCKET
+            
+            # الحصول على اسم المؤسسة
+            org_name = settings_manager.get_organization_name()
+            if not org_name:
+                logging.error("اسم المؤسسة غير محدد")
+                return False
+            
+            # إنشاء بيانات JSON
+            mobile_data = {
+                "organization_name": org_name,
+                "mobile_password": password,
+                "last_updated": "2025-08-22T00:00:00Z"
+            }
+            
+            # تحويل إلى JSON
+            json_data = json.dumps(mobile_data, ensure_ascii=False, indent=2)
+            json_bytes = json_data.encode('utf-8')
+            
+            # تحديد مسار الملف في Supabase
+            # المسار: backups/{org_name}/mobile_access.json
+            safe_org_name = "".join(c for c in org_name if c.isalnum() or c in (' ', '-', '_')).strip()
+            safe_org_name = safe_org_name.replace(' ', '_')
+            file_path = f"backups/{safe_org_name}/mobile_access.json"
+            
+            # رفع الملف
+            upload_result = supabase.storage.from_(bucket).upload(
+                file_path, 
+                json_bytes,
+                file_options={"content-type": "application/json", "upsert": "true"}
+            )
+            
+            if upload_result:
+                logging.info(f"تم رفع ملف كلمة مرور التطبيق المحمول إلى: {file_path}")
+                return True
+            else:
+                logging.error("فشل في رفع ملف كلمة مرور التطبيق المحمول")
+                return False
+                
+        except ImportError:
+            logging.error("مكتبة Supabase غير متوفرة")
+            return False
+        except Exception as e:
+            logging.error(f"خطأ في رفع كلمة المرور إلى Supabase: {e}")
+            return False
 
 
 def show_mobile_password_dialog(parent=None):
