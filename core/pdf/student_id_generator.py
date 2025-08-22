@@ -269,7 +269,8 @@ class StudentIDGenerator:
             elif element_name == "qr_box":
                 self.draw_qr_box(card_x, card_y, element_config)
             elif element_name == "birth_date_box":
-                self.draw_birth_date_box(card_x, card_y, element_config)
+                birthdate = student_data.get('birthdate', '')
+                self.draw_birth_date_box(card_x, card_y, element_config, birthdate)
             elif element_name.endswith('_label'):
                 # رسم التسميات (العناوين الفرعية)
                 label_text = element_config.get('text', '')
@@ -419,7 +420,7 @@ class StudentIDGenerator:
         center_y = abs_y + height / 2
         self.canvas.drawCentredString(center_x, center_y, label)
     
-    def draw_birth_date_box(self, card_x: float, card_y: float, element_config: Dict):
+    def draw_birth_date_box(self, card_x: float, card_y: float, element_config: Dict, birthdate: str = ''):
         """رسم خانة تاريخ الميلاد مع التصميم المحسّن"""
         
         abs_x, abs_y = get_element_absolute_position(element_config, card_x, card_y)
@@ -436,7 +437,13 @@ class StudentIDGenerator:
         self.canvas.rect(abs_x, abs_y, width, height, fill=1)
         
         # إضافة النص
-        label = element_config.get('label', 'تاريخ الميلاد: _______________')
+        if birthdate:
+            # إذا كان تاريخ الميلاد متوفراً، اعرضه
+            label = f"تاريخ الميلاد: {birthdate}"
+        else:
+            # إذا لم يكن متوفراً، اعرض خانة فارغة
+            label = element_config.get('label', 'تاريخ الميلاد: _______________')
+            
         label_font_size = element_config.get('label_font_size', 6)
         label_x = element_config.get('label_x', 0.1)
         label_y = element_config.get('label_y', 0.18)

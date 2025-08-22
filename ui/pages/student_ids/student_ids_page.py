@@ -14,9 +14,9 @@ from PyQt5.QtWidgets import (
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QCheckBox, QGroupBox, QFormLayout,
     QFileDialog, QProgressDialog, QApplication, QSizePolicy,
-    QSplitter, QScrollArea, QDialog
+    QSplitter, QScrollArea, QDialog, QDateEdit
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QTimer, QDate
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QCursor
 
 import config
@@ -76,9 +76,53 @@ class StudentIDsPage(QWidget):
         self.selected_students = set()
         
         self.setup_ui()
+        self.setup_styles()
         self.load_data()
         
         log_user_action("تم فتح صفحة إنشاء هويات الطلاب")
+    
+    def setup_styles(self):
+        """إعداد أنماط CSS للواجهة"""
+        style = """
+            QWidget {
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+            
+            QDateEdit[objectName="birthdateEdit"] {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 12px;
+                color: #495057;
+            }
+            
+            QDateEdit[objectName="birthdateEdit"]:hover {
+                border-color: #007bff;
+                background-color: #fff;
+            }
+            
+            QDateEdit[objectName="birthdateEdit"]:focus {
+                border-color: #007bff;
+                box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+                background-color: #fff;
+            }
+            
+            QTableWidget {
+                gridline-color: #dee2e6;
+                background-color: white;
+                alternate-background-color: #f8f9fa;
+            }
+            
+            QHeaderView::section {
+                background-color: #e9ecef;
+                padding: 8px;
+                border: 1px solid #dee2e6;
+                font-weight: bold;
+                color: #495057;
+            }
+        """
+        self.setStyleSheet(style)
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -179,7 +223,7 @@ class StudentIDsPage(QWidget):
         self.students_table.setObjectName("studentsTable")
         
         # إعداد أعمدة الجدول
-        columns = ["اختيار", "الاسم", "الصف", "المدرسة", "القسم", "رقم الهاتف"]
+        columns = ["اختيار", "الاسم", "الصف", "المدرسة", "القسم", "رقم الهاتف", "تاريخ الميلاد"]
         self.students_table.setColumnCount(len(columns))
         self.students_table.setHorizontalHeaderLabels(columns)
         
@@ -196,6 +240,7 @@ class StudentIDsPage(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # المدرسة
         header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # القسم
         header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الهاتف
+        header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # تاريخ الميلاد
         
         self.students_table.setColumnWidth(0, 60)  # عرض عمود الاختيار
         
@@ -240,7 +285,7 @@ class StudentIDsPage(QWidget):
         try:
             # تحميل بيانات الطلاب من قاعدة البيانات
             query = """
-                SELECT s.id, s.name, s.grade, s.section, s.phone, 
+                SELECT s.id, s.name, s.grade, s.section, s.phone, s.birthdate,
                        sc.name_ar as school_name
                 FROM students s
                 LEFT JOIN schools sc ON s.school_id = sc.id
@@ -262,7 +307,8 @@ class StudentIDsPage(QWidget):
                         'grade': row[2] or '',
                         'section': row[3] or '',
                         'phone': row[4] or '',
-                        'school_name': row[5] or 'غير محدد'
+                        'birthdate': row[5] or '',
+                        'school_name': row[6] or 'غير محدد'
                     }
                     
                     self.students_data.append(student)
@@ -383,6 +429,62 @@ class StudentIDsPage(QWidget):
             self.students_table.setItem(row, 3, QTableWidgetItem(student['school_name']))
             self.students_table.setItem(row, 4, QTableWidgetItem(student['section']))
             self.students_table.setItem(row, 5, QTableWidgetItem(student['phone']))
+            
+            # عمود تاريخ الميلاد القابل للتعديل
+            birthdate_edit = QDateEdit()
+            birthdate_edit.setObjectName("birthdateEdit")
+            birthdate_edit.setCalendarPopup(True)
+            birthdate_edit.setDisplayFormat("yyyy-MM-dd")
+            birthdate_edit.setMaximumDate(QDate.currentDate())
+            
+            # تعيين تاريخ الميلاد إن وجد
+            if student['birthdate']:
+                try:
+                    date = QDate.fromString(student['birthdate'], "yyyy-MM-dd")
+                    if date.isValid():
+                        birthdate_edit.setDate(date)
+                    else:
+                        birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+                except:
+                    birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+            else:
+                birthdate_edit.setDate(QDate.currentDate().addYears(-10))
+            
+            # ربط تغيير التاريخ بتحديث البيانات
+            birthdate_edit.dateChanged.connect(
+                lambda date, student_id=student['id']: self.update_student_birthdate(student_id, date)
+            )
+            
+            self.students_table.setCellWidget(row, 6, birthdate_edit)
+    
+    def update_student_birthdate(self, student_id, date):
+        """تحديث تاريخ ميلاد الطالب في قاعدة البيانات والذاكرة"""
+        try:
+            birthdate_str = date.toString("yyyy-MM-dd")
+            
+            # تحديث قاعدة البيانات
+            update_query = "UPDATE students SET birthdate = ? WHERE id = ?"
+            result = db_manager.execute_update(update_query, (birthdate_str, student_id))
+            
+            if result:
+                # تحديث البيانات في الذاكرة
+                for student in self.students_data:
+                    if student['id'] == student_id:
+                        student['birthdate'] = birthdate_str
+                        break
+                
+                for student in self.filtered_students:
+                    if student['id'] == student_id:
+                        student['birthdate'] = birthdate_str
+                        break
+                
+                log_user_action(f"تحديث تاريخ ميلاد الطالب {student_id} إلى {birthdate_str}")
+            else:
+                QMessageBox.warning(self, "خطأ", "فشل في تحديث تاريخ الميلاد")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تحديث تاريخ الميلاد: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في تحديث تاريخ الميلاد: {str(e)}")
     
     def toggle_student_selection(self, student_id, state):
         """تغيير حالة اختيار الطالب"""
