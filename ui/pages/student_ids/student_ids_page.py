@@ -788,7 +788,7 @@ class StudentIDsPage(QWidget):
         dialog.exec_()
     
     def open_visual_editor(self):
-        """فتح محرر القوالب المرئي"""
+        """فتح محرر القوالب المرئي المحسّن"""
         try:
             from ui.dialogs.template_editor import TemplateEditor
             
@@ -796,13 +796,14 @@ class StudentIDsPage(QWidget):
             result = editor.exec_()
             
             if result == QDialog.Accepted:
-                QMessageBox.information(self, "نجح", "تم تحديث القالب بنجاح")
+                QMessageBox.information(self, "نجح", "تم تحديث القالب بنجاح!\nيمكنك الآن إنشاء الهويات بالتصميم الجديد.")
                 
-        except ImportError:
-            QMessageBox.warning(self, "خطأ", "محرر القوالب المرئي غير متوفر")
+        except ImportError as e:
+            logging.error(f"خطأ في استيراد محرر القوالب: {e}")
+            QMessageBox.warning(self, "خطأ", "محرر القوالب المرئي غير متوفر.\nيرجى التأكد من وجود جميع الملفات المطلوبة.")
         except Exception as e:
             logging.error(f"خطأ في فتح محرر القوالب: {e}")
-            QMessageBox.critical(self, "خطأ", f"خطأ في فتح محرر القوالب:\n{str(e)}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في فتح محرر القوالب:\n{str(e)}\n\nيرجى المحاولة مرة أخرى أو التواصل مع الدعم التقني.")
     
     def save_current_template(self):
         """حفظ القالب الحالي"""

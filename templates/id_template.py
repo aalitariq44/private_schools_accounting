@@ -31,176 +31,126 @@ CARD_SPACING_X = 8 * mm   # مسافة أفقية كافية للقطع
 CARD_SPACING_Y = 10 * mm  # مسافة عمودية كافية للقطع
 
 # قالب العناصر داخل الهوية (إحداثيات نسبية من 0 إلى 1)
-# تصميم محسّن وأجمل مع ترتيب أفضل
+# تصميم مبسط وعصري أكثر أناقة
 TEMPLATE_ELEMENTS = {
-    # عنوان "هوية طالب" في الأعلى - ثابت وبارز
+    # عنوان "هوية طالب" في الأعلى - بسيط وأنيق
     "id_title": {
-        "x": 0.96,         # يمين البطاقة بدلاً من الوسط
+        "x": 0.5,          # في الوسط
         "y": 0.92,         # في أعلى البطاقة
-        "font_size": 14,   # خط كبير وبارز
+        "font_size": 16,   # خط أكبر قليلاً
         "font_name": "Helvetica-Bold",
-        "alignment": "right",
-        "color": Color(0.1, 0.3, 0.6),  # أزرق أنيق
+        "alignment": "center",
+        "color": Color(0.2, 0.4, 0.7),  # أزرق هادئ
         "text": "هوية طالب"
     },
     
-    # اسم المدرسة تحت العنوان مباشرة
+    # اسم المدرسة تحت العنوان - مبسط
     "school_name": {
-        "x": 0.96,         # يمين البطاقة بدلاً من الوسط
+        "x": 0.5,          # في الوسط
         "y": 0.84,         # تحت العنوان
-        "font_size": 12,   # خط كبير ومقروء
-        "font_name": "Helvetica-Bold",
-        "alignment": "right",
-        "color": Color(0.2, 0.2, 0.2),  # رمادي داكن أنيق
-        "max_width": 0.95   # 95% من عرض البطاقة
+        "font_size": 11,   # خط متوسط
+        "font_name": "Helvetica",
+        "alignment": "center",
+        "color": Color(0.3, 0.3, 0.3),  # رمادي هادئ
+        "max_width": 0.95
     },
     
-    # خط فاصل تحت المعلومات العلوية
+    # خط فاصل بسيط وأنيق
     "header_line": {
-        "x": 0.05,
+        "x": 0.1,
         "y": 0.78,
-        "width": 0.90,
-        "height": 0.01,
-        "color": Color(0.1, 0.3, 0.6),
+        "width": 0.8,
+        "height": 0.008,
+        "color": Color(0.2, 0.4, 0.7),
         "type": "line"
     },
     
-    # اسم الطالب - مع تسمية واضحة
-    "student_name_label": {
-        "x": 0.96,
-        "y": 0.70,
-        "font_size": 8,
-        "font_name": "Helvetica",
-        "alignment": "right",
-        "color": Color(0.4, 0.4, 0.4),
-        "text": "اسم الطالب:"
-    },
-    
-    "student_name": {
-        "x": 0.80,         # بجانب مربع الصورة من اليمين
-        "y": 0.70,         # على نفس سطر التسمية
-        "font_size": 12,   # خط أكبر للاسم
-        "font_name": "Helvetica-Bold",
-        "alignment": "right",
-        "color": black,
-        "max_width": 0.52  # المساحة المتبقية بعد مربع الصورة
-    },
-    
-    # صف الطالب مع تسمية
-    "student_grade_label": {
-        "x": 0.96,
-        "y": 0.56,
-        "font_size": 8,
-        "font_name": "Helvetica",
-        "alignment": "right",
-        "color": Color(0.4, 0.4, 0.4),
-        "text": "الصف الدراسي:"
-    },
-    
-    "student_grade": {
-        "x": 0.75,
-        "y": 0.56   ,
-        "font_size": 10,
-        "font_name": "Helvetica-Bold",
-        "alignment": "right",
-        "color": Color(0.1, 0.3, 0.6),
-        "label": ""  # بدون تسمية إضافية
-    },
-    
-    # العام الدراسي مع تحسين التصميم
-    "academic_year_label": {
-        "x": 0.96,
-        "y": 0.42,
-        "font_size": 8,
-        "font_name": "Helvetica",
-        "alignment": "right",
-        "color": Color(0.4, 0.4, 0.4),
-        "text": "العام الدراسي:"
-    },
-    
-    "academic_year": {
-        "x": 0.75,
-        "y": 0.42,
-        "font_size": 9,
-        "font_name": "Helvetica",
-        "alignment": "right",
-        "color": Color(0.2, 0.2, 0.2),
-        "text": "2025 - 2026"
-    },
-    
-    # مربع الصورة محسّن مع إطار أنيق
+    # مربع الصورة - تصميم نظيف
     "photo_box": {
-        "x": 0.04,
-        "y": 0.40,
-        "width": 0.30,
-        "height": 0.54,
-        "border_color": Color(0.1, 0.3, 0.6),  # إطار أزرق أنيق
-        "border_width": 2,  # إطار أكثر بروزاً
-        "fill_color": Color(0.95, 0.95, 0.95),  # خلفية رمادية فاتحة
-        "label": "صورة الطالب",
-        "label_font_size": 7,
-        "label_color": Color(0.5, 0.5, 0.5)
-    },
-    
-    # مربع QR محسّن ومتناسق
-    "qr_box": {
-        "x": 0.74,
-        "y": 0.08,
-        "width": 0.22,
-        "height": 0.28,
-        "border_color": Color(0.1, 0.3, 0.6),
+        "x": 0.05,
+        "y": 0.45,
+        "width": 0.25,
+        "height": 0.45,
+        "border_color": Color(0.6, 0.6, 0.6),  # رمادي فاتح
         "border_width": 1.5,
-        "fill_color": white,
-        "label": "QR Code",
-        "label_font_size": 6,
+        "fill_color": Color(0.97, 0.97, 0.97),  # خلفية بيضاء تقريباً
+        "label": "الصورة",
+        "label_font_size": 8,
         "label_color": Color(0.5, 0.5, 0.5)
     },
     
-    # خانة تاريخ الميلاد محسّنة
-    "birth_date_label": {
-        "x": 0.32,
-        "y": 0.22,
-        "font_size": 8,
+    # اسم الطالب - بدون تسمية منفصلة لتبسيط التصميم
+    "student_name": {
+        "x": 0.95,         # من اليمين
+        "y": 0.68,         # في النصف العلوي
+        "font_size": 14,   # خط بارز
+        "font_name": "Helvetica-Bold",
+        "alignment": "right",
+        "color": Color(0.1, 0.1, 0.1),  # أسود تقريباً
+        "max_width": 0.65  # المساحة المتبقية بعد الصورة
+    },
+    
+    # الصف الدراسي - مع أيقونة بسيطة
+    "student_grade": {
+        "x": 0.95,
+        "y": 0.58,
+        "font_size": 11,
+        "font_name": "Helvetica",
+        "alignment": "right",
+        "color": Color(0.2, 0.4, 0.7),
+        "label": "الصف: "
+    },
+    
+    # العام الدراسي - مبسط
+    "academic_year": {
+        "x": 0.95,
+        "y": 0.48,
+        "font_size": 10,
         "font_name": "Helvetica",
         "alignment": "right",
         "color": Color(0.4, 0.4, 0.4),
-        "text": "تاريخ الميلاد:"
+        "text": "2025-2026"
     },
     
+    # تاريخ الميلاد - تصميم مبسط
     "birth_date_box": {
-        "x": 0.04,
-        "y": 0.08,
-        "width": 0.65,
-        "height": 0.28,
+        "x": 0.35,
+        "y": 0.15,
+        "width": 0.6,
+        "height": 0.2,
+        "border_color": Color(0.8, 0.8, 0.8),
+        "border_width": 1,
+        "fill_color": Color(0.99, 0.99, 0.99),
+        "label": "التاريخ: __ / __ / ____",
+        "label_font_size": 9,
+        "label_x": 0.37,
+        "label_y": 0.2,
+        "label_color": Color(0.5, 0.5, 0.5)
+    },
+    
+    # مربع QR - أصغر وأنيق
+    "qr_box": {
+        "x": 0.05,
+        "y": 0.05,
+        "width": 0.25,
+        "height": 0.3,
         "border_color": Color(0.7, 0.7, 0.7),
         "border_width": 1,
-        "fill_color": Color(0.98, 0.98, 0.98),
-        "label": "_____ / _____ / _________",
+        "fill_color": white,
+        "label": "QR",
         "label_font_size": 8,
-        "label_x": 0.06,
-        "label_y": 0.16,
         "label_color": Color(0.6, 0.6, 0.6)
     },
     
-    # خط فاصل سفلي للتصميم
-    "footer_line": {
-        "x": 0.05,
-        "y": 0.04,
-        "width": 0.90,
-        "height": 0.01,
-        "color": Color(0.1, 0.3, 0.6),
-        "type": "line"
-    },
-    
-    # رقم الطالب (اختياري)
+    # رقم الطالب - بسيط في الزاوية
     "id_number": {
-        "x": 0.96,
-        "y": 0.28,
-        "font_size": 7,
+        "x": 0.95,
+        "y": 0.1,
+        "font_size": 8,
         "font_name": "Helvetica",
         "alignment": "right",
-        "color": Color(0.5, 0.5, 0.5),
-        "text": "رقم الطالب: AUTO"
+        "color": Color(0.6, 0.6, 0.6),
+        "text": "ID: AUTO"
     }
 }
 
@@ -218,14 +168,16 @@ FONTS = {
     "default": "Helvetica"
 }
 
-# ألوان افتراضية
+# ألوان حديثة وأنيقة
 COLORS = {
-    "primary": Color(0.2, 0.3, 0.7),      # أزرق داكن
-    "secondary": Color(0.5, 0.5, 0.5),    # رمادي
-    "accent": Color(0.9, 0.1, 0.1),       # أحمر
-    "text": black,
+    "primary": Color(0.2, 0.4, 0.7),        # أزرق هادئ
+    "secondary": Color(0.4, 0.4, 0.4),      # رمادي متوسط
+    "accent": Color(0.0, 0.6, 0.5),         # تركوازي أنيق
+    "text": Color(0.1, 0.1, 0.1),           # أسود ناعم
     "background": white,
-    "border": black
+    "border": Color(0.6, 0.6, 0.6),        # رمادي فاتح للحدود
+    "light_gray": Color(0.95, 0.95, 0.95), # رمادي فاتح جداً
+    "medium_gray": Color(0.5, 0.5, 0.5)    # رمادي متوسط
 }
 
 def get_card_position(row, col):
