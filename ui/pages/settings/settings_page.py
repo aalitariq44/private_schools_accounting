@@ -10,7 +10,8 @@ import config
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFrame, QLabel, QPushButton, QComboBox, QGroupBox,
-    QMessageBox, QScrollArea, QSpacerItem, QSizePolicy
+    QMessageBox, QScrollArea, QSpacerItem, QSizePolicy,
+    QDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
@@ -78,6 +79,9 @@ class SettingsPage(QWidget):
             
             # إعدادات المؤسسة
             self.create_organization_section(scroll_layout)
+            
+            # إعدادات التطبيق المحمول
+            self.create_mobile_app_section(scroll_layout)
             
             # إعدادات العام الدراسي
             self.create_academic_year_section(scroll_layout)
@@ -173,6 +177,59 @@ class SettingsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم المؤسسة: {e}")
+    
+    def create_mobile_app_section(self, layout):
+        """إنشاء قسم إعدادات التطبيق المحمول"""
+        try:
+            # إطار التطبيق المحمول
+            mobile_group = QGroupBox("إعدادات التطبيق المحمول")
+            mobile_group.setObjectName("settingsGroup")
+            mobile_layout = QGridLayout()
+            mobile_layout.setSpacing(15)
+            
+            # تسمية كلمة المرور
+            password_label = QLabel("كلمة مرور تسجيل الدخول في الهاتف:")
+            password_label.setFont(QFont("Arial", 11))
+            
+            # عرض حالة كلمة المرور
+            self.mobile_password_display = QLabel()
+            self.mobile_password_display.setObjectName("mobilePasswordStatus")
+            self.mobile_password_display.setFont(QFont("Arial", 10))
+            self.mobile_password_display.setStyleSheet("""
+                QLabel#mobilePasswordStatus {
+                    background-color: #F8F9FA;
+                    border: 1px solid #DEE2E6;
+                    border-radius: 5px;
+                    padding: 8px;
+                    color: #495057;
+                }
+            """)
+            
+            # زر إدارة كلمة المرور
+            manage_password_btn = QPushButton("إدارة كلمة المرور")
+            manage_password_btn.setObjectName("mobileButton")
+            manage_password_btn.setMinimumHeight(40)
+            manage_password_btn.clicked.connect(self.manage_mobile_password)
+            
+            # نص توضيحي
+            info_label = QLabel("* تُستخدم للوصول إلى بيانات المؤسسة من التطبيق المحمول")
+            info_label.setFont(QFont("Arial", 9))
+            info_label.setStyleSheet("color: #6C757D; font-style: italic;")
+            
+            # إضافة العناصر للتخطيط
+            mobile_layout.addWidget(password_label, 0, 0)
+            mobile_layout.addWidget(self.mobile_password_display, 0, 1)
+            mobile_layout.addWidget(manage_password_btn, 1, 1)
+            mobile_layout.addWidget(info_label, 2, 1)
+            
+            # إضافة مساحة مرنة
+            mobile_layout.setColumnStretch(2, 1)
+            
+            mobile_group.setLayout(mobile_layout)
+            layout.addWidget(mobile_group)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء قسم التطبيق المحمول: {e}")
     
     def create_academic_year_section(self, layout):
         """إنشاء قسم إعدادات العام الدراسي"""
@@ -309,6 +366,19 @@ class SettingsPage(QWidget):
             logging.error(f"خطأ في تغيير كلمة المرور: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في تغيير كلمة المرور: {str(e)}")
     
+    def manage_mobile_password(self):
+        """إدارة كلمة مرور التطبيق المحمول"""
+        try:
+            from ui.dialogs.mobile_password_dialog import show_mobile_password_dialog
+            if show_mobile_password_dialog(self) == QDialog.Accepted:
+                # تحديث عرض حالة كلمة المرور
+                self.load_mobile_password_status()
+                log_user_action("تم تحديث كلمة مرور التطبيق المحمول")
+            
+        except Exception as e:
+            logging.error(f"خطأ في إدارة كلمة مرور التطبيق المحمول: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في إدارة كلمة المرور: {str(e)}")
+    
     def load_settings(self):
         """تحميل الإعدادات من قاعدة البيانات"""
         try:
@@ -319,6 +389,9 @@ class SettingsPage(QWidget):
             else:
                 self.organization_display.setText("لم يتم تعيين اسم المؤسسة")
             
+            # تحميل حالة كلمة مرور التطبيق المحمول
+            self.load_mobile_password_status()
+            
             # تحميل العام الدراسي الحالي
             current_year = self.get_current_academic_year()
             if current_year:
@@ -328,6 +401,47 @@ class SettingsPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحميل الإعدادات: {e}")
+    
+    def load_mobile_password_status(self):
+        """تحميل حالة كلمة مرور التطبيق المحمول"""
+        try:
+            mobile_password = settings_manager.get_mobile_password()
+            if mobile_password:
+                self.mobile_password_display.setText("محفوظة ✓")
+                self.mobile_password_display.setStyleSheet("""
+                    QLabel#mobilePasswordStatus {
+                        background-color: #d4edda;
+                        border: 1px solid #c3e6cb;
+                        border-radius: 5px;
+                        padding: 8px;
+                        color: #155724;
+                        font-weight: bold;
+                    }
+                """)
+            else:
+                self.mobile_password_display.setText("غير محفوظة")
+                self.mobile_password_display.setStyleSheet("""
+                    QLabel#mobilePasswordStatus {
+                        background-color: #f8d7da;
+                        border: 1px solid #f5c6cb;
+                        border-radius: 5px;
+                        padding: 8px;
+                        color: #721c24;
+                        font-style: italic;
+                    }
+                """)
+        except Exception as e:
+            logging.error(f"خطأ في تحميل حالة كلمة مرور التطبيق المحمول: {e}")
+            self.mobile_password_display.setText("خطأ في تحميل البيانات")
+            self.mobile_password_display.setStyleSheet("""
+                QLabel#mobilePasswordStatus {
+                    background-color: #f8d7da;
+                    border: 1px solid #f5c6cb;
+                    border-radius: 5px;
+                    padding: 8px;
+                    color: #721c24;
+                }
+            """)
     
     def create_advanced_section(self, layout):
         """إنشاء قسم الإعدادات المتقدمة"""
@@ -494,6 +608,25 @@ class SettingsPage(QWidget):
                 
                 QPushButton#advancedButton:pressed {
                     background-color: #4c1d7a;
+                }
+                
+                QPushButton#mobileButton {
+                    background-color: #17a2b8;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 8px 16px;
+                    font-weight: bold;
+                    font-size: 12px;
+                    min-width: 150px;
+                }
+                
+                QPushButton#mobileButton:hover {
+                    background-color: #138496;
+                }
+                
+                QPushButton#mobileButton:pressed {
+                    background-color: #117a8b;
                 }
                 
                 QScrollArea {

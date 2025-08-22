@@ -76,6 +76,14 @@ class SettingsManager:
         """تعيين اسم المؤسسة (للاستخدام في الإعداد الأولي فقط)"""
         return self.set_setting('organization_name', name)
     
+    def get_mobile_password(self) -> str:
+        """الحصول على كلمة مرور التطبيق المحمول"""
+        return self.get_setting('mobile_app_password', '')
+    
+    def set_mobile_password(self, password: str) -> bool:
+        """تعيين كلمة مرور التطبيق المحمول"""
+        return self.set_setting('mobile_app_password', password)
+    
     def get_all_settings(self) -> Dict[str, Any]:
         """الحصول على جميع الإعدادات"""
         try:
@@ -128,7 +136,8 @@ class SettingsManager:
                 'print_school_logo': 'true',
                 'currency_symbol': 'ر.س',
                 'date_format': 'dd/MM/yyyy',
-                'organization_name': ''  # سيتم تعيينه في الإعداد الأولي
+                'organization_name': '',  # سيتم تعيينه في الإعداد الأولي
+                'mobile_app_password': ''  # كلمة مرور التطبيق المحمول
             }
             
             for key, value in defaults.items():
@@ -166,3 +175,13 @@ def get_app_setting(key: str, default_value: Any = None) -> Any:
 def set_app_setting(key: str, value: Any) -> bool:
     """دالة مساعدة لتعيين إعداد التطبيق"""
     return settings_manager.set_setting(key, value)
+
+
+def get_mobile_password() -> str:
+    """دالة مساعدة للحصول على كلمة مرور التطبيق المحمول"""
+    return settings_manager.get_mobile_password()
+
+
+def set_mobile_password(password: str) -> bool:
+    """دالة مساعدة لتعيين كلمة مرور التطبيق المحمول"""
+    return settings_manager.set_mobile_password(password)
