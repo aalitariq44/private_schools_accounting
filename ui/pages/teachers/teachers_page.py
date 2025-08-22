@@ -66,8 +66,8 @@ class TeachersPage(QWidget):
         try:
             # التخطيط الرئيسي
             layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
             # شريط الأدوات والفلاتر
             self.create_toolbar(layout)
@@ -132,8 +132,8 @@ class TeachersPage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(10)
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
             
             filters_layout = QHBoxLayout()
             
@@ -245,99 +245,87 @@ class TeachersPage(QWidget):
             
             style = """
                 QWidget {{
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: {font_family};
-                    font-size: 16px;
+                    font-size: 13px;
                 }}
-                #toolbarFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin-bottom: 10px;
+                #toolbarFrame, #summaryFrame {{
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
                 }}
+                #toolbarFrame {{ margin-bottom: 8px; }}
                 #filterLabel {{
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 5px;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    font-weight: 600;
+                    color: #333;
+                    margin-right: 4px;
+                    font-size: 12px;
                 }}
                 #filterCombo, #searchInput {{
-                    padding: 8px 12px;
-                    border: 1px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    background-color: white;
-                    font-family: {font_family};
+                    padding: 4px 8px;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    background-color: #FFFFFF;
                 }}
+                QPushButton {{
+                    background: #FFFFFF;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 12px;
+                }}
+                QPushButton:hover {{ background: #E9EEF2; }}
                 #primaryButton {{
-                    background-color: #2980B9; /* Blue color for teachers */
-                    border: none;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    background: #2F6ED1;
+                    color: #FFFFFF;
+                    border: 1px solid #2F6ED1;
                 }}
-                #secondaryButton {{
-                    background-color: #27AE60;
-                    border: none;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
+                #primaryButton:hover {{ background: #2559A8; }}
+                #secondaryButton {{ color: #2F6ED1; font-weight: 600; }}
+                #secondaryButton:hover {{ background: #E0ECFF; }}
                 QTableWidget {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    gridline-color: #E3E6E8;
                 }}
                 QTableWidget::item {{
-                    padding: 12px;
-                    border-bottom: 1px solid #E9ECEF;
+                    padding: 2px 4px;
+                    border-bottom: 1px solid #EDF0F2;
                 }}
                 QTableWidget::item:selected {{
-                    background-color: #3498DB;
-                    color: white;
+                    background: #2F6ED1;
+                    color: #FFFFFF;
                 }}
                 QHeaderView::section {{
-                    background-color: #2980B9; /* Blue color for teachers */
-                    color: white;
-                    padding: 12px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                #summaryFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    padding: 10px;
+                    background: #F0F2F4;
+                    color: #222;
+                    padding: 4px 6px;
+                    border: 0px;
+                    border-right: 1px solid #D4D8DB;
+                    font-size: 12px;
+                    font-weight: 600;
                 }}
                 #summaryTitle {{
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 10px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #222;
+                    margin: 0 0 4px 0;
                 }}
                 #summaryLabel {{
-                    font-size: 16px;
-                    color: #7F8C8D;
+                    font-size: 11px;
+                    color: #555;
                 }}
                 #summaryValue {{
-                    font-size: 24px;
-                    font-weight: bold;
-                    color: #2980B9;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #2F6ED1;
                 }}
                 #statLabel {{
-                    font-size: 14px;
-                    color: #7F8C8D;
+                    font-size: 11px;
+                    color: #666;
                 }}
             """.format(font_family=cairo_font)
             
