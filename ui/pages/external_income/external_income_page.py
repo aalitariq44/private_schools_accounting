@@ -76,8 +76,9 @@ class ExternalIncomePage(QWidget):
         try:
             # التخطيط الرئيسي
             layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            # تقليل الهوامش والمسافات لتناسب الشاشات الصغيرة (1366x768)
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
 
             # رأس الصفحة
@@ -105,7 +106,7 @@ class ExternalIncomePage(QWidget):
             header_frame.setObjectName("headerFrame")
             
             header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 15, 20, 15)
+            header_layout.setContentsMargins(10, 8, 10, 8)
             
 
             # عنوان ووصف الصفحة (عمودي)
@@ -156,11 +157,12 @@ class ExternalIncomePage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(5) # Added spacing between rows
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
             
             # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
+            filters_layout.setSpacing(6)
             
             # فلتر المدرسة
             school_label = QLabel("المدرسة:")
@@ -212,6 +214,7 @@ class ExternalIncomePage(QWidget):
             
             # الصف الثاني - البحث وأزرار العمليات
             actions_layout = QHBoxLayout()
+            actions_layout.setSpacing(6)
             
             # مربع البحث
             search_label = QLabel("البحث:")
@@ -296,7 +299,7 @@ class ExternalIncomePage(QWidget):
             # الجدول
             self.income_table = QTableWidget()
             self.income_table.setObjectName("dataTable")
-            self.income_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
+            self.income_table.setStyleSheet("QTableWidget::item { padding: 2px; }")  # تقليل الحشو لزيادة عدد الصفوف المرئية
 
             # إعداد أعمدة الجدول
             columns = ["المعرف", "عنوان الوارد", "الوصف", "المبلغ", "الفئة", "التاريخ", "المدرسة", "الملاحظات"]
@@ -334,7 +337,7 @@ class ExternalIncomePage(QWidget):
             stats_frame.setObjectName("detailedStatsFrame")
             
             stats_layout = QHBoxLayout(stats_frame)
-            stats_layout.setContentsMargins(15, 10, 15, 10)
+            stats_layout.setContentsMargins(8, 6, 8, 6)
             
             # إحصائيات تفصيلية
             self.total_incomes_label = QLabel("إجمالي الواردات: 0")
@@ -776,197 +779,113 @@ class ExternalIncomePage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
+            # تصميم مبسط: ألوان محايدة، خطوط أصغر، أزرار مسطحة، بدون تدرجات ثقيلة
             style = """
-                /* الإطار الرئيسي */
                 QWidget {
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: 'Cairo', Arial, sans-serif;
-                    font-size: 18px;
+                    font-size: 13px;
                 }
-                
-                /* رأس الصفحة */
+                /* رأس الصفحة مبسط */
                 #headerFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #28A745, stop:1 #20924C);
-                    border-radius: 15px;
-                    color: white;
-                    margin-bottom: 15px;
-                    padding: 10px;
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 4px;
+                    margin-bottom: 6px;
                 }
-                
                 #pageTitle {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 8px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #37474F;
+                    margin: 0;
                 }
-                
                 #pageDesc {
-                    font-size: 16px;
-                    color: #E8F5E8;
+                    font-size: 11px;
+                    color: #607D8B;
+                    margin-top: 2px;
                 }
-                
                 /* شريط الأدوات */
-                #toolbarFrame {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                    padding: 5px;
+                #toolbarFrame, #tableFrame, #detailedStatsFrame {
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 4px;
                 }
-                
                 #filterLabel {
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 8px;
-                    font-size: 16px;
+                    font-weight: 600;
+                    color: #37474F;
+                    margin-right: 4px;
+                    font-size: 12px;
                 }
-                
                 #filterCombo, #filterDate {
-                    padding: 8px 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    background-color: white;
-                    min-width: 120px;
-                    font-size: 16px;
-                    margin: 3px;
+                    padding: 4px 6px;
+                    border: 1px solid #C3C7CA;
+                    border-radius: 3px;
+                    background: #FFFFFF;
+                    min-width: 85px;
+                    font-size: 12px;
                 }
-                
                 #searchInput {
-                    padding: 8px 15px;
-                    border: 2px solid #28A745;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    background-color: white;
-                    margin: 3px;
-                    min-width: 250px; /* Increased min-width for search input */
+                    padding: 4px 10px;
+                    border: 1px solid #C3C7CA;
+                    border-radius: 14px;
+                    font-size: 12px;
+                    background: #FFFFFF;
+                    min-width: 180px;
                 }
-                
-                /* الأزرار */
-                #primaryButton {
-                    background-color: #28A745;
-                    color: white;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 140px;
-                    font-size: 16px;
-                    margin: 3px;
+                #searchInput:focus, #filterCombo:focus, #filterDate:focus {
+                    border: 1px solid #5B8DEF;
                 }
-                
-                #primaryButton:hover {
-                    background-color: #218838;
-                }
-                
-                #secondaryButton {
-                    background-color: #6C757D;
-                    color: white;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 140px;
-                    font-size: 16px;
-                    margin: 3px;
-                }
-                
-                #refreshButton {
-                    background-color: #FFC107;
-                    color: #212529;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 100px;
-                    font-size: 16px;
-                    margin: 3px;
-                }
-                
-                #editButton, #deleteButton {
+                /* الأزرار المسطحة */
+                #primaryButton, #secondaryButton, #refreshButton {
+                    background: #FFFFFF;
+                    color: #2F3A40;
+                    border: 1px solid #B5BCC0;
                     padding: 6px 12px;
                     border-radius: 4px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    border: none;
-                    margin: 1px;
+                    font-weight: 600;
+                    font-size: 12px;
                 }
-                
-                #editButton {
-                    background-color: #17A2B8;
-                    color: white;
+                #primaryButton:hover, #secondaryButton:hover, #refreshButton:hover {
+                    background: #F0F3F5;
                 }
-                
-                #deleteButton {
-                    background-color: #DC3545;
-                    color: white;
+                #primaryButton:pressed, #secondaryButton:pressed, #refreshButton:pressed {
+                    background: #E2E6E9;
                 }
-                
+                #primaryButton { border-color: #229954; color: #1B5E33; }
+                #secondaryButton { border-color: #2980B9; color: #1F5375; }
+                #refreshButton { border-color: #B5A000; color: #605500; }
                 /* الجدول */
                 QTableWidget {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    gridline-color: #E9ECEF;
-                    font-size: 16px;
-                    margin: 10px 0px;
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    gridline-color: #E3E6E8;
+                    font-size: 12px;
                 }
-                
                 QTableWidget::item {
-                    padding: 12px 8px;
-                    border-bottom: 1px solid #E9ECEF;
-                    font-size: 16px;
+                    border-bottom: 1px solid #EEF0F1;
                 }
-                
                 QTableWidget::item:selected {
-                    background-color: #E8F5E8;
-                    color: #155724;
+                    background: #5B8DEF;
+                    color: #FFFFFF;
                 }
-                
                 QHeaderView::section {
-                    background-color: #28A745;
-                    color: white;
-                    padding: 12px 8px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    border: none;
-                    border-right: 1px solid #20924C;
+                    background: #ECEFF1;
+                    color: #37474F;
+                    padding: 4px 6px;
+                    border: 1px solid #D0D5D8;
+                    font-weight: 600;
+                    font-size: 12px;
                 }
-                
                 /* الإحصائيات */
-                #summaryStatsFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #F8F9FA, stop:1 #E9ECEF);
-                    border: 2px solid #DEE2E6;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                    padding: 15px;
+                #detailStatLabel, #summaryStatLabel {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #546E7A;
+                    margin: 2px 4px;
                 }
-                
-                #summaryStatLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #28A745;
-                    background-color: white;
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    margin: 5px;
-                    border: 2px solid #28A745;
-                }
-                
                 #detailedStatsFrame {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-top: 15px;
-                    padding: 15px;
-                }
-                
-                #detailStatLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #495057;
-                    margin: 5px;
+                    margin-top: 6px;
+                    padding: 6px;
                 }
             """
             
