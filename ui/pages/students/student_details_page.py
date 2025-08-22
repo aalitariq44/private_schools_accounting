@@ -278,27 +278,23 @@ class StudentDetailsPage(QWidget):
                 QMessageBox.warning(self, "خطأ", "لا توجد بيانات للطباعة")
                 return
             
-            # جمع المعلومات للطباعة
-            basic_info = self.student_info_widget.get_basic_info()
-            school_info = self.student_info_widget.get_school_info()
-            
-            # بيانات الطالب
+            # بيانات الطالب - استخدام الفهارس الصحيحة
             try:
-                total_fee = float(self.student_data[11])
+                total_fee = float(self.student_data[11])  # total_fee في الفهرس 11
             except Exception:
                 total_fee = 0
             
             student = {
                 'id': self.student_id,
-                'name': basic_info['name'],
-                'school_name': school_info['name'],
-                'school_address': school_info['address'],
-                'school_phone': school_info['phone'],
-                'grade': basic_info['grade'],
-                'section': basic_info['section'],
-                'gender': basic_info['gender'],
-                'phone': basic_info['phone'],
-                'status': basic_info['status'],
+                'name': self.student_data[1],  # name في الفهرس 1
+                'school_name': self.student_data[18] if len(self.student_data) > 18 else "",  # school_name من JOIN
+                'school_address': self.student_data[20] if len(self.student_data) > 20 else "",  # school_address من JOIN
+                'school_phone': self.student_data[21] if len(self.student_data) > 21 else "",  # school_phone من JOIN
+                'grade': self.student_data[4],  # grade في الفهرس 4
+                'section': self.student_data[5],  # section في الفهرس 5
+                'gender': self.student_data[7],  # gender في الفهرس 7
+                'phone': self.student_data[8],  # phone في الفهرس 8
+                'status': self.student_data[13],  # status في الفهرس 13
                 'total_fee': total_fee
             }
             
