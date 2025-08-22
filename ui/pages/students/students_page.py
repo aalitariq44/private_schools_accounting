@@ -204,8 +204,9 @@ class StudentsPage(QWidget):
         try:
             # التخطيط الرئيسي
             layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            # تقليل الهوامش والمسافات لتناسب الشاشات الأصغر (1366x768)
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
             
             # شريط الأدوات والفلاتر
@@ -231,11 +232,13 @@ class StudentsPage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(10)
+            # تصميم مبسط: هوامش وحشوات أصغر
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
             
             # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
+            filters_layout.setSpacing(6)
             
             # فلتر المدرسة
             school_label = QLabel("المدرسة:")
@@ -306,6 +309,7 @@ class StudentsPage(QWidget):
             
             # الصف الثاني - البحث والعمليات
             actions_layout = QHBoxLayout()
+            actions_layout.setSpacing(6)
             
             # مربع البحث
             search_label = QLabel("البحث:")
@@ -380,7 +384,8 @@ class StudentsPage(QWidget):
                 header.setSectionResizeMode(i, QHeaderView.ResizeToContents)
 
             # إزالة الحشوات داخل الصفوف
-            self.students_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
+            # تقليل الحشوة لزيادة عدد الصفوف المرئية
+            self.students_table.setStyleSheet("QTableWidget::item { padding: 2px; }")
 
             # ربط الأحداث: فتح تفاصيل الطالب عند النقر المزدوج
             self.students_table.cellDoubleClicked.connect(self.open_student_details)
@@ -405,7 +410,7 @@ class StudentsPage(QWidget):
             summary_frame.setObjectName("summaryFrame")
             
             summary_layout = QHBoxLayout(summary_frame)
-            summary_layout.setContentsMargins(15, 10, 15, 10)
+            summary_layout.setContentsMargins(8, 6, 8, 6)
             
             # ملخص الأرقام
             numbers_layout = QVBoxLayout()
@@ -1044,147 +1049,114 @@ class StudentsPage(QWidget):
             # استخدام خط Cairo المحمل
             cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
             
-            # لحل مشكلة F-string، سنستخدم format
+            # تصميم مبسط متوافق مع الدقات الأصغر – إزالة التدرجات وتقليل الأحجام
             style = """
-                /* الإطار الرئيسي */
                 QWidget {{
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: {font_family};
-                    font-size: 16px;
+                    font-size: 13px;
                 }}
-                
-                /* رأس الصفحة */
-                #headerFrame {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #9B59B6, stop:1 #8E44AD);
-                    border-radius: 10px;
-                    color: white;
-                    margin-bottom: 10px;
-                }}
-                
-                #pageTitle {{
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 5px;
-                    font-family: {font_family};
-                }}
-                
-                #pageDesc {{
-                    font-size: 16px;
-                    color: #E8DAEF;
-                    font-family: {font_family};
-                }}
-                
-                #quickStat {{
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: white;
-                    background-color: rgba(255, 255, 255, 0.2);
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    margin: 0 5px;
-                    font-family: {font_family};
-                }}
-                
-                /* شريط الأدوات */
-                #toolbarFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin-bottom: 10px;
-                }}
-                
-                #filterLabel {{
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 5px;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                #filterCombo {{
-                    padding: 6px 10px;
-                    border: 1px solid #BDC3C7;
+
+                /* شريط الأدوات / الأقسام */
+                #toolbarFrame, #summaryFrame, #tableFrame {{
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
                     border-radius: 4px;
-                    background-color: white;
-                    min-width: 100px;
-                    font-size: 16px;
-                    font-family: {font_family};
                 }}
-                
+
+                #filterLabel {{
+                    font-weight: 600;
+                    color: #37474F;
+                    margin-right: 4px;
+                    font-size: 13px;
+                }}
+
+                #filterCombo {{
+                    padding: 4px 6px;
+                    border: 1px solid #C3C7CA;
+                    border-radius: 3px;
+                    background: #FFFFFF;
+                    min-width: 85px;
+                    font-size: 12px;
+                }}
+
                 #searchInput {{
-                    padding: 8px 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 20px;
-                    font-size: 16px;
-                    background-color: white;
-                    font-family: {font_family};
+                    padding: 4px 10px;
+                    border: 1px solid #C3C7CA;
+                    border-radius: 14px;
+                    font-size: 12px;
+                    background-color: #FFFFFF;
                 }}
-                
-                /* الأزرار */
-                #primaryButton {{
-                    background-color: #9B59B6;
-                    border: 2px solid #8E44AD;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+                #searchInput:focus {{
+                    border: 1px solid #5B8DEF;
+                    background: #FFFFFF;
                 }}
-                
-                #groupButton {{
-                    background-color: #3498DB;
-                    border: 2px solid #2980B9;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+
+                /* أزرار مسطحة بألوان هادئة */
+                #primaryButton, #groupButton, #secondaryButton {{
+                    background-color: #FFFFFF;
+                    color: #2F3A40;
+                    border: 1px solid #B5BCC0;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    font-size: 12px;
                 }}
-                
-                #secondaryButton {{
-                    background-color: #27AE60;
-                    border: 2px solid #229954;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+                #primaryButton:hover, #groupButton:hover, #secondaryButton:hover {{
+                    background-color: #F0F3F5;
                 }}
-                
+                #primaryButton:pressed, #groupButton:pressed, #secondaryButton:pressed {{
+                    background-color: #E2E6E9;
+                }}
+
+                /* تخصيص تمييز أنماط مختلفة عبر ظل خفيف فقط */
+                #primaryButton {{ border-color: #8E44AD; color: #4A2F63; }}
+                #groupButton {{ border-color: #2980B9; color: #1F5375; }}
+                #secondaryButton {{ border-color: #229954; color: #1B5E33; }}
+
                 /* الجدول */
                 QTableWidget {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    gridline-color: #E3E6E8;
+                    font-size: 12px;
                 }}
-                
                 QTableWidget::item {{
-                    padding: 12px;
-                    border-bottom: 1px solid #E9ECEF;
-                    font-family: {font_family};
+                    border-bottom: 1px solid #EEF0F1;
                 }}
-                
-                /* Selected item */
                 QTableWidget::item:selected {{
-                    background-color: #3498DB;
-                    color: white;
+                    background-color: #5B8DEF;
+                    color: #FFFFFF;
                 }}
-                
                 QHeaderView::section {{
-                    background-color: #9B59B6;
-                    color: white;
-                    padding: 12px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    background: #ECEFF1;
+                    color: #37474F;
+                    padding: 4px 6px;
+                    border: 1px solid #D0D5D8;
+                    font-weight: 600;
+                    font-size: 12px;
+                }}
+
+                /* ملخص الإحصائيات */
+                #summaryTitle {{
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #37474F;
+                }}
+                #summaryLabel {{
+                    font-size: 11px;
+                    color: #455A64;
+                }}
+                #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
+                    font-size: 14px;
+                    font-weight: 700;
+                    padding: 2px 4px;
+                }}
+                #summaryValueSuccess {{ color: #1B5E20; }}
+                #summaryValueWarning {{ color: #B35C00; }}
+                #statLabel {{
+                    font-size: 11px;
+                    color: #546E7A;
                 }}
             """.format(font_family=cairo_font)
             
