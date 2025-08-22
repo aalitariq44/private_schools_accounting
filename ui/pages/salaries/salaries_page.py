@@ -62,17 +62,21 @@ class SalariesPage(QWidget):
             self.cairo_family = families[0] if families else "Arial"
             
             logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            # ضبط حجم الخط الافتراضي الأصغر الملائم للتصميم المبسط
+            self.setFont(QFont(self.cairo_family, 13))
             
         except Exception as e:
             logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
             self.cairo_family = "Arial"
+            self.setFont(QFont(self.cairo_family, 13))
 
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
         try:
             layout = QVBoxLayout(self)
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            # تقليل الهوامش والمسافات لتكثيف المحتوى على الشاشات الصغيرة
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
             self.create_toolbar(layout)
             self.create_salaries_table(layout)
@@ -124,8 +128,8 @@ class SalariesPage(QWidget):
             toolbar_frame = QFrame()
             toolbar_frame.setObjectName("toolbarFrame")
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(10)
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
 
             filters_layout = QHBoxLayout()
             
@@ -209,6 +213,7 @@ class SalariesPage(QWidget):
             summary_frame = QFrame()
             summary_frame.setObjectName("summaryFrame")
             summary_layout = QHBoxLayout(summary_frame)
+            summary_layout.setContentsMargins(8, 6, 8, 6)
             
             def create_stat_box(title, value_widget):
                 box = QVBoxLayout()
@@ -280,98 +285,84 @@ class SalariesPage(QWidget):
             
             style = """
                 QWidget {{
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: {font_family};
-                    font-size: 16px;
+                    font-size: 13px;
                 }}
-                #toolbarFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin-bottom: 10px;
+                #toolbarFrame, #summaryFrame {{
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
                 }}
+                #toolbarFrame {{ margin-bottom: 8px; }}
                 #filterLabel {{
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 5px;
-                    font-size: 16px;
+                    font-weight: 600;
+                    color: #333;
+                    margin-right: 4px;
+                    font-size: 12px;
                 }}
                 #filterCombo, #searchInput, QDateEdit {{
-                    padding: 8px 12px;
-                    border: 1px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    background-color: white;
+                    padding: 4px 8px;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    background-color: #FFFFFF;
                 }}
+                QPushButton {{
+                    background: #FFFFFF;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 12px;
+                }}
+                QPushButton:hover {{ background: #E9EEF2; }}
                 #primaryButton {{
-                    background-color: #F39C12; /* Orange color for salaries */
-                    border: none;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
+                    background: #2F6ED1;
+                    color: #FFFFFF;
+                    border: 1px solid #2F6ED1;
                 }}
-                #secondaryButton {{
-                    background-color: #27AE60;
-                    border: none;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                }}
+                #primaryButton:hover {{ background: #2559A8; }}
+                #secondaryButton {{ color: #2F6ED1; font-weight: 600; }}
+                #secondaryButton:hover {{ background: #E0ECFF; }}
                 QTableWidget {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    font-size: 16px;
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
+                    font-size: 12px;
+                    gridline-color: #E3E6E8;
                 }}
                 QTableWidget::item {{
-                    padding: 12px;
-                    border-bottom: 1px solid #E9ECEF;
+                    padding: 2px 4px;
+                    border-bottom: 1px solid #EDF0F2;
                 }}
                 QTableWidget::item:selected {{
-                    background-color: #3498DB;
-                    color: white;
+                    background: #2F6ED1;
+                    color: #FFFFFF;
                 }}
                 QHeaderView::section {{
-                    background-color: #F39C12; /* Orange color for salaries */
-                    color: white;
-                    padding: 12px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                }}
-                #summaryFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    padding: 15px;
+                    background: #F0F2F4;
+                    color: #222;
+                    padding: 4px 6px;
+                    border: 0px;
+                    border-right: 1px solid #D4D8DB;
+                    font-size: 12px;
+                    font-weight: 600;
                 }}
                 #summaryLabel {{
-                    font-size: 16px;
-                    color: #7F8C8D;
-                    font-weight: bold;
+                    font-size: 11px;
+                    color: #555;
+                    font-weight: 600;
                 }}
-                #summaryValue {{
-                    font-size: 22px;
-                    font-weight: bold;
-                    color: #E67E22;
-                }}
-                #summaryValueSuccess {{
-                    font-size: 22px;
-                    font-weight: bold;
-                    color: #27AE60;
-                }}
-                #summaryValueWarning {{
-                    font-size: 22px;
-                    font-weight: bold;
-                    color: #2980B9;
-                }}
-                #statLabel {{
+                #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
                     font-size: 14px;
-                    color: #7F8C8D;
+                    font-weight: 600;
+                }}
+                #summaryValue {{ color: #2F6ED1; }}
+                #summaryValueSuccess {{ color: #2E8B57; }}
+                #summaryValueWarning {{ color: #D17F2F; }}
+                #statLabel {{
+                    font-size: 11px;
+                    color: #666;
                 }}
             """.format(font_family=cairo_font)
             

@@ -84,8 +84,9 @@ class ExpensesPage(QWidget):
         try:
             # التخطيط الرئيسي
             layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            # تقليل الهوامش والمسافات لتناسب الشاشات الأصغر
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
             # رأس الصفحة
             self.create_header(layout)
@@ -112,7 +113,7 @@ class ExpensesPage(QWidget):
             header_frame.setObjectName("headerFrame")
             
             header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 15, 20, 15)
+            header_layout.setContentsMargins(10, 8, 10, 8)
             
             # عنوان ووصف الصفحة (عمودي)
             title_layout = QVBoxLayout()
@@ -162,8 +163,8 @@ class ExpensesPage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(10) # Added spacing between rows
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6) # مسافة أصغر بين الصفوف
             
             # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
@@ -268,7 +269,8 @@ class ExpensesPage(QWidget):
             # الجدول
             self.expenses_table = QTableWidget()
             self.expenses_table.setObjectName("dataTable")
-            self.expenses_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
+            # حشو بسيط لزيادة القابلية للقراءة مع الحفاظ على الكثافة
+            self.expenses_table.setStyleSheet("QTableWidget::item { padding: 2px; }")
 
             # إعداد أعمدة الجدول (بدون عمود الإجراءات)
             columns = ["المعرف", "الوصف", "المبلغ", "النوع", "التاريخ", "المدرسة", "الملاحظات"]
@@ -306,7 +308,7 @@ class ExpensesPage(QWidget):
             stats_frame.setObjectName("detailedStatsFrame")
             
             stats_layout = QHBoxLayout(stats_frame)
-            stats_layout.setContentsMargins(15, 10, 15, 10)
+            stats_layout.setContentsMargins(8, 6, 8, 6)
             
             # إحصائيات تفصيلية
             self.total_expenses_label = QLabel("إجمالي المصروفات: 0")
@@ -776,197 +778,91 @@ class ExpensesPage(QWidget):
         """إعداد تنسيقات الصفحة"""
         try:
             style = """
-                /* الإطار الرئيسي */
+                /* قاعدة عامة */
                 QWidget {
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: 'Cairo', Arial, sans-serif;
-                    font-size: 18px;
+                    font-size: 13px;
                 }
-                
-                /* رأس الصفحة */
+                /* رأس مبسط */
                 #headerFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #DC3545, stop:1 #C82333);
-                    border-radius: 15px;
-                    color: white;
-                    margin-bottom: 15px;
-                    padding: 10px;
-                }
-                
-                #pageTitle {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: white;
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
                     margin-bottom: 8px;
                 }
-                
+                #pageTitle {
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #222;
+                    margin: 0 0 2px 0;
+                }
                 #pageDesc {
-                    font-size: 16px;
-                    color: #F8E5E5;
+                    font-size: 12px;
+                    color: #555;
+                    margin: 0;
                 }
-                
                 /* شريط الأدوات */
-                #toolbarFrame {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                    padding: 10px;
-                }
-                
-                #filterLabel {
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 8px;
-                    font-size: 16px;
-                }
-                
-                #filterCombo, #filterDate {
-                    padding: 8px 12px;
-                    border: 2px solid #BDC3C7;
+                #toolbarFrame, #detailedStatsFrame {
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
                     border-radius: 6px;
-                    background-color: white;
-                    min-width: 120px;
-                    font-size: 16px;
-                    margin: 3px;
                 }
-                
-                #searchInput {
-                    padding: 8px 15px;
-                    border: 2px solid #DC3545;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    background-color: white;
-                    margin: 3px;
-                    min-width: 250px; /* Increased min-width for search input */
-                }
-                
-                /* الأزرار */
-                #primaryButton {
-                    background-color: #DC3545;
-                    color: white;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 140px;
-                    font-size: 16px;
-                    margin: 3px;
-                }
-                
-                #primaryButton:hover {
-                    background-color: #C82333;
-                }
-                
-                #secondaryButton {
-                    background-color: #6C757D;
-                    color: white;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 140px;
-                    font-size: 16px;
-                    margin: 3px;
-                }
-                
-                #refreshButton {
-                    background-color: #FFC107;
-                    color: #212529;
-                    border: none;
-                    padding: 12px 25px;
-                    border-radius: 8px;
-                    font-weight: bold;
-                    min-width: 100px;
-                    font-size: 16px;
-                    margin: 3px;
-                }
-                
-                #editButton, #deleteButton {
-                    padding: 6px 12px;
+                #toolbarFrame { margin-bottom: 8px; }
+                #filterLabel { color: #333; font-size: 12px; font-weight: 600; }
+                #filterCombo, #filterDate, #searchInput {
+                    padding: 4px 8px;
+                    border: 1px solid #C5CBD0;
                     border-radius: 4px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    border: none;
-                    margin: 1px;
+                    background: #FFFFFF;
+                    font-size: 12px;
+                    min-width: 90px;
                 }
-                
-                #editButton {
-                    background-color: #17A2B8;
-                    color: white;
+                #searchInput { min-width: 180px; }
+                /* الأزرار العامة */
+                QPushButton {
+                    background: #FFFFFF;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    padding: 6px 12px;
+                    font-size: 12px;
                 }
-                
-                #deleteButton {
-                    background-color: #DC3545;
-                    color: white;
+                QPushButton:hover { background: #E9EEF2; }
+                #primaryButton {
+                    background: #2F6ED1;
+                    color: #FFFFFF;
+                    border: 1px solid #2F6ED1;
                 }
-                
+                #primaryButton:hover { background: #2559A8; }
+                #refreshButton { border-color: #2F6ED1; color: #2F6ED1; font-weight: 600; }
+                #refreshButton:hover { background: #E0ECFF; }
                 /* الجدول */
                 QTableWidget {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    gridline-color: #E9ECEF;
-                    font-size: 16px;
-                    margin: 10px 0px;
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
+                    gridline-color: #E3E6E8;
+                    font-size: 12px;
                 }
-                
-                QTableWidget::item {
-                    padding: 12px 8px;
-                    border-bottom: 1px solid #E9ECEF;
-                    font-size: 16px;
-                }
-                
-                QTableWidget::item:selected {
-                    background-color: #F8E5E5;
-                    color: #721C24;
-                }
-                
+                QTableWidget::item { padding: 2px 4px; }
+                QTableWidget::item:selected { background: #2F6ED1; color: #FFFFFF; }
                 QHeaderView::section {
-                    background-color: #DC3545;
-                    color: white;
-                    padding: 12px 8px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    border: none;
-                    border-right: 1px solid #C82333;
+                    background: #F0F2F4;
+                    color: #222;
+                    padding: 4px 6px;
+                    border: 0px;
+                    border-right: 1px solid #D4D8DB;
+                    font-size: 12px;
+                    font-weight: 600;
                 }
-                
                 /* الإحصائيات */
-                #summaryStatsFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #F8F9FA, stop:1 #E9ECEF);
-                    border: 2px solid #DEE2E6;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
-                    padding: 15px;
+                #summaryStatLabel, #detailStatLabel {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #333;
+                    margin: 2px 8px 2px 0;
                 }
-                
-                #summaryStatLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #DC3545;
-                    background-color: white;
-                    padding: 10px 20px;
-                    border-radius: 20px;
-                    margin: 5px;
-                    border: 2px solid #DC3545;
-                }
-                
-                #detailedStatsFrame {
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-top: 15px;
-                    padding: 15px;
-                }
-                
-                #detailStatLabel {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #495057;
-                    margin: 5px;
-                }
+                #detailStatLabel { color: #444; }
             """
             
             self.setStyleSheet(style)
@@ -983,17 +879,17 @@ class ExpensesPage(QWidget):
                 if font_id != -1:
                     font_families = QFontDatabase.applicationFontFamilies(font_id)
                     if font_families:
-                        cairo_font = QFont(font_families[0], 18)
+                        cairo_font = QFont(font_families[0], 13)
                         self.setFont(cairo_font)
                         logging.info("تم تحميل خط Cairo بنجاح في صفحة المصروفات")
                         return
                         
             # استخدام خط بديل
-            fallback_font = QFont("Arial", 18)
+            fallback_font = QFont("Arial", 13)
             self.setFont(fallback_font)
             logging.warning("تم استخدام خط Arial كبديل لخط Cairo في صفحة المصروفات")
             
         except Exception as e:
             logging.error(f"خطأ في إعداد خط Cairo في صفحة المصروفات: {e}")
-            fallback_font = QFont("Arial", 18)
+            fallback_font = QFont("Arial", 13)
             self.setFont(fallback_font)
