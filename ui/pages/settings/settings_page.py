@@ -47,23 +47,23 @@ class SettingsPage(QWidget):
                 if font_id != -1:
                     families = QFontDatabase.applicationFontFamilies(font_id)
                     if families:
-                        self.setFont(QFont(families[0], 18))
+                        self.setFont(QFont(families[0], 13))
                         logging.info("تم تحميل خط Cairo بنجاح في صفحة الإعدادات")
                         return
             # بديل
-            self.setFont(QFont("Arial", 18))
+            self.setFont(QFont("Arial", 13))
             logging.warning("تم استخدام خط Arial كبديل لخط Cairo في صفحة الإعدادات")
         except Exception as e:
             logging.error(f"خطأ في إعداد خط Cairo في صفحة الإعدادات: {e}")
-            self.setFont(QFont("Arial", 18))
+            self.setFont(QFont("Arial", 13))
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
         try:
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
-            main_layout.setContentsMargins(20, 20, 20, 20)
-            main_layout.setSpacing(20)
+            main_layout.setContentsMargins(8, 8, 8, 8)
+            main_layout.setSpacing(8)
             
             # العنوان
             self.create_header(main_layout)
@@ -75,7 +75,7 @@ class SettingsPage(QWidget):
             
             scroll_widget = QWidget()
             scroll_layout = QVBoxLayout()
-            scroll_layout.setSpacing(20)
+            scroll_layout.setSpacing(8)
             
             # إعدادات المؤسسة
             self.create_organization_section(scroll_layout)
@@ -119,7 +119,7 @@ class SettingsPage(QWidget):
             title_label = QLabel("إعدادات التطبيق")
             title_label.setObjectName("pageTitle")
             title_font = QFont()
-            title_font.setPointSize(18)
+            title_font.setPointSize(13)
             title_font.setBold(True)
             title_label.setFont(title_font)
             
@@ -139,11 +139,11 @@ class SettingsPage(QWidget):
             organization_group = QGroupBox("معلومات المؤسسة")
             organization_group.setObjectName("settingsGroup")
             organization_layout = QGridLayout()
-            organization_layout.setSpacing(15)
+            organization_layout.setSpacing(8)
             
             # تسمية اسم المؤسسة
             org_label = QLabel("اسم المؤسسة:")
-            org_label.setFont(QFont("Arial", 11))
+            org_label.setFont(QFont("Arial", 11))  # يمكن خفضه لاحقاً إذا لزم
             
             # حقل عرض اسم المؤسسة (غير قابل للتعديل)
             self.organization_display = QLabel()
@@ -185,7 +185,7 @@ class SettingsPage(QWidget):
             mobile_group = QGroupBox("إعدادات التطبيق المحمول")
             mobile_group.setObjectName("settingsGroup")
             mobile_layout = QGridLayout()
-            mobile_layout.setSpacing(15)
+            mobile_layout.setSpacing(8)
             
             # تسمية كلمة المرور
             password_label = QLabel("كلمة مرور تسجيل الدخول في الهاتف:")
@@ -208,7 +208,7 @@ class SettingsPage(QWidget):
             # زر إدارة كلمة المرور
             manage_password_btn = QPushButton("إدارة كلمة المرور")
             manage_password_btn.setObjectName("mobileButton")
-            manage_password_btn.setMinimumHeight(40)
+            manage_password_btn.setMinimumHeight(30)
             manage_password_btn.clicked.connect(self.manage_mobile_password)
             
             # نص توضيحي
@@ -238,7 +238,7 @@ class SettingsPage(QWidget):
             academic_group = QGroupBox("إعدادات العام الدراسي")
             academic_group.setObjectName("settingsGroup")
             academic_layout = QGridLayout()
-            academic_layout.setSpacing(15)
+            academic_layout.setSpacing(8)
             
             # تسمية العام الدراسي
             year_label = QLabel("العام الدراسي الحالي:")
@@ -246,7 +246,7 @@ class SettingsPage(QWidget):
             
             # قائمة الأعوام الدراسية
             self.academic_year_combo = QComboBox()
-            self.academic_year_combo.setMinimumHeight(35)
+            self.academic_year_combo.setMinimumHeight(28)
             self.academic_year_combo.setFont(QFont("Arial", 11))
             
             # ملء قائمة الأعوام
@@ -255,7 +255,7 @@ class SettingsPage(QWidget):
             # زر الحفظ
             save_year_btn = QPushButton("حفظ العام الدراسي")
             save_year_btn.setObjectName("primaryButton")
-            save_year_btn.setMinimumHeight(40)
+            save_year_btn.setMinimumHeight(30)
             save_year_btn.clicked.connect(self.save_academic_year)
             
             # إضافة العناصر للتخطيط
@@ -279,7 +279,7 @@ class SettingsPage(QWidget):
             security_group = QGroupBox("إعدادات الأمان")
             security_group.setObjectName("settingsGroup")
             security_layout = QGridLayout()
-            security_layout.setSpacing(15)
+            security_layout.setSpacing(8)
             
             # تسمية كلمة المرور
             password_label = QLabel("كلمة المرور:")
@@ -288,7 +288,7 @@ class SettingsPage(QWidget):
             # زر تغيير كلمة المرور
             change_password_btn = QPushButton("تغيير كلمة المرور")
             change_password_btn.setObjectName("secondaryButton")
-            change_password_btn.setMinimumHeight(40)
+            change_password_btn.setMinimumHeight(30)
             change_password_btn.clicked.connect(self.change_password)
             
             # إضافة العناصر للتخطيط
@@ -450,7 +450,7 @@ class SettingsPage(QWidget):
             advanced_group = QGroupBox("الإعدادات المتقدمة")
             advanced_group.setObjectName("settingsGroup")
             advanced_layout = QGridLayout()
-            advanced_layout.setSpacing(15)
+            advanced_layout.setSpacing(8)
             
             # تسمية الإعدادات المتقدمة
             advanced_label = QLabel("إدارة المدارس:")
@@ -459,7 +459,7 @@ class SettingsPage(QWidget):
             # زر الإعدادات المتقدمة
             advanced_btn = QPushButton("الإعدادات المتقدمة")
             advanced_btn.setObjectName("advancedButton")
-            advanced_btn.setMinimumHeight(40)
+            advanced_btn.setMinimumHeight(30)
             advanced_btn.clicked.connect(self.open_advanced_settings)
             
             # نص توضيحي
@@ -494,162 +494,26 @@ class SettingsPage(QWidget):
         """إعداد أنماط الصفحة"""
         try:
             self.setStyleSheet("""
-                QWidget {
-                    background-color: #f8f9fa;
-                    font-family: 'Cairo', Arial, sans-serif;
-                    font-size: 18px;
-                }
-                
-                #pageTitle {
-                    color: #2c3e50;
-                    padding: 10px 0;
-                }
-                
-                QGroupBox {
-                    font-size: 14px;
-                    font-weight: bold;
-                    color: #34495e;
-                    border: 2px solid #bdc3c7;
-                    border-radius: 8px;
-                    margin-top: 1ex;
-                    padding-top: 15px;
-                    background-color: white;
-                }
-                
-                QGroupBox::title {
-                    subcontrol-origin: margin;
-                    left: 10px;
-                    padding: 0 10px 0 10px;
-                    background-color: white;
-                }
-                
-                QLabel {
-                    color: #2c3e50;
-                    font-weight: 500;
-                }
-                
-                QComboBox {
-                    border: 2px solid #bdc3c7;
-                    border-radius: 6px;
-                    padding: 8px;
-                    background-color: white;
-                    color: #2c3e50;
-                    min-width: 200px;
-                }
-                
-                QComboBox:focus {
-                    border-color: #3498db;
-                }
-                
-                QComboBox::drop-down {
-                    border: none;
-                    width: 30px;
-                }
-                
-                QComboBox::down-arrow {
-                    image: none;
-                    border: 5px solid transparent;
-                    border-top: 8px solid #7f8c8d;
-                    margin-right: 5px;
-                }
-                
-                QPushButton#primaryButton {
-                    background-color: #3498db;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 10px 20px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    min-width: 150px;
-                }
-                
-                QPushButton#primaryButton:hover {
-                    background-color: #2980b9;
-                }
-                
-                QPushButton#primaryButton:pressed {
-                    background-color: #21618c;
-                }
-                
-                QPushButton#secondaryButton {
-                    background-color: #e74c3c;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 10px 20px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    min-width: 150px;
-                }
-                
-                QPushButton#secondaryButton:hover {
-                    background-color: #c0392b;
-                }
-                
-                QPushButton#secondaryButton:pressed {
-                    background-color: #a93226;
-                }
-                
-                QPushButton#advancedButton {
-                    background-color: #6f42c1;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 8px 16px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    min-width: 150px;
-                }
-                
-                QPushButton#advancedButton:hover {
-                    background-color: #5a2d91;
-                }
-                
-                QPushButton#advancedButton:pressed {
-                    background-color: #4c1d7a;
-                }
-                
-                QPushButton#mobileButton {
-                    background-color: #17a2b8;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    padding: 8px 16px;
-                    font-weight: bold;
-                    font-size: 12px;
-                    min-width: 150px;
-                }
-                
-                QPushButton#mobileButton:hover {
-                    background-color: #138496;
-                }
-                
-                QPushButton#mobileButton:pressed {
-                    background-color: #117a8b;
-                }
-                
-                QScrollArea {
-                    border: none;
-                    background-color: transparent;
-                }
-                
-                QScrollBar:vertical {
-                    border: none;
-                    background-color: #ecf0f1;
-                    width: 12px;
-                    border-radius: 6px;
-                }
-                
-                QScrollBar::handle:vertical {
-                    background-color: #bdc3c7;
-                    border-radius: 6px;
-                    min-height: 30px;
-                }
-                
-                QScrollBar::handle:vertical:hover {
-                    background-color: #95a5a6;
-                }
+                QWidget { background:#F5F6F7; font-family:'Cairo','Arial'; font-size:13px; }
+                #pageTitle { color:#2C3E50; padding:4px 0; font-size:13px; font-weight:600; }
+                QGroupBox { font-size:12px; font-weight:600; color:#2C3E50; border:1px solid #DDE1E4; border-radius:6px; margin-top:6px; background:#FFFFFF; padding:8px 8px 10px 8px; }
+                QGroupBox::title { subcontrol-origin: margin; left:8px; padding:0 4px; background:#FFFFFF; }
+                QLabel { color:#2C3E50; font-weight:500; font-size:12px; }
+                QComboBox { border:1px solid #C5CBD0; border-radius:4px; padding:2px 6px; background:#FFFFFF; min-height:24px; font-size:12px; }
+                QComboBox:focus { border:1px solid #2F6ED1; }
+                QPushButton { background:#FFFFFF; color:#2F6ED1; border:1px solid #C5CBD0; border-radius:4px; padding:4px 10px; font-size:12px; font-weight:600; }
+                QPushButton:hover { background:#2F6ED1; color:#FFFFFF; }
+                QPushButton:pressed { background:#2559A8; }
+                QPushButton#secondaryButton { color:#C0392B; border:1px solid #D19990; }
+                QPushButton#secondaryButton:hover { background:#C0392B; color:#FFFFFF; }
+                QPushButton#advancedButton { color:#5A2D91; border:1px solid #B9A9D3; }
+                QPushButton#advancedButton:hover { background:#5A2D91; color:#FFFFFF; }
+                QPushButton#mobileButton { color:#117a8b; border:1px solid #82C8D3; }
+                QPushButton#mobileButton:hover { background:#117a8b; color:#FFFFFF; }
+                QScrollArea { border:none; background:transparent; }
+                QScrollBar:vertical { border:none; background:#E2E5E8; width:10px; border-radius:5px; }
+                QScrollBar::handle:vertical { background:#C5CBD0; border-radius:5px; min-height:24px; }
+                QScrollBar::handle:vertical:hover { background:#AEB5BA; }
             """)
             
         except Exception as e:
