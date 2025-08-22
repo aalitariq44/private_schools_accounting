@@ -179,6 +179,14 @@ class EditStudentDialog(QDialog):
         self.gender_combo.addItems(["ذكر", "أنثى"])
         basic_layout.addRow("الجنس:", self.gender_combo)
         
+        # تاريخ الميلاد
+        self.birthdate_edit = QDateEdit()
+        self.birthdate_edit.setDate(QDate.currentDate().addYears(-10))  # تاريخ افتراضي منذ 10 سنوات
+        self.birthdate_edit.setCalendarPopup(True)
+        self.birthdate_edit.setDisplayFormat("yyyy-MM-dd")
+        self.birthdate_edit.setMaximumDate(QDate.currentDate())  # لا يمكن اختيار تاريخ مستقبلي
+        basic_layout.addRow("تاريخ الميلاد:", self.birthdate_edit)
+        
         content_layout.addWidget(basic_info_group)
         
         # مجموعة المعلومات الأكاديمية
@@ -294,6 +302,12 @@ class EditStudentDialog(QDialog):
                 index = self.gender_combo.findText(student['gender'])
                 if index != -1:
                     self.gender_combo.setCurrentIndex(index)
+                
+                # Set birthdate
+                if student['birthdate']:
+                    birthdate = QDate.fromString(student['birthdate'], "yyyy-MM-dd")
+                    if birthdate.isValid():
+                        self.birthdate_edit.setDate(birthdate)
                 
                 # Set school and grade, blocking signals to prevent premature updates
                 self.school_combo.blockSignals(True)
@@ -447,7 +461,7 @@ class EditStudentDialog(QDialog):
             update_query = """
                 UPDATE students SET
                     name = ?, school_id = ?, grade = ?,
-                    section = ?, gender = ?, phone = ?,
+                    section = ?, gender = ?, birthdate = ?, phone = ?,
                     total_fee = ?, start_date = ?, status = ?
                 WHERE id = ?
             """
@@ -462,6 +476,7 @@ class EditStudentDialog(QDialog):
                 self.grade_combo.currentData(),
                 self.section_combo.currentText(),
                 self.gender_combo.currentText(),
+                self.birthdate_edit.date().toString("yyyy-MM-dd"),
                 self.phone_edit.text().strip(),
                 total_fee,
                 self.start_date_edit.date().toString("yyyy-MM-dd"),

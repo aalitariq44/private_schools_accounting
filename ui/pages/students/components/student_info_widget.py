@@ -89,6 +89,9 @@ class StudentInfoWidget(QWidget):
             self.gender_label = QLabel("--")
             self.gender_label.setObjectName("infoValue")
             
+            self.birthdate_label = QLabel("--")
+            self.birthdate_label.setObjectName("infoValue")
+            
             self.phone_label = QLabel("--")
             self.phone_label.setObjectName("infoValue")
             
@@ -112,17 +115,19 @@ class StudentInfoWidget(QWidget):
             grid_layout.addWidget(self.grade_label, 1, 1)
             grid_layout.addWidget(QLabel("الشعبة:"), 1, 2)
             grid_layout.addWidget(self.section_label, 1, 3)
-            grid_layout.addWidget(QLabel("الهاتف:"), 1, 4)
-            grid_layout.addWidget(self.phone_label, 1, 5)
+            grid_layout.addWidget(QLabel("تاريخ الميلاد:"), 1, 4)
+            grid_layout.addWidget(self.birthdate_label, 1, 5)
             
             # الصف الثالث
-            grid_layout.addWidget(QLabel("الحالة:"), 2, 0)
-            grid_layout.addWidget(self.status_label, 2, 1)
-            grid_layout.addWidget(QLabel("تاريخ المباشرة:"), 2, 2)
-            grid_layout.addWidget(self.start_date_label, 2, 3)
+            grid_layout.addWidget(QLabel("الهاتف:"), 2, 0)
+            grid_layout.addWidget(self.phone_label, 2, 1)
+            grid_layout.addWidget(QLabel("الحالة:"), 2, 2)
+            grid_layout.addWidget(self.status_label, 2, 3)
+            grid_layout.addWidget(QLabel("تاريخ المباشرة:"), 2, 4)
+            grid_layout.addWidget(self.start_date_label, 2, 5)
             
-            # إضافة الملاحظات في نفس الصف مع تاريخ المباشرة
-            grid_layout.addWidget(QLabel("ملاحظات:"), 2, 4)
+            # الصف الرابع - الملاحظات
+            grid_layout.addWidget(QLabel("ملاحظات:"), 3, 0)
             
             # إنشاء حقل الملاحظات المصغر
             self.notes_display = QLabel("--")
@@ -147,7 +152,7 @@ class StudentInfoWidget(QWidget):
             """)
             # إضافة إمكانية تعديل الملاحظات بالنقر المزدوج
             self.notes_display.mouseDoubleClickEvent = self.edit_notes_dialog
-            grid_layout.addWidget(self.notes_display, 2, 5)
+            grid_layout.addWidget(self.notes_display, 3, 1, 1, 5)  # دمج عبر 5 أعمدة
             
             info_layout.addLayout(grid_layout)
             layout.addWidget(info_frame)
@@ -203,6 +208,7 @@ class StudentInfoWidget(QWidget):
                 self.grade_label.setText("--")
                 self.section_label.setText("--")
                 self.gender_label.setText("--")
+                self.birthdate_label.setText("--")
                 self.phone_label.setText("--")
                 self.status_label.setText("--")
                 self.start_date_label.setText("--")
@@ -223,8 +229,16 @@ class StudentInfoWidget(QWidget):
             self.grade_label.setText(str(student_data[4]))  # grade
             self.section_label.setText(str(student_data[5]))  # section
             self.gender_label.setText(str(student_data[7]))  # gender
-            self.phone_label.setText(str(student_data[8] or "--"))  # phone
-            self.status_label.setText(str(student_data[13]))  # status
+            
+            # تاريخ الميلاد
+            birthdate = student_data.get('birthdate') if hasattr(student_data, 'get') else (student_data[8] if len(student_data) > 8 else None)
+            if birthdate:
+                self.birthdate_label.setText(str(birthdate))
+            else:
+                self.birthdate_label.setText("--")
+            
+            self.phone_label.setText(str(student_data[9] or "--"))  # phone (updated index)
+            self.status_label.setText(str(student_data[14]))  # status (updated index)
             # تغيير لون خلفية حقل الحالة بناءً على النص
             status_text = self.status_label.text()
             if status_text == "منتقل":
@@ -243,10 +257,10 @@ class StudentInfoWidget(QWidget):
             
             # تحديث القسط الكلي
             try:
-                total_fee = float(student_data[11])
+                total_fee = float(student_data[12])  # updated index for total_fee after adding birthdate
                 self.total_fee_label.setText(f"القسط الكلي: {total_fee:,.0f} د.ع")
             except (ValueError, TypeError):
-                logging.error(f"خطأ في تحويل القسط الكلي: {student_data[11]}")
+                logging.error(f"خطأ في تحويل القسط الكلي: {student_data[12]}")
                 self.total_fee_label.setText("القسط الكلي: 0 د.ع")
             
         except Exception as e:
@@ -276,9 +290,9 @@ class StudentInfoWidget(QWidget):
             
             # القسط الكلي
             try:
-                total_fee = float(self.student_data[11])
+                total_fee = float(self.student_data[12])  # updated index for total_fee after adding birthdate
             except (ValueError, TypeError):
-                logging.error(f"خطأ في تحويل القسط الكلي: {self.student_data[11]}")
+                logging.error(f"خطأ في تحويل القسط الكلي: {self.student_data[12]}")
                 total_fee = 0
             
             # المتبقي
@@ -330,6 +344,7 @@ class StudentInfoWidget(QWidget):
             "grade": self.grade_label.text(),
             "section": self.section_label.text(),
             "gender": self.gender_label.text(),
+            "birthdate": self.birthdate_label.text(),
             "phone": self.phone_label.text(),
             "status": self.status_label.text(),
             "start_date": self.start_date_label.text()

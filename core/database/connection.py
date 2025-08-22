@@ -116,6 +116,7 @@ class DatabaseManager:
                         section TEXT NOT NULL,
                         academic_year TEXT,
                         gender TEXT NOT NULL,
+                        birthdate DATE,
                         phone TEXT,
                         guardian_name TEXT,
                         guardian_phone TEXT,
