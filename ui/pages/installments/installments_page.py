@@ -72,8 +72,9 @@ class InstallmentsPage(QWidget):
         try:
             # التخطيط الرئيسي
             layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
+            # تقليل الهوامش والمسافات لتناسب الشاشات الصغيرة (1366x768)
+            layout.setContentsMargins(8, 8, 8, 8)
+            layout.setSpacing(8)
             
             # العنوان الرئيسي
             self.create_page_header(layout)
@@ -100,7 +101,7 @@ class InstallmentsPage(QWidget):
             header_frame.setObjectName("headerFrame")
             
             header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 15, 20, 15)
+            header_layout.setContentsMargins(10, 8, 10, 8)
             
             # العنوان والوصف
             text_layout = QVBoxLayout()
@@ -141,11 +142,12 @@ class InstallmentsPage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QVBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
-            toolbar_layout.setSpacing(10)
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
             
             # الصف الأول - فلاتر أساسية
             filters_layout = QHBoxLayout()
+            filters_layout.setSpacing(6)
             
             # اختيار المدرسة
             school_label = QLabel("المدرسة:")
@@ -174,6 +176,7 @@ class InstallmentsPage(QWidget):
             
             # الصف الثاني - فلاتر التاريخ والعمليات
             actions_layout = QHBoxLayout()
+            actions_layout.setSpacing(6)
             
             # فلتر تاريخ الاستحقاق
             due_date_label = QLabel("تاريخ الاستحقاق من:")
@@ -269,7 +272,7 @@ class InstallmentsPage(QWidget):
             self.installments_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.installments_table.customContextMenuRequested.connect(self.show_context_menu)
             # Remove extra padding to match row height of students table
-            self.installments_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
+            self.installments_table.setStyleSheet("QTableWidget::item { padding: 2px; }")
             
             table_layout.addWidget(self.installments_table)
             layout.addWidget(table_frame)
@@ -285,7 +288,7 @@ class InstallmentsPage(QWidget):
             summary_frame.setObjectName("summaryFrame")
             
             summary_layout = QHBoxLayout(summary_frame)
-            summary_layout.setContentsMargins(15, 10, 15, 10)
+            summary_layout.setContentsMargins(8, 6, 8, 6)
             
             # ملخص الأرقام
             numbers_layout = QVBoxLayout()
@@ -595,114 +598,127 @@ class InstallmentsPage(QWidget):
             # استخدام خط Cairo المحمل
             cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
             
+            # تصميم مبسط متوافق مع الشاشات الصغيرة – تقليل الأحجام والألوان الثقيلة
             style = """
-                /* الإطار الرئيسي */
                 QWidget {{
-                    background-color: #F8F9FA;
+                    background-color: #F5F6F7;
                     font-family: {font_family};
-                    font-size: 16px;
-                }}
-                
-                /* رأس الصفحة */
-                #headerFrame {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #2E86AB, stop:1 #A23B72);
-                    border-radius: 10px;
-                    color: white;
-                    margin-bottom: 10px;
-                }}
-                
-                #pageTitle {{
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 5px;
-                    font-family: {font_family};
-                }}
-                
-                #pageDesc {{
-                    font-size: 16px;
-                    color: #E8DAEF;
-                    font-family: {font_family};
-                }}
-                
-                /* شريط الأدوات */
-                #toolbarFrame {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin-bottom: 10px;
-                }}
-                
-                #filterLabel {{
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-right: 5px;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                #filterCombo {{
-                    padding: 6px 10px;
-                    border: 1px solid #BDC3C7;
-                    border-radius: 4px;
-                    background-color: white;
-                    min-width: 100px;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                /* الأزرار */
-                #primaryButton {{
-                    background-color: #2E86AB;
-                    border: 2px solid #1F5F8B;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                #secondaryButton {{
-                    background-color: #27AE60;
-                    border: 2px solid #229954;
-                    color: white;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                /* الجدول */
-                QTableWidget {{
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 8px;
-                    font-size: 16px;
-                    font-family: {font_family};
-                }}
-                
-                QTableWidget::item {{
-                    padding: 12px;
-                    border-bottom: 1px solid #E9ECEF;
-                    font-family: {font_family};
+                    font-size: 13px;
                 }}
 
-                QTableWidget::item:selected {{
-                    background-color: #2E86AB;
-                    color: white;
+                /* رأس الصفحة مبسط */
+                #headerFrame {{
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 4px;
+                    margin-bottom: 6px;
                 }}
-                
+                #pageTitle {{
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: #37474F;
+                    margin: 0;
+                }}
+                #pageDesc {{
+                    font-size: 11px;
+                    color: #607D8B;
+                    margin-top: 2px;
+                }}
+                #quickStat {{
+                    background: #F0F3F5;
+                    color: #37474F;
+                    border: 1px solid #D0D5D8;
+                    padding: 4px 10px;
+                    border-radius: 14px;
+                    font-size: 11px;
+                    font-weight: 600;
+                }}
+
+                /* إطارات عامة */
+                #toolbarFrame, #summaryFrame, #tableFrame {{
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 4px;
+                }}
+
+                #filterLabel {{
+                    font-weight: 600;
+                    color: #37474F;
+                    margin-right: 4px;
+                    font-size: 12px;
+                }}
+                #filterCombo, #dateInput {{
+                    padding: 4px 6px;
+                    border: 1px solid #C3C7CA;
+                    border-radius: 3px;
+                    background: #FFFFFF;
+                    min-width: 90px;
+                    font-size: 12px;
+                }}
+                #dateInput:focus, #filterCombo:focus {{
+                    border: 1px solid #5B8DEF;
+                }}
+
+                /* الأزرار المسطحة */
+                #primaryButton, #secondaryButton {{
+                    background: #FFFFFF;
+                    color: #2F3A40;
+                    border: 1px solid #B5BCC0;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    font-size: 12px;
+                }}
+                #primaryButton:hover, #secondaryButton:hover {{
+                    background: #F0F3F5;
+                }}
+                #primaryButton:pressed, #secondaryButton:pressed {{
+                    background: #E2E6E9;
+                }}
+                #secondaryButton {{ border-color: #229954; color: #1B5E33; }}
+
+                /* الجدول */
+                QTableWidget {{
+                    background: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    gridline-color: #E3E6E8;
+                    font-size: 12px;
+                }}
+                QTableWidget::item {{
+                    border-bottom: 1px solid #EEF0F1;
+                }}
+                QTableWidget::item:selected {{
+                    background: #5B8DEF;
+                    color: #FFFFFF;
+                }}
                 QHeaderView::section {{
-                    background-color: #2E86AB;
-                    color: white;
-                    padding: 12px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                    font-family: {font_family};
+                    background: #ECEFF1;
+                    color: #37474F;
+                    padding: 4px 6px;
+                    border: 1px solid #D0D5D8;
+                    font-weight: 600;
+                    font-size: 12px;
+                }}
+
+                /* الملخص */
+                #summaryTitle {{
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #37474F;
+                }}
+                #summaryLabel {{
+                    font-size: 11px;
+                    color: #455A64;
+                }}
+                #summaryValue {{
+                    font-size: 14px;
+                    font-weight: 700;
+                    padding: 2px 4px;
+                    color: #1B5E20;
+                }}
+                #statLabel {{
+                    font-size: 11px;
+                    color: #546E7A;
                 }}
             """.format(font_family=cairo_font)
             
