@@ -114,13 +114,7 @@ class AddGroupStudentsDialog(QDialog):
         self.gender_combo.setObjectName("inputCombo")
         self.gender_combo.addItems(["ذكر", "أنثى"])
         
-        # تاريخ الميلاد المشترك
-        self.birthdate_input = QDateEdit()
-        self.birthdate_input.setObjectName("inputField")
-        self.birthdate_input.setDate(QDate.currentDate().addYears(-10))  # تاريخ افتراضي منذ 10 سنوات
-        self.birthdate_input.setCalendarPopup(True)
-        self.birthdate_input.setDisplayFormat("yyyy-MM-dd")
-        self.birthdate_input.setMaximumDate(QDate.currentDate())  # لا يمكن اختيار تاريخ مستقبلي
+    # ...existing fields (gender etc.)
 
         # توزيع الحقول في صفين أفقيين
         # الصف الأول: المدرسة، الصف، الشعبة، الرسوم الدراسية
@@ -132,15 +126,13 @@ class AddGroupStudentsDialog(QDialog):
         shared_layout.addWidget(self.section_combo, 0, 5)
         shared_layout.addWidget(QLabel("الرسوم الدراسية:"), 0, 6)
         shared_layout.addWidget(self.total_fee_input, 0, 7)
-        # الصف الثاني: تاريخ المباشرة، الحالة، الجنس، تاريخ الميلاد
+    # الصف الثاني: تاريخ المباشرة، الحالة، الجنس
         shared_layout.addWidget(QLabel("تاريخ المباشرة:"), 1, 0)
         shared_layout.addWidget(self.start_date_input, 1, 1)
         shared_layout.addWidget(QLabel("الحالة:"), 1, 2)
         shared_layout.addWidget(self.status_combo, 1, 3)
         shared_layout.addWidget(QLabel("الجنس:"), 1, 4)
         shared_layout.addWidget(self.gender_combo, 1, 5)
-        shared_layout.addWidget(QLabel("تاريخ الميلاد:"), 1, 6)
-        shared_layout.addWidget(self.birthdate_input, 1, 7)
         
         shared_frame.setLayout(shared_layout)
         layout.addWidget(shared_frame)
@@ -428,8 +420,7 @@ class AddGroupStudentsDialog(QDialog):
                 'total_fee': self.total_fee_input.value(),
                 'start_date': self.start_date_input.date().toString('yyyy-MM-dd'),
                 'status': self.status_combo.currentText(),
-                'gender': self.gender_combo.currentText(),
-                'birthdate': self.birthdate_input.date().toString('yyyy-MM-dd')
+                'gender': self.gender_combo.currentText()
             }
             
             # جمع بيانات الطلاب
@@ -452,8 +443,8 @@ class AddGroupStudentsDialog(QDialog):
                     query = """
                         INSERT INTO students (
                             name, school_id, grade, section, phone, 
-                            total_fee, start_date, status, gender, birthdate
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            total_fee, start_date, status, gender
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     values = (
@@ -465,8 +456,7 @@ class AddGroupStudentsDialog(QDialog):
                         shared_data['total_fee'],
                         shared_data['start_date'],
                         shared_data['status'],
-                        shared_data['gender'],
-                        shared_data['birthdate']
+                        shared_data['gender']
                     )
                     
                     db_manager.execute_query(query, values)
