@@ -35,8 +35,9 @@ class DashboardPage(QWidget):
         try:
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
-            main_layout.setContentsMargins(10, 10, 10, 10)
-            main_layout.setSpacing(10)
+            # تقليل الهوامش والمسافات لتوفير مساحة رأسية
+            main_layout.setContentsMargins(8, 8, 8, 8)
+            main_layout.setSpacing(8)
             
             # إحصائيات سريعة
             self.create_statistics_section(main_layout)
@@ -64,7 +65,7 @@ class DashboardPage(QWidget):
             stats_frame.setObjectName("statsFrame")
             
             stats_layout = QVBoxLayout(stats_frame)
-            stats_layout.setContentsMargins(2, 2, 2, 2)
+            stats_layout.setContentsMargins(4, 4, 4, 4)
             
             # عنوان القسم
             stats_title = QLabel("الإحصائيات السريعة")
@@ -73,7 +74,7 @@ class DashboardPage(QWidget):
             
             # شبكة الإحصائيات
             stats_grid = QGridLayout()
-            stats_grid.setSpacing(1)
+            stats_grid.setSpacing(4)
             
 
             # إنشاء بطاقات الإحصائيات الجديدة
@@ -119,7 +120,7 @@ class DashboardPage(QWidget):
             
             layout = QHBoxLayout(card)
             layout.setAlignment(Qt.AlignCenter)
-            layout.setContentsMargins(10, 10, 10, 10)
+            layout.setContentsMargins(6, 6, 6, 6)
             
             # القيمة
             value_label = QLabel(value)
@@ -138,20 +139,19 @@ class DashboardPage(QWidget):
             # تطبيق اللون
             card.setStyleSheet(f"""
                 #statCard {{
-                    background-color: {color};
-                    border-radius: 3px;
-                    border: none;
-                    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+                    background: #FFFFFF;
+                    border:1px solid #DDE1E4;
+                    border-radius:6px;
                 }}
                 #statValue {{
-                    color: white;
-                    font-size: 18px;
-                    font-weight: bold;
+                    color: #2C3E50;
+                    font-size:14px;
+                    font-weight:600;
                 }}
                 #statTitle {{
-                    color: rgba(255, 255, 255, 0.9);
-                    font-size: 18px;
-                    font-weight: bold;
+                    color:#5F6B73;
+                    font-size:12px;
+                    font-weight:500;
                 }}
             """)
             
@@ -168,7 +168,7 @@ class DashboardPage(QWidget):
             actions_frame.setObjectName("actionsFrame")
             
             actions_layout = QVBoxLayout(actions_frame)
-            actions_layout.setContentsMargins(5, 5, 5, 5)
+            actions_layout.setContentsMargins(4, 4, 4, 4)
             
             # عنوان القسم
             actions_title = QLabel("الإجراءات السريعة")
@@ -177,7 +177,7 @@ class DashboardPage(QWidget):
             
             # أزرار الإجراءات
             buttons_layout = QHBoxLayout()
-            buttons_layout.setSpacing(5)
+            buttons_layout.setSpacing(6)
             
             # زر عرض المدارس
             add_school_btn = QPushButton("عرض المدارس")
@@ -219,7 +219,7 @@ class DashboardPage(QWidget):
             info_frame.setObjectName("infoFrame")
             
             info_layout = QVBoxLayout(info_frame)
-            info_layout.setContentsMargins(5, 5, 5, 5)
+            info_layout.setContentsMargins(4, 4, 4, 4)
             
             # عنوان القسم
             info_title = QLabel("معلومات النظام")
@@ -228,7 +228,7 @@ class DashboardPage(QWidget):
             
             # معلومات النظام
             info_grid = QGridLayout()
-            info_grid.setSpacing(3)
+            info_grid.setSpacing(4)
             
             # تاريخ آخر تحديث
             self.last_update_label = QLabel("آخر تحديث: جاري التحميل...")
@@ -483,59 +483,35 @@ class DashboardPage(QWidget):
         """إعداد تنسيقات الصفحة"""
         try:
             style = """
-                #dashboardHeader {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 20px;
-                    padding: 5px;
-                }
-                
-                #dashboardTitle {
-                    color: #2C3E50;
-                    font-size: 20px;
-                    font-weight: bold;
-                }
-                
+                QWidget { background:#F5F6F7; }
                 #statsFrame, #actionsFrame, #infoFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 20px;
+                    background:#FFFFFF;
+                    border:1px solid #DDE1E4;
+                    border-radius:6px;
+                    margin-bottom:8px;
+                    padding:4px 6px 6px;
                 }
-                
                 #sectionTitle {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 10px;
-                    padding-bottom: 8px;
-                    border-bottom: 1px solid #ECF0F1;
+                    font-size:13px;
+                    font-weight:600;
+                    color:#2C3E50;
+                    margin:0 0 4px 0;
+                    padding:0 0 4px 0;
+                    border-bottom:1px solid #E2E5E8;
                 }
-                
                 #actionButton {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3498DB, stop: 1 #2980B9);
-                    color: white;
-                    border: none;
-                    padding: 8px 15px;
-                    border-radius: 5px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    min-width: 120px;
+                    background:#FFFFFF;
+                    color:#2F6ED1;
+                    border:1px solid #C5CBD0;
+                    padding:4px 10px;
+                    border-radius:4px;
+                    font-size:12px;
+                    font-weight:600;
+                    min-width:100px;
                 }
-                
-                #actionButton:hover {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2980B9, stop: 1 #2573A7);
-                }
-                
-                #actionButton:pressed {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #21618C, stop: 1 #1E5A80);
-                }
-                
-                #infoLabel {
-                    color: #7F8C8D;
-                    font-size: 18px;
-                }
+                #actionButton:hover { background:#2F6ED1; color:#FFFFFF; }
+                #actionButton:pressed { background:#2559A8; }
+                #infoLabel { color:#5F6B73; font-size:12px; }
             """
             
             self.setStyleSheet(style)

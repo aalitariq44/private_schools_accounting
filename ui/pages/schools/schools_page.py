@@ -46,8 +46,9 @@ class SchoolsPage(QWidget):
         try:
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
-            main_layout.setContentsMargins(20, 20, 20, 20)
-            main_layout.setSpacing(15)
+            # هوامش ومسافات مضغوطة لتناسب الشاشات الأصغر
+            main_layout.setContentsMargins(8, 8, 8, 8)
+            main_layout.setSpacing(8)
             
             # شريط الأدوات العلوي
             self.create_toolbar(main_layout)
@@ -71,7 +72,8 @@ class SchoolsPage(QWidget):
             toolbar_frame.setObjectName("toolbarFrame")
             
             toolbar_layout = QHBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(15, 10, 15, 10)
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
             
             # عنوان الصفحة
             title_label = QLabel("إدارة المدارس")
@@ -169,7 +171,8 @@ class SchoolsPage(QWidget):
             status_frame.setObjectName("statusFrame")
             
             status_layout = QHBoxLayout(status_frame)
-            status_layout.setContentsMargins(15, 5, 15, 5)
+            status_layout.setContentsMargins(8, 4, 8, 4)
+            status_layout.setSpacing(6)
             
             # عداد المدارس
             self.schools_count_label = QLabel("العدد: 0")
@@ -625,157 +628,66 @@ class SchoolsPage(QWidget):
         """إعداد تنسيقات الصفحة"""
         try:
             style = """
+                QWidget { background: #F5F6F7; }
                 #toolbarFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 12px;
-                    margin-bottom: 15px;
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
+                    border-radius: 6px;
+                    margin-bottom: 8px;
                 }
-                
                 #pageTitle {
-                    font-size: 16px;
-                    font-weight: bold;
+                    font-size: 13px;
+                    font-weight: 600;
                     color: #2C3E50;
                 }
-                
                 #searchLabel {
-                    font-size: 16px;
-                    color: #7F8C8D;
-                    margin-right: 8px;
+                    font-size: 12px;
+                    color: #5F6B73;
+                    margin-right: 4px;
                 }
-                
                 #searchInput {
-                    padding: 10px 15px;
-                    border: 1px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    background-color: white;
-                    min-width: 250px;
+                    padding: 4px 8px;
+                    border: 1px solid #C5CBD0;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    background-color: #FFFFFF;
+                    min-width: 180px;
                 }
-                
-                #searchInput:focus {
-                    border-color: #3498DB;
-                    outline: none;
-                }
-                
-                #addButton {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #27AE60, stop: 1 #229954);
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    font-weight: bold;
-                }
-                
-                #addButton:hover {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #229954, stop: 1 #1E8449);
-                }
-                
+                #searchInput:focus { border:1px solid #2F6ED1; }
                 #refreshButton {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3498DB, stop: 1 #2980B9);
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 6px;
-                    font-size: 16px;
-                    font-weight: bold;
+                    background: #FFFFFF;
+                    color: #2F6ED1;
+                    border: 1px solid #C5CBD0;
+                    padding: 4px 10px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    font-weight: 600;
                 }
-                
-                #refreshButton:hover {
-                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #2980B9, stop: 1 #2573A7);
-                }
-                
+                #refreshButton:hover { background:#2F6ED1; color:#FFFFFF; border:1px solid #2F6ED1; }
+                #refreshButton:pressed { background:#2559A8; }
                 #tableFrame {
-                    background-color: white;
-                    border: 1px solid #E9ECEF;
-                    border-radius: 12px;
-                }
-                
-                #schoolsTable {
-                    border: none;
-                    background-color: white;
-                    gridline-color: #ECF0F1;
-                    font-size: 16px;
-                    selection-background-color: #D5DBDB;
-                }
-                
-                #schoolsTable::item {
-                    padding: 0px;
-                    border-bottom: 1px solid #ECF0F1;
-                }
-                
-                #schoolsTable::item:selected {
-                    background-color: #D5DBDB;
-                    color: #2C3E50;
-                }
-                
-                #schoolsTable QHeaderView::section {
-                    background-color: #34495E;
-                    color: white;
-                    padding: 12px 8px;
-                    border: none;
-                    font-weight: bold;
-                    font-size: 16px;
-                }
-                
-                #editButton {
-                    background-color: #F39C12;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    padding: 5px 10px;
-                    min-width: 70px;
-                }
-                
-                #editButton:hover {
-                    background-color: #E67E22;
-                }
-                
-                #deleteButton {
-                    background-color: #E74C3C;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    padding: 5px 10px;
-                    min-width: 70px;
-                }
-                
-                #deleteButton:hover {
-                    background-color: #C0392B;
-                }
-                
-                #detailsButton {
-                    background-color: #9B59B6;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    padding: 5px 10px;
-                    min-width: 70px;
-                }
-                
-                #detailsButton:hover {
-                    background-color: #8E44AD;
-                }
-                
-                #statusFrame {
-                    background-color: #ECF0F1;
-                    border: 1px solid #BDC3C7;
+                    background-color: #FFFFFF;
+                    border: 1px solid #DDE1E4;
                     border-radius: 6px;
-                    margin-top: 15px;
-                    padding: 10px 15px;
                 }
-                
-                #countLabel, #updateLabel {
-                    font-size: 16px;
-                    color: #7F8C8D;
+                #schoolsTable { border:none; background:#FFFFFF; gridline-color:#E2E5E8; font-size:12px; selection-background-color:#2F6ED1; selection-color:#FFFFFF; }
+                #schoolsTable::item { padding:0px; }
+                #schoolsTable QHeaderView::section {
+                    background:#F0F2F4;
+                    color:#2C3E50;
+                    padding:4px 6px;
+                    font-size:12px;
+                    font-weight:600;
+                    border:1px solid #D4D8DB;
                 }
+                #statusFrame {
+                    background:#FFFFFF;
+                    border:1px solid #DDE1E4;
+                    border-radius:6px;
+                    margin-top:8px;
+                    padding:4px 8px;
+                }
+                #countLabel, #updateLabel { font-size:12px; color:#5F6B73; }
             """
             
             self.setStyleSheet(style)
