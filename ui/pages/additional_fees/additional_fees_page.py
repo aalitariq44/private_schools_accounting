@@ -91,8 +91,10 @@ class AdditionalFeesPage(QWidget):
             # جدول الرسوم الإضافية
             self.create_fees_table(layout)
             
-            # إحصائيات وملخص
+            # إنشاء عناصر الملخص (لكن سنخفيها لإتاحة مساحة أكبر كما طلب المستخدم)
             self.create_summary(layout)
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.setVisible(False)
             
             self.setLayout(layout)
             
@@ -125,22 +127,10 @@ class AdditionalFeesPage(QWidget):
             header_layout.addLayout(text_layout)
             header_layout.addStretch()
             
-            # إحصائيات سريعة في الرأس
-            stats_layout = QHBoxLayout()
-            
-            self.total_fees_label = QLabel("إجمالي الرسوم: 0")
-            self.total_fees_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.total_fees_label)
-            
-            self.collected_amount_label = QLabel("المحصل: 0 د.ع")
-            self.collected_amount_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.collected_amount_label)
-            
-            self.pending_fees_label = QLabel("المستحق: 0 د.ع")
-            self.pending_fees_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.pending_fees_label)
-            
-            header_layout.addLayout(stats_layout)
+            # زر إحصائيات مفصلة بدلاً من الإحصائيات الظاهرة الدائمة لتوفير مساحة
+            self.detailed_stats_button = QPushButton("احصائيات مفصلة")
+            self.detailed_stats_button.setObjectName("secondaryButton")
+            header_layout.addWidget(self.detailed_stats_button)
             
             layout.addWidget(header_frame)
             
@@ -311,6 +301,8 @@ class AdditionalFeesPage(QWidget):
         try:
             summary_frame = QFrame()
             summary_frame.setObjectName("summaryFrame")
+            # تخزين المرجع حتى نتمكن من إخفائه لاحقاً
+            self.summary_frame = summary_frame
             
             summary_layout = QHBoxLayout(summary_frame)
             summary_layout.setContentsMargins(8, 6, 8, 6)
@@ -406,7 +398,8 @@ class AdditionalFeesPage(QWidget):
             
             summary_layout.addLayout(stats_layout)
             
-            layout.addWidget(summary_frame)
+            # لا نضيف الإطار إلى التخطيط الرئيسي لتوفير المساحة على الصفحة
+            # layout.addWidget(summary_frame)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الرسوم: {e}")
@@ -418,6 +411,8 @@ class AdditionalFeesPage(QWidget):
             self.export_fees_button.clicked.connect(self.export_fees)
             self.refresh_button.clicked.connect(self.refresh)
             self.clear_filters_button.clicked.connect(self.clear_filters)
+            if hasattr(self, 'detailed_stats_button'):
+                self.detailed_stats_button.clicked.connect(self.show_detailed_stats)
             
             # ربط الفلاتر
             self.school_combo.currentTextChanged.connect(self.on_school_changed)
@@ -642,62 +637,133 @@ class AdditionalFeesPage(QWidget):
     def update_summary(self):
         """تحديث ملخص الرسوم"""
         try:
-            # حساب الإجماليات للرسوم المعروضة
-            total_amount = 0
-            collected_amount = 0
-            pending_amount = 0
-            pending_count = 0
-            collected_count = 0
-            
-            # إحصائيات حسب النوع
-            type_amounts = {
-                "رسوم التسجيل": 0,
-                "الزي المدرسي": 0,
-                "الكتب": 0,
-                "القرطاسية": 0,
-                "رسم مخصص": 0
-            }
-            
-            for fee in self.current_fees:
-                # (id, student_name, school_name, fee_type, amount, paid, payment_date, notes, created_at)
-                amount = fee[4] or 0
-                paid = fee[5]
-                fee_type = fee[3] or ""
-                
-                total_amount += amount
-                
-                if paid:
-                    collected_amount += amount
-                    collected_count += 1
-                    if fee_type in type_amounts:
-                        type_amounts[fee_type] += amount
-                else:
-                    pending_amount += amount
-                    pending_count += 1
-            
-            # تحديث الملصقات الرئيسية
-            self.total_amount_value.setText(f"{total_amount:,.0f} د.ع")
-            self.collected_value.setText(f"{collected_amount:,.0f} د.ع")
-            self.pending_summary_value.setText(f"{pending_amount:,.0f} د.ع")
-            
-            # تحديث ملصقات الرأس
-            self.total_fees_label.setText(f"إجمالي الرسوم: {len(self.current_fees)}")
-            self.collected_amount_label.setText(f"المحصل: {collected_amount:,.0f} د.ع")
-            self.pending_fees_label.setText(f"المستحق: {pending_amount:,.0f} د.ع")
-            
-            # تحديث الإحصائيات حسب النوع
-            self.registration_fees_label.setText(f"رسوم تسجيل: {type_amounts['رسوم التسجيل']:,.0f} د.ع")
-            self.uniform_fees_label.setText(f"الزي المدرسي: {type_amounts['الزي المدرسي']:,.0f} د.ع")
-            self.books_fees_label.setText(f"الكتب: {type_amounts['الكتب']:,.0f} د.ع")
-            self.stationery_fees_label.setText(f"القرطاسية: {type_amounts['القرطاسية']:,.0f} د.ع")
-            self.custom_fees_label.setText(f"رسم مخصص: {type_amounts['رسم مخصص']:,.0f} د.ع")
-
-            # تحديث الإحصائيات الأخرى
-            self.pending_count_label.setText(f"الرسوم غير المدفوعة: {pending_count}")
-            self.collected_count_label.setText(f"الرسوم المدفوعة: {collected_count}")
+            stats = self.compute_stats()
+            # تحديث الملصقات إذا كانت موجودة (قد تكون مخفية)
+            if hasattr(self, 'total_amount_value'):
+                self.total_amount_value.setText(f"{stats['total_amount']:,.0f} د.ع")
+            if hasattr(self, 'collected_value'):
+                self.collected_value.setText(f"{stats['collected_amount']:,.0f} د.ع")
+            if hasattr(self, 'pending_summary_value'):
+                self.pending_summary_value.setText(f"{stats['pending_amount']:,.0f} د.ع")
+            if hasattr(self, 'total_fees_label'):
+                self.total_fees_label.setText(f"إجمالي الرسوم: {stats['fees_count']}")
+            if hasattr(self, 'collected_amount_label'):
+                self.collected_amount_label.setText(f"المحصل: {stats['collected_amount']:,.0f} د.ع")
+            if hasattr(self, 'pending_fees_label'):
+                self.pending_fees_label.setText(f"المستحق: {stats['pending_amount']:,.0f} د.ع")
+            if hasattr(self, 'registration_fees_label'):
+                self.registration_fees_label.setText(f"رسوم تسجيل: {stats['type_amounts']['رسوم التسجيل']:,.0f} د.ع")
+            if hasattr(self, 'uniform_fees_label'):
+                self.uniform_fees_label.setText(f"الزي المدرسي: {stats['type_amounts']['الزي المدرسي']:,.0f} د.ع")
+            if hasattr(self, 'books_fees_label'):
+                self.books_fees_label.setText(f"الكتب: {stats['type_amounts']['الكتب']:,.0f} د.ع")
+            if hasattr(self, 'stationery_fees_label'):
+                self.stationery_fees_label.setText(f"القرطاسية: {stats['type_amounts']['القرطاسية']:,.0f} د.ع")
+            if hasattr(self, 'custom_fees_label'):
+                self.custom_fees_label.setText(f"رسم مخصص: {stats['type_amounts']['رسم مخصص']:,.0f} د.ع")
+            if hasattr(self, 'pending_count_label'):
+                self.pending_count_label.setText(f"الرسوم غير المدفوعة: {stats['pending_count']}")
+            if hasattr(self, 'collected_count_label'):
+                self.collected_count_label.setText(f"الرسوم المدفوعة: {stats['collected_count']}")
             
         except Exception as e:
             logging.error(f"خطأ في تحديث ملخص الرسوم: {e}")
+
+    def compute_stats(self):
+        """حساب الإحصائيات وتجميعها في قاموس لإعادة الاستخدام"""
+        total_amount = 0
+        collected_amount = 0
+        pending_amount = 0
+        pending_count = 0
+        collected_count = 0
+        amounts_list = []
+
+        type_amounts = {
+            "رسوم التسجيل": 0,
+            "الزي المدرسي": 0,
+            "الكتب": 0,
+            "القرطاسية": 0,
+            "رسم مخصص": 0
+        }
+
+        for fee in self.current_fees:
+            amount = fee[4] or 0
+            paid = fee[5]
+            fee_type = fee[3] or ""
+            amounts_list.append(amount)
+            total_amount += amount
+            if paid:
+                collected_amount += amount
+                collected_count += 1
+                if fee_type in type_amounts:
+                    type_amounts[fee_type] += amount
+            else:
+                pending_amount += amount
+                pending_count += 1
+
+        avg_amount = (total_amount / len(self.current_fees)) if self.current_fees else 0
+        max_amount = max(amounts_list) if amounts_list else 0
+        min_amount = min(amounts_list) if amounts_list else 0
+
+        stats = {
+            'total_amount': total_amount,
+            'collected_amount': collected_amount,
+            'pending_amount': pending_amount,
+            'pending_count': pending_count,
+            'collected_count': collected_count,
+            'fees_count': len(self.current_fees),
+            'type_amounts': type_amounts,
+            'avg_amount': avg_amount,
+            'max_amount': max_amount,
+            'min_amount': min_amount
+        }
+        self.stats_data = stats
+        return stats
+
+    def show_detailed_stats(self):
+        """عرض نافذة منبثقة تحتوي على جميع الإحصائيات بالتفصيل"""
+        try:
+            stats = self.compute_stats()
+            dialog = QDialog(self)
+            dialog.setWindowTitle("الإحصائيات التفصيلية للرسوم الإضافية")
+            dialog.resize(450, 520)
+            layout = QVBoxLayout(dialog)
+
+            # عنوان
+            title = QLabel("ملخص تفصيلي")
+            title.setStyleSheet("font-weight:700;font-size:14px;margin-bottom:4px;")
+            layout.addWidget(title)
+
+            # أرقام عامة
+            general = QTextEdit()
+            general.setReadOnly(True)
+            general.setStyleSheet("background:#FAFAFA;border:1px solid #DDD;font-family:'{}';font-size:12px;".format(self.cairo_family))
+            lines = []
+            lines.append(f"عدد السجلات: {stats['fees_count']}")
+            lines.append(f"إجمالي المبالغ: {stats['total_amount']:,.0f} د.ع")
+            lines.append(f"المبالغ المحصلة: {stats['collected_amount']:,.0f} د.ع")
+            lines.append(f"المبالغ المستحقة: {stats['pending_amount']:,.0f} د.ع")
+            lines.append(f"عدد الرسوم المدفوعة: {stats['collected_count']}")
+            lines.append(f"عدد الرسوم غير المدفوعة: {stats['pending_count']}")
+            lines.append("")
+            lines.append(f"متوسط المبلغ: {stats['avg_amount']:,.2f} د.ع")
+            lines.append(f"أعلى مبلغ: {stats['max_amount']:,.0f} د.ع")
+            lines.append(f"أقل مبلغ: {stats['min_amount']:,.0f} د.ع")
+            lines.append("")
+            lines.append("إجمالي حسب النوع (مدفوع):")
+            for t, val in stats['type_amounts'].items():
+                lines.append(f" - {t}: {val:,.0f} د.ع")
+            general.setPlainText("\n".join(lines))
+            layout.addWidget(general)
+
+            close_btn = QPushButton("إغلاق")
+            close_btn.clicked.connect(dialog.accept)
+            layout.addWidget(close_btn, alignment=Qt.AlignRight)
+
+            dialog.exec_()
+        except Exception as e:
+            logging.error(f"خطأ في عرض الإحصائيات التفصيلية: {e}")
+
     
     def apply_filters(self):
         """تطبيق الفلاتر وإعادة تحميل البيانات"""
