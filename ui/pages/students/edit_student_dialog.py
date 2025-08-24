@@ -7,7 +7,7 @@ import json
 from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, 
                             QLabel, QLineEdit, QComboBox, QDateEdit, QTextEdit,
                             QPushButton, QFrame, QMessageBox, QFileDialog,
-                            QGroupBox, QSpinBox, QScrollArea, QWidget)
+                            QGroupBox, QSpinBox, QScrollArea, QWidget, QApplication)
 from PyQt5.QtCore import Qt, QDate, pyqtSignal
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 import shutil
@@ -24,231 +24,125 @@ class EditStudentDialog(QDialog):
     def __init__(self, student_id, parent=None):
         super().__init__(parent)
         self.student_id = student_id
-        self.photo_path = None # Not used in this version, but kept for consistency
+        self.photo_path = None  # Not used in this version, but kept for consistency
+        # تهيئة الواجهة والبيانات (تصميم مبسط فقط بدون تغيير الوظائف)
         self.setup_ui()
-        self.setup_connections() # Connect signals first
-        self.load_schools() # Load schools, which might trigger update_grades_for_school
-        self.load_student_data() # Load student data and populate fields
-        # self.update_grades_for_school() # This call is now redundant as load_student_data handles it
+        self.setup_connections()  # Connect signals first
+        self.load_schools()  # Load schools (may trigger update_grades_for_school)
+        self.load_student_data()  # Populate fields
+        self.apply_responsive_design()  # Responsive sizing (تصميم فقط)
         
     def setup_ui(self):
+        """تهيئة الواجهة (تصميم مبسط متوافق مع الشاشات الصغيرة). الوظائف دون تغيير."""
         self.setWindowTitle("تعديل بيانات الطالب")
         self.setModal(True)
-        self.resize(800, 900)
-        
-        # تطبيق الستايل مع تحسينات
+        self.resize(700, 600)
+        self.setMinimumSize(480, 520)
+
         self.setStyleSheet("""
-            QDialog {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #f8f9ff, stop:1 #e8f0ff);
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }
-            
-            QLabel {
-                color: #2c3e50;
-                font-weight: bold;
-                font-size:18px;
-                margin: 5px 0px;
-            }
-            
+            QDialog { background:#f5f7fa; font-family:'Segoe UI', Arial, sans-serif; }
+            QLabel { color:#1f2d3d; font-weight:600; margin:4px 0; }
             QLineEdit, QComboBox, QDateEdit, QTextEdit, QSpinBox {
-                padding: 12px 15px;
-                border: 2px solid #bdc3c7;
-                border-radius: 10px;
-                background-color: white;
-                font-size: 18px;
-                min-height: 30px;
-                margin: 5px 0px;
-            }
-            
+                padding:6px 8px; border:1px solid #c0c6ce; border-radius:6px; background:#fff; }
             QLineEdit:focus, QComboBox:focus, QDateEdit:focus, QTextEdit:focus, QSpinBox:focus {
-                border-color: #3498db;
-                background-color: #f8fbff;
-            }
-            
-            QComboBox::drop-down {
-                border: none;
-                width: 30px;
-            }
-            
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3498db, stop:1 #2980b9);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-weight: bold;
-                font-size: 18px;
-                min-width: 120px;
-                margin: 8px 4px;
-            }
-            
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5dade2, stop:1 #3498db);
-            }
-            
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2980b9, stop:1 #1f618d);
-            }
-            
-            QPushButton#photo_btn {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #27ae60, stop:1 #2ecc71);
-                min-width: 100px;
-            }
-            
-            QPushButton#cancel_btn {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #e74c3c, stop:1 #c0392b);
-            }
-            
-            QGroupBox {
-                font-weight: bold;
-                font-size: 18px;
-                color: #2c3e50;
-                border: 2px solid #bdc3c7;
-                border-radius: 12px;
-                margin: 15px 0px;
-                padding-top: 20px;
-            }
-            
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 20px;
-                padding: 0 10px 0 10px;
-                background-color: #3498db;
-                color: white;
-                border-radius: 6px;
-                padding: 8px 15px;
-                font-size: 18px;
-            }
-            
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
+                border:1px solid #357abd; background:#f0f7ff; }
+            QPushButton { background:#357abd; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-weight:600; }
+            QPushButton:hover { background:#4b8fcc; }
+            QPushButton:pressed { background:#2d6399; }
+            QPushButton#cancel_btn { background:#c0392b; }
+            QPushButton#cancel_btn:hover { background:#d35445; }
+            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
+            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
+            QScrollArea { border:none; }
         """)
-        
-        # التخطيط الرئيسي
+
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
-        
-        # إضافة scroll area للشاشات الصغيرة
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
+        main_layout.setContentsMargins(6, 6, 6, 6)
+        main_layout.setSpacing(6)
+
+        scroll_area = QScrollArea(); scroll_area.setWidgetResizable(True)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
-        # المحتوى الرئيسي داخل scroll area
+
         content_widget = QWidget()
         content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(20)
-        content_layout.setContentsMargins(25, 25, 25, 25)
-        
-        # عنوان النافذة
+        content_layout.setContentsMargins(12, 12, 12, 12)
+        content_layout.setSpacing(12)
+
         title_label = QLabel("تعديل بيانات الطالب")
         title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("""
-            QLabel {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3498db, stop:1 #2980b9);
-                color: white;
-                padding: 15px;
-                border-radius: 10px;
-                font-size: 18px;
-                font-weight: bold;
-            }
-        """)
+        title_label.setStyleSheet("background:#357abd; color:#fff; padding:10px; border-radius:6px; font-weight:700;")
         content_layout.addWidget(title_label)
-        
-        # مجموعة المعلومات الأساسية
+
+        # المعلومات الأساسية
         basic_info_group = QGroupBox("المعلومات الأساسية")
         basic_layout = QFormLayout(basic_info_group)
-        basic_layout.setSpacing(15)
-        
-        # الحقول الأساسية
-        self.full_name_edit = QLineEdit()
-        self.full_name_edit.setPlaceholderText("أدخل الاسم الكامل للطالب")
+        basic_layout.setSpacing(8); basic_layout.setLabelAlignment(Qt.AlignRight)
+        self.full_name_edit = QLineEdit(); self.full_name_edit.setPlaceholderText("أدخل الاسم الكامل للطالب")
         basic_layout.addRow("الاسم الكامل:", self.full_name_edit)
-        
-        # الجنس
-        self.gender_combo = QComboBox()
-        self.gender_combo.addItems(["ذكر", "أنثى"])
+        self.gender_combo = QComboBox(); self.gender_combo.addItems(["ذكر", "أنثى"])
         basic_layout.addRow("الجنس:", self.gender_combo)
-        
         content_layout.addWidget(basic_info_group)
-        
-        # مجموعة المعلومات الأكاديمية
+
+        # المعلومات الأكاديمية
         academic_info_group = QGroupBox("المعلومات الأكاديمية")
         academic_layout = QFormLayout(academic_info_group)
-        academic_layout.setSpacing(15)
-        
-        # المدرسة
-        self.school_combo = QComboBox()
-        self.school_combo.setPlaceholderText("اختر المدرسة")
+        academic_layout.setSpacing(8); academic_layout.setLabelAlignment(Qt.AlignRight)
+        self.school_combo = QComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
         academic_layout.addRow("المدرسة:", self.school_combo)
-        
-        # الصف
-        self.grade_combo = QComboBox()
-        self.grade_combo.setPlaceholderText("اختر الصف")
+        self.grade_combo = QComboBox(); self.grade_combo.setPlaceholderText("اختر الصف")
         academic_layout.addRow("الصف:", self.grade_combo)
-        
-        # الشعبة
-        self.section_combo = QComboBox()
-        self.section_combo.addItems(["أ", "ب", "ج", "د", "ه", "و", "ز", "ح", "ط", "ي"])
-        self.section_combo.setPlaceholderText("اختر الشعبة")
+        self.section_combo = QComboBox(); self.section_combo.addItems(["أ", "ب", "ج", "د", "ه", "و", "ز", "ح", "ط", "ي"])
         academic_layout.addRow("الشعبة:", self.section_combo)
-        
-        # المبلغ الإجمالي
-        self.total_fee_edit = QLineEdit()
-        self.total_fee_edit.setPlaceholderText("المبلغ الإجمالي بالدينار")
+        self.total_fee_edit = QLineEdit(); self.total_fee_edit.setPlaceholderText("المبلغ الإجمالي بالدينار")
         academic_layout.addRow("الرسوم الدراسية:", self.total_fee_edit)
-        
-        # تاريخ المباشرة
-        self.start_date_edit = QDateEdit()
-        self.start_date_edit.setDate(QDate.currentDate())
-        self.start_date_edit.setCalendarPopup(True)
-        self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
+        self.start_date_edit = QDateEdit(); self.start_date_edit.setDate(QDate.currentDate()); self.start_date_edit.setCalendarPopup(True); self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
         academic_layout.addRow("تاريخ المباشرة:", self.start_date_edit)
-        
-        # الحالة
-        self.status_combo = QComboBox()
-        self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
+        self.status_combo = QComboBox(); self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
         academic_layout.addRow("الحالة:", self.status_combo)
-        
         content_layout.addWidget(academic_info_group)
-        
-        # مجموعة معلومات الاتصال وولي الأمر
+
+        # معلومات الاتصال
         contact_info_group = QGroupBox("معلومات الاتصال وولي الأمر")
         contact_layout = QFormLayout(contact_info_group)
-        contact_layout.setSpacing(15)
-        
-        # الهاتف
-        self.phone_edit = QLineEdit()
-        self.phone_edit.setPlaceholderText("رقم هاتف الطالب")
+        contact_layout.setSpacing(8); contact_layout.setLabelAlignment(Qt.AlignRight)
+        self.phone_edit = QLineEdit(); self.phone_edit.setPlaceholderText("رقم هاتف الطالب")
         contact_layout.addRow("هاتف الطالب:", self.phone_edit)
-        
         content_layout.addWidget(contact_info_group)
-        
-        # أزرار العمل
-        buttons_layout = QHBoxLayout()
-        buttons_layout.addStretch()
-        
+
+        buttons_layout = QHBoxLayout(); buttons_layout.addStretch()
         self.save_btn = QPushButton("حفظ التعديلات")
-        buttons_layout.addWidget(self.save_btn)
-        
-        self.cancel_btn = QPushButton("إلغاء")
-        self.cancel_btn.setObjectName("cancel_btn")
-        buttons_layout.addWidget(self.cancel_btn)
-        
+        self.cancel_btn = QPushButton("إلغاء"); self.cancel_btn.setObjectName("cancel_btn")
+        buttons_layout.addWidget(self.save_btn); buttons_layout.addWidget(self.cancel_btn)
         content_layout.addLayout(buttons_layout)
-        
-        # إضافة المحتوى إلى scroll area
+
         scroll_area.setWidget(content_widget)
         main_layout.addWidget(scroll_area)
+
+    def apply_responsive_design(self):
+        """ضبط تلقائي للحجم والخط حسب دقة الشاشة (تصميم فقط)."""
+        try:
+            screen = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
+            if not screen:
+                return
+            sw, sh = screen.width(), screen.height()
+            target_w = min(720, int(sw * 0.85))
+            target_h = min(640, int(sh * 0.88))
+            self.resize(target_w, target_h)
+            scale = min(sw / 1920.0, sh / 1080.0)
+            base = 14
+            point_size = max(10, int(base * (0.9 + scale * 0.6)))
+            f = self.font(); f.setPointSize(point_size); self.setFont(f)
+            if sw <= 1366:
+                for grp in self.findChildren(QGroupBox):
+                    lay = grp.layout()
+                    if lay:
+                        lay.setHorizontalSpacing(6)
+                        lay.setVerticalSpacing(6)
+                for btn in self.findChildren(QPushButton):
+                    btn.setMinimumHeight(32)
+        except Exception as e:
+            logging.warning(f"Responsive design adjustment failed (edit dialog): {e}")
         
     def setup_connections(self):
         """ربط الإشارات"""
