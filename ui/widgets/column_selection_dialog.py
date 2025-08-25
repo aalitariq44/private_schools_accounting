@@ -11,7 +11,12 @@ class ColumnSelectionDialog(QDialog):
         for col_key, col_display in columns.items():
             item = QListWidgetItem(col_display)
             item.setData(1, col_key)  # Use a custom role to store the key
-            item.setCheckState(2)  # Qt.Checked
+            # افتراضياً اجعل بعض الأعمدة غير محددة
+            default_unchecked = ['status', 'total_fee', 'total_paid', 'remaining', 'school_name', 'gender']
+            if col_key in default_unchecked:
+                item.setCheckState(0)  # Qt.Unchecked
+            else:
+                item.setCheckState(2)  # Qt.Checked
             self.list_widget.addItem(item)
         
         self.layout().addWidget(self.list_widget)
