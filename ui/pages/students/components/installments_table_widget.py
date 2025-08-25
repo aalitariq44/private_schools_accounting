@@ -233,7 +233,7 @@ class InstallmentsTableWidget(QWidget):
             
             # القسط الكلي
             try:
-                total_fee = float(self.student_data[11])
+                total_fee = float(self.student_data[12])  # total_fee في الفهرس 12
             except (ValueError, TypeError):
                 QMessageBox.warning(self, "خطأ", "قيمة القسط الكلي غير صحيحة")
                 return
@@ -282,7 +282,7 @@ class InstallmentsTableWidget(QWidget):
                     continue
             
             try:
-                total_fee = float(self.student_data[11])
+                total_fee = float(self.student_data[12])  # total_fee في الفهرس 12
             except:
                 total_fee = 0
             remaining = total_fee - total_paid
@@ -293,14 +293,14 @@ class InstallmentsTableWidget(QWidget):
             receipt = {
                 'id': inst[0],
                 'installment_id': inst[0],
-                'student_name': str(self.student_data[1]),
+                'student_name': str(self.student_data[1]),  # name في الفهرس 1
                 'school_name': school_info["name"],
                 'school_name_en': school_info["name_en"],
                 'school_address': school_info["address"],
                 'school_phone': school_info["phone"],
                 'school_logo_path': school_info["logo_path"],
-                'grade': str(self.student_data[4]),
-                'section': str(self.student_data[5]),
+                'grade': str(self.student_data[4]),  # grade في الفهرس 4
+                'section': str(self.student_data[5]),  # section في الفهرس 5,
                 'payment_date': f"{inst[2]} {inst[3] or ''}",
                 'payment_method': inst[4] or '',
                 'description': inst[4] or '',
@@ -342,9 +342,12 @@ class InstallmentsTableWidget(QWidget):
     
     def get_school_info(self):
         """الحصول على معلومات المدرسة"""
-        if not self.student_data or len(self.student_data) < 5:
+        if not self.student_data or len(self.student_data) < 6:
             return {"name": "", "name_en": "", "address": "", "phone": "", "logo_path": ""}
         
+        # معلومات المدرسة من JOIN في نهاية البيانات
+        # البيانات بعد إضافة عمود notes:
+        # 18: school_name, 19: school_name_en, 20: school_address, 21: school_phone, 22: school_logo_path
         return {
             "name": str(self.student_data[-5] or ""),  # school_name
             "name_en": str(self.student_data[-4] or ""),  # school_name_en

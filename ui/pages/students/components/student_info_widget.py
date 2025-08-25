@@ -222,13 +222,16 @@ class StudentInfoWidget(QWidget):
                 return
             
             # تحديث المعلومات بناءً على البنية الصحيحة لجدول students
-            # فهارس الأعمدة: name(1), grade(4), section(5), gender(7), phone(8), total_fee(11), start_date(12), status(13), notes(16), birthdate(17)
+            # فهارس الأعمدة الصحيحة:
+            # 1: name, 4: grade, 5: section, 7: gender, 8: birthdate, 9: phone
+            # 12: total_fee, 13: start_date, 14: status, 17: notes
+            # مع JOIN: 18: school_name, 19: school_name_en, 20: school_address, 21: school_phone, 22: school_logo_path
             
             # الاسم - الفهرس 1
             self.name_label.setText(str(student_data[1] or "--"))
             
-            # اسم المدرسة - من JOIN
-            if len(student_data) > 18 and student_data[18]:  # school_name من JOIN
+            # اسم المدرسة - من JOIN - الفهرس 18
+            if len(student_data) > 18 and student_data[18]:
                 self.school_label.setText(str(student_data[18]))
             else:
                 self.school_label.setText("--")
@@ -242,17 +245,14 @@ class StudentInfoWidget(QWidget):
             # الجنس - الفهرس 7
             self.gender_label.setText(str(student_data[7] or "--"))
             
-            # تاريخ الميلاد - الفهرس 17
-            if len(student_data) > 17 and student_data[17]:
-                self.birthdate_label.setText(str(student_data[17]))
-            else:
-                self.birthdate_label.setText("--")
+            # تاريخ الميلاد - الفهرس 8
+            self.birthdate_label.setText(str(student_data[8] or "--"))
             
-            # الهاتف - الفهرس 8
-            self.phone_label.setText(str(student_data[8] or "--"))
+            # الهاتف - الفهرس 9
+            self.phone_label.setText(str(student_data[9] or "--"))
             
-            # الحالة - الفهرس 13
-            status_text = str(student_data[13] or "نشط")
+            # الحالة - الفهرس 14
+            status_text = str(student_data[14] or "نشط")
             self.status_label.setText(status_text)
             
             # تغيير لون خلفية حقل الحالة بناءً على النص
@@ -265,21 +265,21 @@ class StudentInfoWidget(QWidget):
             else:
                 self.status_label.setStyleSheet("")
             
-            # تاريخ المباشرة - الفهرس 12
-            self.start_date_label.setText(str(student_data[12] or "--"))
+            # تاريخ المباشرة - الفهرس 13
+            self.start_date_label.setText(str(student_data[13] or "--"))
             
-            # الملاحظات - الفهرس 16
+            # الملاحظات - الفهرس 17
             notes = ""
-            if len(student_data) > 16 and student_data[16]:
-                notes = str(student_data[16])
+            if len(student_data) > 17 and student_data[17]:
+                notes = str(student_data[17])
             self.update_notes_display(notes)
             
-            # القسط الكلي - الفهرس 11
+            # القسط الكلي - الفهرس 12
             try:
-                total_fee = float(student_data[11] or 0)
+                total_fee = float(student_data[12] or 0)
                 self.total_fee_label.setText(f"القسط الكلي: {total_fee:,.0f} د.ع")
             except (ValueError, TypeError):
-                logging.error(f"خطأ في تحويل القسط الكلي: {student_data[11]}")
+                logging.error(f"خطأ في تحويل القسط الكلي: {student_data[12]}")
                 self.total_fee_label.setText("القسط الكلي: 0 د.ع")
             
         except Exception as e:
@@ -290,7 +290,7 @@ class StudentInfoWidget(QWidget):
         try:
             self.installments_data = installments_data
             
-            if not self.student_data or len(self.student_data) < 12:
+            if not self.student_data or len(self.student_data) < 13:
                 # قيم افتراضية في حالة عدم وجود بيانات
                 self.total_fee_label.setText("القسط الكلي: 0 د.ع")
                 self.paid_amount_label.setText("المدفوع: 0 د.ع")
@@ -302,16 +302,17 @@ class StudentInfoWidget(QWidget):
             total_paid = 0
             for installment in installments_data:
                 try:
-                    paid_amount = installment[6] if len(installment) > 6 and installment[6] else installment[1]
-                    total_paid += float(paid_amount)
+                    # المبلغ في العمود الثاني (index 1)
+                    paid_amount = float(installment[1]) if installment[1] else 0
+                    total_paid += paid_amount
                 except (ValueError, TypeError, IndexError):
                     continue
             
-            # القسط الكلي - الفهرس 11
+            # القسط الكلي - الفهرس 12
             try:
-                total_fee = float(self.student_data[11] or 0)
+                total_fee = float(self.student_data[12] or 0)
             except (ValueError, TypeError):
-                logging.error(f"خطأ في تحويل القسط الكلي: {self.student_data[11]}")
+                logging.error(f"خطأ في تحويل القسط الكلي: {self.student_data[12]}")
                 total_fee = 0
             
             # المتبقي
@@ -341,11 +342,11 @@ class StudentInfoWidget(QWidget):
     
     def get_school_info(self):
         """الحصول على معلومات المدرسة"""
-        if not self.student_data or len(self.student_data) < 20:
+        if not self.student_data or len(self.student_data) < 23:
             return {"name": "", "address": "", "phone": ""}
         
-        # معلومات المدرسة تأتي من JOIN في نهاية البيانات
-        # school_name (18), school_name_en (19), school_address (20), school_phone (21)
+        # معلومات المدرسة تأتي من JOIN
+        # 18: school_name, 19: school_name_en, 20: school_address, 21: school_phone, 22: school_logo_path
         try:
             return {
                 "name": str(self.student_data[18] or "") if len(self.student_data) > 18 else "",
@@ -400,8 +401,8 @@ class StudentInfoWidget(QWidget):
             
             # تحميل الملاحظات الحالية مباشرة من بيانات الطالب
             current_notes = ""
-            if self.student_data and len(self.student_data) > 16:
-                current_notes = str(self.student_data[16] or "")
+            if self.student_data and len(self.student_data) > 17:
+                current_notes = str(self.student_data[17] or "")
             notes_edit.setPlainText(current_notes)
             
             layout.addWidget(notes_edit)
@@ -429,13 +430,13 @@ class StudentInfoWidget(QWidget):
                         # تحديث البيانات المحلية
                         if self.student_data:
                             student_data_list = list(self.student_data)
-                            # الملاحظات في الفهرس 16
-                            if len(student_data_list) > 16:
-                                student_data_list[16] = notes_text
+                            # الملاحظات في الفهرس 17
+                            if len(student_data_list) > 17:
+                                student_data_list[17] = notes_text
                             else:
-                                while len(student_data_list) < 17:
+                                while len(student_data_list) < 18:
                                     student_data_list.append("")
-                                student_data_list[16] = notes_text
+                                student_data_list[17] = notes_text
                             self.student_data = tuple(student_data_list)
                         
                         # تحديث العرض
@@ -479,6 +480,6 @@ class StudentInfoWidget(QWidget):
     
     def get_notes(self):
         """الحصول على الملاحظات الحالية"""
-        if self.student_data and len(self.student_data) > 16:
-            return str(self.student_data[16] or "")
+        if self.student_data and len(self.student_data) > 17:
+            return str(self.student_data[17] or "")
         return ""

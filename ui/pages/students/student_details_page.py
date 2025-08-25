@@ -278,9 +278,9 @@ class StudentDetailsPage(QWidget):
                 QMessageBox.warning(self, "خطأ", "لا توجد بيانات للطباعة")
                 return
             
-            # بيانات الطالب - استخدام الفهارس الصحيحة
+            # بيانات الطالب - استخدام الفهارس الصحيحة بعد إضافة عمود notes
             try:
-                total_fee = float(self.student_data[11])  # total_fee في الفهرس 11
+                total_fee = float(self.student_data[12])  # total_fee في الفهرس 12
             except Exception:
                 total_fee = 0
             
@@ -293,8 +293,10 @@ class StudentDetailsPage(QWidget):
                 'grade': self.student_data[4],  # grade في الفهرس 4
                 'section': self.student_data[5],  # section في الفهرس 5
                 'gender': self.student_data[7],  # gender في الفهرس 7
-                'phone': self.student_data[8],  # phone في الفهرس 8
-                'status': self.student_data[13],  # status في الفهرس 13
+                'phone': self.student_data[9],  # phone في الفهرس 9
+                'birthdate': self.student_data[8],  # birthdate في الفهرس 8
+                'start_date': self.student_data[13],  # start_date في الفهرس 13
+                'status': self.student_data[14],  # status في الفهرس 14
                 'total_fee': total_fee
             }
             
