@@ -77,18 +77,18 @@ class DashboardPage(QWidget):
             stats_grid.setSpacing(4)
             
 
-            # إنشاء بطاقات الإحصائيات الجديدة
-            self.schools_card = self.create_stat_card("المدارس", "0", "#3498DB")
-            self.students_card = self.create_stat_card("الطلاب", "0", "#27AE60")
-            self.teachers_card = self.create_stat_card("المعلمين", "0", "#8E44AD")
+            # إنشاء بطاقات الإحصائيات الجديدة بألوان جذابة
+            self.schools_card = self.create_stat_card("المدارس", "0", "#4A90E2") # Blue
+            self.students_card = self.create_stat_card("الطلاب", "0", "#5CB85C") # Green
+            self.teachers_card = self.create_stat_card("المعلمين", "0", "#9C27B0") # Purple
 
-            self.total_fees_card = self.create_stat_card("مجموع الرسوم الدراسية", "0 د.ع", "#F39C12")
-            self.paid_fees_card = self.create_stat_card("مجموع الأقساط المدفوعة", "0 د.ع", "#2ECC71")
-            self.remaining_fees_card = self.create_stat_card("المتبقي", "0 د.ع", "#E74C3C")
+            self.total_fees_card = self.create_stat_card("مجموع الرسوم الدراسية", "0 د.ع", "#FFC107") # Amber
+            self.paid_fees_card = self.create_stat_card("مجموع الأقساط المدفوعة", "0 د.ع", "#28A745") # Dark Green
+            self.remaining_fees_card = self.create_stat_card("المتبقي", "0 د.ع", "#DC3545") # Red
 
-            self.additional_fees_card = self.create_stat_card("مجموع الرسوم الإضافية", "0 د.ع", "#9B59B6")
-            self.additional_fees_paid_card = self.create_stat_card("الرسوم الإضافية المدفوعة فقط", "0 د.ع", "#16A085")
-            self.additional_fees_unpaid_card = self.create_stat_card("الرسوم الإضافية غير المدفوعة فقط", "0 د.ع", "#D35400")
+            self.additional_fees_card = self.create_stat_card("مجموع الرسوم الإضافية", "0 د.ع", "#6F42C1") # Indigo
+            self.additional_fees_paid_card = self.create_stat_card("الرسوم الإضافية المدفوعة فقط", "0 د.ع", "#20C997") # Teal
+            self.additional_fees_unpaid_card = self.create_stat_card("الرسوم الإضافية غير المدفوعة فقط", "0 د.ع", "#FD7E14") # Orange
 
             # ترتيب البطاقات في الشبكة حسب الطلب
             # الصف الأول
@@ -139,17 +139,19 @@ class DashboardPage(QWidget):
             # تطبيق اللون
             card.setStyleSheet(f"""
                 #statCard {{
-                    background: #FFFFFF;
-                    border:1px solid #DDE1E4;
+                    background: {color};
+                    border:1px solid {color};
                     border-radius:6px;
                 }}
                 #statValue {{
-                    color: #2C3E50;
+                    background: transparent; /* Remove white background */
+                    color: #FFFFFF; /* White text for better contrast on colored background */
                     font-size:14px;
                     font-weight:600;
                 }}
                 #statTitle {{
-                    color:#5F6B73;
+                    background: transparent; /* Remove white background */
+                    color:#E0E0E0; /* Lighter white for title */
                     font-size:12px;
                     font-weight:500;
                 }}
@@ -500,17 +502,24 @@ class DashboardPage(QWidget):
                     border-bottom:1px solid #E2E5E8;
                 }
                 #actionButton {
-                    background:#FFFFFF;
-                    color:#2F6ED1;
-                    border:1px solid #C5CBD0;
-                    padding:4px 10px;
-                    border-radius:4px;
-                    font-size:12px;
+                    background:#007BFF; /* Primary blue */
+                    color:#FFFFFF;
+                    border:1px solid #007BFF;
+                    padding:6px 12px; /* Slightly larger padding */
+                    border-radius:5px; /* Slightly more rounded */
+                    font-size:13px; /* Slightly larger font */
                     font-weight:600;
-                    min-width:100px;
+                    min-width:110px; /* Slightly wider */
+                    transition: all 0.3s ease; /* Smooth transition for hover effects */
                 }
-                #actionButton:hover { background:#2F6ED1; color:#FFFFFF; }
-                #actionButton:pressed { background:#2559A8; }
+                #actionButton:hover {
+                    background:#0056B3; /* Darker blue on hover */
+                    border:1px solid #0056B3;
+                }
+                #actionButton:pressed {
+                    background:#004085; /* Even darker on pressed */
+                    border:1px solid #004085;
+                }
                 #infoLabel { color:#5F6B73; font-size:12px; }
             """
             
