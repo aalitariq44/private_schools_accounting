@@ -44,10 +44,10 @@ class WordManager:
             section = doc.sections[0]
             section.page_height = Inches(11.69)  # A4
             section.page_width = Inches(8.27)
-            section.left_margin = Inches(0.8)
-            section.right_margin = Inches(0.8)
-            section.top_margin = Inches(1)
-            section.bottom_margin = Inches(1)
+            section.left_margin = Inches(0.5)
+            section.right_margin = Inches(0.5)
+            section.top_margin = Inches(0.5)
+            section.bottom_margin = Inches(0.5)
             
             # ضبط اتجاه النص من اليمين لليسار
             doc.styles['Normal'].font.name = 'Arial'
