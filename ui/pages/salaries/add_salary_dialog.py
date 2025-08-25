@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QLineEdit, QPushButton, QComboBox, QTextEdit,
     QDateEdit, QSpinBox, QDoubleSpinBox, QMessageBox,
-    QFrame, QGroupBox, QCheckBox
+    QFrame, QGroupBox, QCheckBox, QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate, pyqtSignal
 from PyQt5.QtGui import QFont, QDoubleValidator, QIntValidator
@@ -32,183 +32,108 @@ class AddSalaryDialog(QDialog):
         self.load_schools()
         self.load_staff_data()
         self.calculate_default_period()
+        self.apply_responsive_design()
         
     def setup_ui(self):
-        """إعداد واجهة المستخدم بتنسيق عصري مشابه لإضافة طالب"""
+        """إعداد الواجهة (تصميم متجاوب مبسط موحد)."""
         self.setWindowTitle("إضافة راتب جديد")
         self.setModal(True)
-        self.resize(600, 750)
-        self.setMinimumWidth(500)
-        self.setMaximumWidth(700)
+        self.resize(640, 620)
+        self.setMinimumSize(480, 520)
 
-        # ستايل عصري
-        self.setup_styles()
+        # ستايل موحد خفيف (مشابه للحوارات الأخرى)
+        self.setStyleSheet("""
+            QDialog { background:#f5f7fa; font-family:'Segoe UI', Arial, sans-serif; }
+            QLabel { color:#1f2d3d; font-weight:600; margin:4px 0; }
+            QLineEdit, QComboBox, QDoubleSpinBox, QDateEdit, QTextEdit {
+                padding:6px 8px; border:1px solid #c0c6ce; border-radius:6px; background:#ffffff; }
+            QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QTextEdit:focus {
+                border:1px solid #357abd; background:#f0f7ff; }
+            QPushButton { background:#357abd; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-weight:600; }
+            QPushButton:hover { background:#4b8fcc; }
+            QPushButton:pressed { background:#2d6399; }
+            QPushButton#cancel_btn { background:#c0392b; }
+            QPushButton#cancel_btn:hover { background:#d35445; }
+            QPushButton#delete_btn { background:#dc3545; }
+            QPushButton#delete_btn:hover { background:#c82333; }
+            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
+            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
+            QScrollArea { border:none; }
+            QLabel#salaryLabel { color:#27ae60; font-weight:600; }
+            QLabel#daysLabel { color:#c0392b; font-weight:600; }
+        """)
 
-        # التخطيط الرئيسي
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setContentsMargins(6, 6, 6, 6)
+        main_layout.setSpacing(6)
 
-        # Scroll area لدعم الشاشات الصغيرة
-        from PyQt5.QtWidgets import QScrollArea, QWidget
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll = QScrollArea(); scroll.setWidgetResizable(True)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        content_widget = QWidget()
-        content_layout = QVBoxLayout(content_widget)
-        content_layout.setSpacing(20)
-        content_layout.setContentsMargins(25, 25, 25, 25)
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(12, 12, 12, 12)
+        content_layout.setSpacing(12)
 
-        # عنوان النافذة
         title_label = QLabel("إضافة راتب جديد")
         title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("""
-            QLabel {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3498db, stop:1 #2980b9);
-                color: white;
-                padding: 15px;
-                border-radius: 10px;
-                font-size: 18px;
-                font-weight: bold;
-            }
-        """)
+        title_label.setStyleSheet("background:#357abd; color:#fff; padding:10px; border-radius:6px; font-weight:700;")
         content_layout.addWidget(title_label)
 
-        # مجموعة اختيار الموظف/المعلم
-        staff_group = self.create_staff_group()
-        content_layout.addWidget(staff_group)
+        content_layout.addWidget(self.create_staff_group())
+        content_layout.addWidget(self.create_salary_group())
+        content_layout.addWidget(self.create_period_group())
+        content_layout.addWidget(self.create_notes_group())
+        content_layout.addLayout(self.create_buttons())
 
-        # مجموعة تفاصيل الراتب
-        salary_group = self.create_salary_group()
-        content_layout.addWidget(salary_group)
-
-        # مجموعة فترة الراتب
-        period_group = self.create_period_group()
-        content_layout.addWidget(period_group)
-
-        # مجموعة الملاحظات
-        notes_group = self.create_notes_group()
-        content_layout.addWidget(notes_group)
-
-        # أزرار الحفظ والإلغاء
-        buttons_layout = self.create_buttons()
-        content_layout.addLayout(buttons_layout)
-
-        scroll_area.setWidget(content_widget)
-        main_layout.addWidget(scroll_area)
+        scroll.setWidget(content)
+        main_layout.addWidget(scroll)
         
     def create_staff_group(self):
-        """إنشاء مجموعة اختيار الموظف/المعلم مع نظام التصفية"""
         group = QGroupBox("بيانات الموظف/المعلم")
-        layout = QFormLayout()
-        
-        # اختيار المدرسة
-        self.school_combo = QComboBox()
-        self.school_combo.addItem("جميع المدارس", "")
-        self.school_combo.setMinimumWidth(300)
+        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
+        self.school_combo = QComboBox(); self.school_combo.addItem("جميع المدارس", "")
         layout.addRow("اختر المدرسة:", self.school_combo)
-        
-        # نوع الموظف
-        self.staff_type_combo = QComboBox()
-        self.staff_type_combo.addItem("جميع الأنواع", "")
-        self.staff_type_combo.addItem("معلم", "teacher")
-        self.staff_type_combo.addItem("موظف", "employee")
+        self.staff_type_combo = QComboBox(); self.staff_type_combo.addItem("جميع الأنواع", ""); self.staff_type_combo.addItem("معلم", "teacher"); self.staff_type_combo.addItem("موظف", "employee")
         layout.addRow("نوع الموظف:", self.staff_type_combo)
-        
-        # قائمة الموظفين/المعلمين
-        self.staff_combo = QComboBox()
-        self.staff_combo.setMinimumWidth(300)
-        layout.addRow("اختر الموظف/المعلم:", self.staff_combo)
-        
-        # عرض الراتب المسجل
-        self.base_salary_label = QLabel("0.00 دينار")
-        self.base_salary_label.setObjectName("salaryLabel")
+        self.staff_combo = QComboBox(); layout.addRow("اختر الموظف/المعلم:", self.staff_combo)
+        self.base_salary_label = QLabel("0.00 دينار"); self.base_salary_label.setObjectName("salaryLabel")
         layout.addRow("الراتب المسجل:", self.base_salary_label)
-        
-        group.setLayout(layout)
-        return group
+        group.setLayout(layout); return group
     
     def create_salary_group(self):
-        """إنشاء مجموعة تفاصيل الراتب"""
         group = QGroupBox("تفاصيل الراتب")
-        layout = QFormLayout()
-        
-        # المبلغ المدفوع
-        self.paid_amount_input = QDoubleSpinBox()
-        self.paid_amount_input.setRange(0, 999999999)
-        self.paid_amount_input.setDecimals(2)
-        self.paid_amount_input.setSuffix(" دينار")
-        self.paid_amount_input.setMinimumWidth(150)
+        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
+        self.paid_amount_input = QDoubleSpinBox(); self.paid_amount_input.setRange(0, 999999999); self.paid_amount_input.setDecimals(2); self.paid_amount_input.setSuffix(" دينار")
         layout.addRow("المبلغ المدفوع:", self.paid_amount_input)
-        
-        # تاريخ الدفع
-        self.payment_date_input = QDateEdit()
-        self.payment_date_input.setDate(QDate.currentDate())
-        self.payment_date_input.setCalendarPopup(True)
-        self.payment_date_input.setMinimumWidth(150)
+        self.payment_date_input = QDateEdit(); self.payment_date_input.setDate(QDate.currentDate()); self.payment_date_input.setCalendarPopup(True)
         layout.addRow("تاريخ الدفع:", self.payment_date_input)
-        
-        group.setLayout(layout)
-        return group
+        group.setLayout(layout); return group
     
     def create_period_group(self):
-        """إنشاء مجموعة فترة الراتب"""
         group = QGroupBox("فترة الراتب")
-        layout = QFormLayout()
-        
-        # من تاريخ
-        self.from_date_input = QDateEdit()
-        self.from_date_input.setCalendarPopup(True)
-        self.from_date_input.setMinimumWidth(150)
+        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
+        self.from_date_input = QDateEdit(); self.from_date_input.setCalendarPopup(True)
         layout.addRow("من تاريخ:", self.from_date_input)
-        
-        # إلى تاريخ
-        self.to_date_input = QDateEdit()
-        self.to_date_input.setCalendarPopup(True)
-        self.to_date_input.setMinimumWidth(150)
+        self.to_date_input = QDateEdit(); self.to_date_input.setCalendarPopup(True)
         layout.addRow("إلى تاريخ:", self.to_date_input)
-        
-        # عدد الأيام
-        self.days_count_label = QLabel("30 يوم")
-        self.days_count_label.setObjectName("daysLabel")
+        self.days_count_label = QLabel("30 يوم"); self.days_count_label.setObjectName("daysLabel")
         layout.addRow("عدد الأيام:", self.days_count_label)
-        
-        group.setLayout(layout)
-        return group
+        group.setLayout(layout); return group
     
     def create_notes_group(self):
-        """إنشاء مجموعة الملاحظات"""
         group = QGroupBox("ملاحظات")
-        layout = QVBoxLayout()
-        
-        self.notes_input = QTextEdit()
-        self.notes_input.setMaximumHeight(80)
-        self.notes_input.setPlaceholderText("أدخل أي ملاحظات إضافية...")
+        layout = QVBoxLayout(); layout.setSpacing(6)
+        self.notes_input = QTextEdit(); self.notes_input.setMaximumHeight(90); self.notes_input.setPlaceholderText("ملاحظات إضافية...")
         layout.addWidget(self.notes_input)
-        
-        group.setLayout(layout)
-        return group
+        group.setLayout(layout); return group
     
     def create_buttons(self):
-        """إنشاء أزرار الحفظ والإلغاء"""
-        layout = QHBoxLayout()
-        layout.addStretch()
-        
-        # زر الإلغاء
-        self.cancel_btn = QPushButton("إلغاء")
-        self.cancel_btn.setObjectName("cancelButton")
-        self.cancel_btn.setMinimumSize(100, 35)
-        
-        # زر الحفظ
+        layout = QHBoxLayout(); layout.addStretch()
         self.save_btn = QPushButton("إضافة الراتب")
-        self.save_btn.setObjectName("saveButton")
-        self.save_btn.setMinimumSize(120, 35)
-        
-        layout.addWidget(self.cancel_btn)
-        layout.addWidget(self.save_btn)
-        
+        self.cancel_btn = QPushButton("إلغاء"); self.cancel_btn.setObjectName("cancel_btn")
+        layout.addWidget(self.save_btn); layout.addWidget(self.cancel_btn)
         return layout
     
     def setup_connections(self):
@@ -221,108 +146,35 @@ class AddSalaryDialog(QDialog):
         self.save_btn.clicked.connect(self.save_salary)
         self.cancel_btn.clicked.connect(self.reject)
     
-    def setup_styles(self):
-        """تطبيق ستايل عصري مشابه لإضافة طالب"""
-        self.setStyleSheet("""
-            QDialog {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #f8f9ff, stop:1 #e8f0ff);
-                font-family: 'Segoe UI', Arial, sans-serif;
-            }
+    # أزلنا دالة setup_styles لصالح ستايل مبسط داخل setup_ui
 
-            QLabel {
-                color: #2c3e50;
-                font-weight: bold;
-                font-size:18px;
-                margin: 5px 0px;
-            }
+    def apply_responsive_design(self):
+        """ضبط الحجم والخط حسب دقة الشاشة (متوافق مع باقي الحوارات)."""
+        try:
+            from PyQt5.QtWidgets import QApplication, QGroupBox, QPushButton
+            screen = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
+            if not screen:
+                return
+            sw, sh = screen.width(), screen.height()
+            target_w = min(760, int(sw * 0.82))
+            target_h = min(680, int(sh * 0.85))
+            self.resize(target_w, target_h)
 
-            QLineEdit, QComboBox, QDoubleSpinBox, QDateEdit, QTextEdit {
-                padding: 12px 15px;
-                border: 2px solid #bdc3c7;
-                border-radius: 10px;
-                background-color: white;
-                font-size: 18px;
-                min-height: 30px;
-                margin: 5px 0px;
-            }
+            scale = min(sw / 1920.0, sh / 1080.0)
+            base = 14
+            point_size = max(10, int(base * (0.9 + scale * 0.6)))
+            f = self.font(); f.setPointSize(point_size); self.setFont(f)
 
-            QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QTextEdit:focus {
-                border-color: #3498db;
-                background-color: #f8fbff;
-            }
-
-            QComboBox::drop-down {
-                border: none;
-                width: 30px;
-            }
-
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3498db, stop:1 #2980b9);
-                color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 10px;
-                font-weight: bold;
-                font-size: 18px;
-                min-width: 120px;
-                margin: 8px 4px;
-            }
-
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5dade2, stop:1 #3498db);
-            }
-
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2980b9, stop:1 #1f618d);
-            }
-
-            QPushButton#cancelButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #e74c3c, stop:1 #c0392b);
-            }
-
-            QGroupBox {
-                font-weight: bold;
-                font-size: 18px;
-                color: #2c3e50;
-                border: 2px solid #bdc3c7;
-                border-radius: 12px;
-                margin: 15px 0px;
-                padding-top: 20px;
-            }
-
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 20px;
-                padding: 0 10px 0 10px;
-                background-color: #3498db;
-                color: white;
-                border-radius: 6px;
-                padding: 8px 15px;
-                font-size: 18px;
-            }
-
-            QLabel#salaryLabel {
-                color: #27ae60;
-                font-weight: bold;
-                font-size: 16px;
-            }
-
-            QLabel#daysLabel {
-                color: #e74c3c;
-                font-weight: bold;
-                font-size: 16px;
-            }
-
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-        """)
+            if sw <= 1366:
+                for grp in self.findChildren(QGroupBox):
+                    lay = grp.layout()
+                    if lay:
+                        lay.setHorizontalSpacing(6)
+                        lay.setVerticalSpacing(6)
+                for btn in self.findChildren(QPushButton):
+                    btn.setMinimumHeight(32)
+        except Exception as e:
+            logging.warning(f"Responsive design adjustment failed (salary add): {e}")
     
     def calculate_default_period(self):
         """حساب الفترة الافتراضية (30 يوم قبل اليوم الحالي)"""
