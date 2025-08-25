@@ -85,7 +85,7 @@ class StudentIDsPage(QWidget):
         """إعداد أنماط CSS للواجهة"""
         style = """
             QWidget {
-                font-family: 'Segoe UI', Arial, sans-serif;
+                font-family: 'Cairo', 'Segoe UI', Arial, sans-serif;
             }
             
             QDateEdit[objectName="birthdateEdit"] {
