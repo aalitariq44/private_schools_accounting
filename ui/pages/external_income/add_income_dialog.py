@@ -132,7 +132,7 @@ class AddIncomeDialog(QDialog):
             self.category_combo = QComboBox(); self.category_combo.addItems([
                 "-- اختر الفئة --", "الحانوت", "النقل", "الأنشطة", "التبرعات", "إيجارات", "أخرى"
             ])
-            form.addRow("الفئة:", self.category_combo)
+            form.addRow("الفئة *:", self.category_combo)
 
             self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("ملاحظات إضافية..."); self.notes_input.setMaximumHeight(100)
             form.addRow("الملاحظات:", self.notes_input)
@@ -190,7 +190,10 @@ class AddIncomeDialog(QDialog):
                 errors.append("يجب إدخال مبلغ أكبر من الصفر")
             
             # لا حاجة للتحقق من المدرسة لأن "عام" خيار صالح
-            
+            # التحقق من اختيار الفئة
+            if self.category_combo.currentIndex() == 0:
+                errors.append("يجب اختيار الفئة")
+
             return errors
             
         except Exception as e:
