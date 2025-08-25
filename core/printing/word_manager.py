@@ -16,6 +16,7 @@ try:
     from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
     from docx.enum.table import WD_TABLE_ALIGNMENT
     from docx.oxml.ns import qn
+    from docx.oxml import OxmlElement
     DOCX_AVAILABLE = True
 except ImportError:
     DOCX_AVAILABLE = False
@@ -39,6 +40,17 @@ class WordManager:
         try:
             # إنشاء مستند Word جديد
             doc = Document()
+            # اجعل اتجاه الكتابة من اليمين لليسار بشكل افتراضي
+            from docx.oxml import OxmlElement
+            normal_style = doc.styles['Normal']
+            # ضبط فقرة RTL
+            pPr = normal_style.element.get_or_add_pPr()
+            bidi = OxmlElement('w:bidi')
+            pPr.append(bidi)
+            # ضبط النص RTL
+            rPr = normal_style.element.get_or_add_rPr()
+            rtl = OxmlElement('w:rtl')
+            rPr.append(rtl)
             
             # إعداد اتجاه الصفحة واللغة
             section = doc.sections[0]
@@ -98,6 +110,14 @@ class WordManager:
                 table = doc.add_table(rows=1, cols=num_cols)
                 table.alignment = WD_TABLE_ALIGNMENT.CENTER
                 table.style = 'Table Grid'
+                
+                # جعل صف العنوان يتكرر في كل صفحة
+                hdr_row = table.rows[0]
+                # إضافة وسم tblHeader لعنصر الصف
+                hdr_tr = hdr_row._tr
+                trPr = hdr_tr.get_or_add_trPr()
+                tblHeader = OxmlElement('w:tblHeader')
+                trPr.append(tblHeader)
                 
                 # إضافة عناوين الأعمدة (RTL: العنوان الأخير على اليمين)
                 header_row = table.rows[0]
