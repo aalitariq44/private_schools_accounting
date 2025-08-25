@@ -170,6 +170,8 @@ class AddIncomeDialog(QDialog):
                 # إذا لم توجد مدارس، يمكن على الأقل إضافة واردات عامة
                 pass  # الخيار "عام" موجود بالفعل
             
+            # قم باختيار الخيار الافتراضي "عام"
+            self.school_combo.setCurrentIndex(0)
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
             QMessageBox.warning(self, "خطأ", f"خطأ في تحميل قائمة المدارس:\n{str(e)}")
