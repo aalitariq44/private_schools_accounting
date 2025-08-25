@@ -196,7 +196,7 @@ class DatabaseManager:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS external_income (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        school_id INTEGER NOT NULL,
+                        school_id INTEGER,
                         title TEXT NOT NULL DEFAULT 'إيراد خارجي',
                         amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                         category TEXT NOT NULL DEFAULT 'متنوع',
@@ -206,7 +206,7 @@ class DatabaseManager:
                         notes TEXT DEFAULT '',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
                     )
                 """)
                 
@@ -214,7 +214,7 @@ class DatabaseManager:
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS expenses (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        school_id INTEGER NOT NULL,
+                        school_id INTEGER,
                         expense_type TEXT NOT NULL DEFAULT 'مصروف عام',
                         amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
                         expense_date DATE NOT NULL DEFAULT (date('now')),
@@ -222,7 +222,7 @@ class DatabaseManager:
                         notes TEXT DEFAULT '',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
                     )
                 """)
                 
