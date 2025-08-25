@@ -1071,3 +1071,12 @@ class SalaryDetailsDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في طباعة التقرير: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في طباعة التقرير:\n{str(e)}")
+
+    def showEvent(self, event):
+        """ضمان تكبير النافذة دائماً عند عرضها حتى لو حاول النظام استرجاع حجم سابق"""
+        super().showEvent(event)
+        try:
+            if not self.isMaximized():
+                self.setWindowState(self.windowState() | Qt.WindowMaximized)
+        except Exception as e:
+            logging.debug(f"تعذر فرض التكبير: {e}")
