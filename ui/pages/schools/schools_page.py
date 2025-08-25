@@ -646,14 +646,14 @@ class SchoolsPage(QWidget):
                     margin-right: 4px;
                 }
                 #searchInput {
-                    padding: 4px 8px;
+                    padding: 6px 10px; /* Slightly more padding */
                     border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    font-size: 12px;
+                    border-radius: 5px; /* Slightly more rounded */
+                    font-size: 13px; /* Slightly larger font */
                     background-color: #FFFFFF;
                     min-width: 180px;
                 }
-                #searchInput:focus { border:1px solid #2F6ED1; }
+                #searchInput:focus { border:1px solid #007BFF; } /* Primary blue on focus */
                 #refreshButton {
                     background:#007BFF; /* Primary blue */
                     color:#FFFFFF;
