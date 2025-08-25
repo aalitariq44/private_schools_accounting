@@ -37,7 +37,7 @@ class AddAdditionalFeeDialog(QDialog):
         try:
             self.setWindowTitle("إضافة رسم إضافي")
             self.setModal(True)
-            self.resize(800, 900) # Adjusted size to match add_student_dialog
+            self.resize(800, 600) # Reduced height for smaller window size
             
             # التخطيط الرئيسي
             main_layout = QVBoxLayout(self)

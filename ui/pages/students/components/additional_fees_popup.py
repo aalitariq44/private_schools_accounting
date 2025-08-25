@@ -55,7 +55,7 @@ class AdditionalFeesPopup(QDialog):
         try:
             self.setWindowTitle("الرسوم الإضافية")
             self.setModal(True)
-            self.resize(900, 600)
+            self.resize(900, 500)  # Reduced height for smaller window size
             
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
