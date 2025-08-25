@@ -193,7 +193,7 @@ class WordManager:
             doc.add_paragraph()
             footer_paragraph = doc.add_paragraph()
             footer_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            footer_run = footer_paragraph.add_run('نظام إدارة المدارس الخاصة')
+            footer_run = footer_paragraph.add_run('نظام غريديا لادارة حسابات المدارس الاهلية')
             footer_run.font.size = Pt(10)
             footer_run.italic = True
             footer_run.font.name = 'Arial'
