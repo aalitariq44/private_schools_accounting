@@ -207,6 +207,10 @@ class MainWindow(QMainWindow):
             scroll_area.setWidget(buttons_widget)
             sidebar_layout.addWidget(scroll_area)
             
+            # Hide the "إنشاء هويات" (student IDs) button from the sidebar
+            if "student_ids" in self.sidebar_buttons:
+                self.sidebar_buttons["student_ids"].hide()
+            
         except Exception as e:
             logging.error(f"خطأ في إنشاء القائمة الجانبية: {e}")
             raise
