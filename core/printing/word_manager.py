@@ -99,9 +99,10 @@ class WordManager:
                 table.alignment = WD_TABLE_ALIGNMENT.CENTER
                 table.style = 'Table Grid'
                 
-                # إضافة عناوين الأعمدة
+                # إضافة عناوين الأعمدة (RTL: العنوان الأخير على اليمين)
                 header_row = table.rows[0]
-                header_row.cells[0].text = 'ت'
+                # ضع عمود الترقيم في الخلية الأخيرة
+                header_row.cells[num_cols-1].text = 'ت'
                 
                 # ترتيب الأعمدة كما في المتطلبات
                 column_order = ['id', 'name', 'school_name', 'grade', 'section', 'gender', 'phone', 'status', 'total_fee', 'total_paid', 'remaining']
@@ -116,9 +117,10 @@ class WordManager:
                     if col_key not in [item[0] for item in ordered_columns]:
                         ordered_columns.append((col_key, col_name))
                 
-                # ملء عناوين الأعمدة
+                # ملء عناوين الأعمدة بالعكس (من اليمين لليسار)
                 for i, (col_key, col_name) in enumerate(ordered_columns):
-                    header_row.cells[i + 1].text = col_name
+                    # تبدأ الأعمدة المحددة قبل عمود الترقيم، من الخلية قبل الأخيرة إلى الأولى
+                    header_row.cells[num_cols - 2 - i].text = col_name
                 
                 # تنسيق عناوين الأعمدة
                 for cell in header_row.cells:
@@ -128,16 +130,17 @@ class WordManager:
                     run.font.size = Pt(11)
                     run.font.name = 'Arial'
                 
-                # إضافة بيانات الطلاب
+                # إضافة بيانات الطلاب (RTL: الترقيم في اليمين وبقية الأعمدة تتجه نحو اليسار)
                 for index, student in enumerate(students, 1):
                     row = table.add_row()
-                    row.cells[0].text = str(index)
-                    
+                    # ضع الترقيم في الخلية الأخيرة
+                    row.cells[num_cols-1].text = str(index)
                     for i, (col_key, col_name) in enumerate(ordered_columns):
                         cell_value = student.get(col_key, '')
                         if cell_value is None:
                             cell_value = ''
-                        row.cells[i + 1].text = str(cell_value)
+                        # املأ الأعمدة المحددة بالعكس من قبل عمود الترقيم
+                        row.cells[num_cols - 2 - i].text = str(cell_value)
                     
                     # تنسيق صف البيانات
                     for cell in row.cells:
