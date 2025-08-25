@@ -9,7 +9,8 @@ from datetime import datetime, date
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QTextEdit, QComboBox, QDateEdit, QDoubleSpinBox,
-    QPushButton, QLabel, QMessageBox, QGroupBox, QFrame
+    QPushButton, QLabel, QMessageBox, QGroupBox, QFrame,
+    QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QFont
@@ -25,175 +26,128 @@ class EditExpenseDialog(QDialog):
         super().__init__(parent)
         self.expense_id = expense_id
         self.expense_data = None
-        
+
         self.setWindowTitle("تعديل بيانات المصروف")
         self.setModal(True)
-        self.resize(550, 700)
-        
+        self.resize(660, 600)
+        self.setMinimumSize(480, 500)
+
         self.setup_ui()
-        self.setup_styles()
         self.load_schools()
         self.load_expense_data()
-        
-        # تركيز على حقل العنوان
-        self.title_input.setFocus()
+        self.apply_responsive_design()
+
+        if hasattr(self, 'title_input'):
+            self.title_input.setFocus()
     
     def setup_ui(self):
-        """إعداد واجهة المستخدم"""
         try:
-            layout = QVBoxLayout()
-            layout.setContentsMargins(20, 20, 20, 20)
-            layout.setSpacing(15)
-            
-            # رأس النافذة
-            self.create_header(layout)
-            
-            # معلومات المصروف الأساسية
-            self.create_basic_info_section(layout)
-            
-            
-            # تفاصيل إضافية
-            self.create_additional_details_section(layout)
-            
-            # أزرار الحفظ والإلغاء
-            self.create_buttons_section(layout)
-            
-            self.setLayout(layout)
-            
+            self.setStyleSheet("""
+                QDialog { background:#f5f7fa; font-family:'Segoe UI', Arial, sans-serif; }
+                QLabel { color:#1f2d3d; font-weight:600; margin:4px 0; }
+                QLineEdit, QComboBox, QDoubleSpinBox, QDateEdit, QTextEdit {
+                    padding:6px 8px; border:1px solid #c0c6ce; border-radius:6px; background:#ffffff; }
+                QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QTextEdit:focus {
+                    border:1px solid #c83d30; background:#fff4f3; }
+                QPushButton { background:#c83d30; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-weight:600; }
+                QPushButton:hover { background:#d7574b; }
+                QPushButton:pressed { background:#b73226; }
+                QPushButton#cancel_btn { background:#6c757d; }
+                QPushButton#cancel_btn:hover { background:#5a6268; }
+                QPushButton#delete_btn { background:#dc3545; }
+                QPushButton#delete_btn:hover { background:#c82333; }
+                QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
+                QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#c83d30; color:#fff; border-radius:4px; }
+                QScrollArea { border:none; }
+            """)
+
+            main_layout = QVBoxLayout(self)
+            main_layout.setContentsMargins(6, 6, 6, 6)
+            main_layout.setSpacing(6)
+
+            scroll = QScrollArea(); scroll.setWidgetResizable(True)
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+            content = QWidget()
+            content_layout = QVBoxLayout(content)
+            content_layout.setContentsMargins(12, 12, 12, 12)
+            content_layout.setSpacing(12)
+
+            self.create_header(content_layout)
+            self.create_basic_info_section(content_layout)
+            self.create_additional_details_section(content_layout)
+            self.create_buttons_section(content_layout)
+
+            scroll.setWidget(content)
+            main_layout.addWidget(scroll)
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة تعديل المصروف: {e}")
             raise
     
     def create_header(self, layout):
-        """إنشاء رأس النافذة"""
         try:
-            header_frame = QFrame()
-            header_frame.setObjectName("headerFrame")
-            
-            header_layout = QVBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 15, 20, 15)
-            
-            title_label = QLabel(f"تعديل بيانات المصروف #{self.expense_id}")
-            title_label.setObjectName("dialogTitle")
-            title_label.setStyleSheet("color: black;")
-            header_layout.addWidget(title_label)
-            
-            desc_label = QLabel("يرجى تعديل البيانات حسب الحاجة")
-            desc_label.setObjectName("dialogDesc")
-            desc_label.setStyleSheet("color: black;")
-            header_layout.addWidget(desc_label)
-            
-            layout.addWidget(header_frame)
-            
+            title = QLabel(f"تعديل بيانات المصروف #{self.expense_id}")
+            title.setAlignment(Qt.AlignCenter)
+            title.setStyleSheet("background:#c83d30; color:#fff; padding:10px; border-radius:6px; font-weight:700;")
+            layout.addWidget(title)
         except Exception as e:
             logging.error(f"خطأ في إنشاء رأس النافذة: {e}")
     
     def create_basic_info_section(self, layout):
-        """إنشاء قسم المعلومات الأساسية"""
         try:
-            group_box = QGroupBox("المعلومات الأساسية")
-            group_box.setObjectName("sectionGroupBox")
-            
-            form_layout = QFormLayout(group_box)
-            form_layout.setContentsMargins(15, 20, 15, 15)
-            form_layout.setSpacing(12)
-            
-            # وصف المصروف
-            self.title_input = QLineEdit()
-            self.title_input.setObjectName("requiredInput")
-            self.title_input.setPlaceholderText("أدخل وصف المصروف...")
-            form_layout.addRow("الوصف *:", self.title_input)
-            
-            # المبلغ
-            self.amount_input = QDoubleSpinBox()
-            self.amount_input.setObjectName("amountInput")
-            self.amount_input.setRange(0.01, 999999999.99)
-            self.amount_input.setDecimals(2)
-            self.amount_input.setSuffix(" د.ع")
-            self.amount_input.setValue(0.0)
-            form_layout.addRow("المبلغ *:", self.amount_input)
-            
-            # المدرسة
-            self.school_combo = QComboBox()
-            self.school_combo.setObjectName("requiredCombo")
-            form_layout.addRow("المدرسة *:", self.school_combo)
-            
-            # تاريخ المصروف
-            self.expense_date = QDateEdit()
-            self.expense_date.setObjectName("dateInput")
-            self.expense_date.setDate(QDate.currentDate())
-            self.expense_date.setCalendarPopup(True)
-            form_layout.addRow("التاريخ *:", self.expense_date)
-            
-            # فئة المصروف
-            self.category_combo = QComboBox()
-            self.category_combo.setObjectName("requiredCombo")
-            self.category_combo.addItems([
-                "-- اختر الفئة --", "الرواتب", "المواد التعليمية", "الخدمات", 
-                "الصيانة", "الكهرباء والماء", "النظافة", "المكتبية", 
-                "النقل", "التأمين", "أخرى"
+            grp = QGroupBox("المعلومات الأساسية")
+            form = QFormLayout(grp)
+            form.setSpacing(8)
+            form.setLabelAlignment(Qt.AlignRight)
+
+            self.title_input = QLineEdit(); self.title_input.setPlaceholderText("أدخل وصف المصروف")
+            form.addRow("الوصف *:", self.title_input)
+
+            self.amount_input = QDoubleSpinBox(); self.amount_input.setRange(0.01, 999999999.99); self.amount_input.setDecimals(2); self.amount_input.setSuffix(" د.ع")
+            form.addRow("المبلغ *:", self.amount_input)
+
+            self.school_combo = QComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
+            form.addRow("المدرسة *:", self.school_combo)
+
+            self.expense_date = QDateEdit(); self.expense_date.setDate(QDate.currentDate()); self.expense_date.setCalendarPopup(True)
+            form.addRow("التاريخ *:", self.expense_date)
+
+            self.category_combo = QComboBox(); self.category_combo.addItems([
+                "-- اختر الفئة --", "الرواتب", "المواد التعليمية", "الخدمات", "الصيانة", "الكهرباء والماء", "النظافة", "المكتبية", "النقل", "التأمين", "أخرى"
             ])
-            form_layout.addRow("الفئة *:", self.category_combo)
-            
-            layout.addWidget(group_box)
-            
+            form.addRow("الفئة *:", self.category_combo)
+
+            layout.addWidget(grp)
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم المعلومات الأساسية: {e}")
     
     
     def create_additional_details_section(self, layout):
-        """إنشاء قسم التفاصيل الإضافية"""
         try:
-            group_box = QGroupBox("تفاصيل إضافية")
-            group_box.setObjectName("sectionGroupBox")
-            
-            form_layout = QFormLayout(group_box)
-            form_layout.setContentsMargins(15, 20, 15, 15)
-            form_layout.setSpacing(12)
-            
-            
-            # الملاحظات
-            self.notes_input = QTextEdit()
-            self.notes_input.setObjectName("notesInput")
-            self.notes_input.setPlaceholderText("أضف أي ملاحظات إضافية حول هذا المصروف...")
-            self.notes_input.setMaximumHeight(100)
-            form_layout.addRow("الملاحظات:", self.notes_input)
-            
-            layout.addWidget(group_box)
-            
+            grp = QGroupBox("تفاصيل إضافية")
+            form = QFormLayout(grp)
+            form.setSpacing(8)
+            form.setLabelAlignment(Qt.AlignRight)
+
+            self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("ملاحظات إضافية..."); self.notes_input.setMaximumHeight(100)
+            form.addRow("الملاحظات:", self.notes_input)
+
+            layout.addWidget(grp)
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم التفاصيل الإضافية: {e}")
     
     def create_buttons_section(self, layout):
-        """إنشاء قسم الأزرار"""
         try:
-            buttons_frame = QFrame()
-            buttons_layout = QHBoxLayout(buttons_frame)
-            buttons_layout.setContentsMargins(0, 15, 0, 0)
-            buttons_layout.setSpacing(10)
-            
-            buttons_layout.addStretch()
-            
-            # زر الإلغاء
-            self.cancel_button = QPushButton("إلغاء")
-            self.cancel_button.setObjectName("cancelButton")
-            self.cancel_button.clicked.connect(self.reject)
-            buttons_layout.addWidget(self.cancel_button)
-            
-            # زر الحذف
-            self.delete_button = QPushButton("حذف المصروف")
-            self.delete_button.setObjectName("deleteButton")
-            self.delete_button.clicked.connect(self.delete_expense)
-            buttons_layout.addWidget(self.delete_button)
-            
-            # زر الحفظ
+            btns = QHBoxLayout(); btns.addStretch()
             self.save_button = QPushButton("حفظ التعديلات")
-            self.save_button.setObjectName("saveButton")
+            self.delete_button = QPushButton("حذف المصروف"); self.delete_button.setObjectName("delete_btn")
+            self.cancel_button = QPushButton("إلغاء"); self.cancel_button.setObjectName("cancel_btn")
             self.save_button.clicked.connect(self.save_changes)
-            buttons_layout.addWidget(self.save_button)
-            
-            layout.addWidget(buttons_frame)
-            
+            self.delete_button.clicked.connect(self.delete_expense)
+            self.cancel_button.clicked.connect(self.reject)
+            btns.addWidget(self.save_button); btns.addWidget(self.delete_button); btns.addWidget(self.cancel_button)
+            layout.addLayout(btns)
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم الأزرار: {e}")
     
@@ -367,154 +321,29 @@ class EditExpenseDialog(QDialog):
             logging.error(f"خطأ في حذف المصروف: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في حذف المصروف:\n{str(e)}")
     
-    def setup_styles(self):
-        """إعداد تنسيقات النافذة"""
+    def apply_responsive_design(self):
         try:
-            style = """
-                QDialog {
-                    background-color: #F8F9FA;
-                    font-family: 'Segoe UI', Tahoma, Arial;
-                }
-                
-                #headerFrame {
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:1, 
-                        stop:0 #FD7E14, stop:1 #E8590C);
-                    border-radius: 10px;
-                    color: white;
-                    margin-bottom: 15px;
-                }
-                
-                #dialogTitle {
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: white;
-                    margin-bottom: 5px;
-                }
-                
-                #dialogDesc {
-                    font-size: 18px;
-                    color: #FEF1E8;
-                }
-                
-                #sectionGroupBox {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    background-color: white;
-                    border: 2px solid #E9ECEF;
-                    border-radius: 8px;
-                    margin: 5px 0px;
-                    padding-top: 10px;
-                }
-                
-                #requiredInput, #optionalInput {
-                    padding: 10px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                }
-                
-                #requiredInput {
-                    border-color: #FD7E14;
-                }
-                
-                #requiredInput:focus {
-                    border-color: #E8590C;
-                    outline: none;
-                }
-                
-                #requiredCombo, #optionalCombo {
-                    padding: 8px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                    min-height: 20px;
-                }
-                
-                #requiredCombo {
-                    border-color: #FD7E14;
-                }
-                
-                #amountInput {
-                    padding: 10px;
-                    border: 2px solid #FD7E14;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                    font-weight: bold;
-                }
-                
-                #dateInput {
-                    padding: 8px;
-                    border: 2px solid #FD7E14;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                }
-                
-                #notesInput {
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                    padding: 8px;
-                }
-                
-                #saveButton {
-                    background-color: #28A745;
-                    color: white;
-                    border: none;
-                    padding: 12px 30px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 18px;
-                    min-width: 140px;
-                }
-                
-                #saveButton:hover {
-                    background-color: #218838;
-                }
-                
-                #deleteButton {
-                    background-color: #DC3545;
-                    color: white;
-                    border: none;
-                    padding: 12px 30px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 18px;
-                    min-width: 120px;
-                }
-                
-                #deleteButton:hover {
-                    background-color: #C82333;
-                }
-                
-                #cancelButton {
-                    background-color: #6C757D;
-                    color: white;
-                    border: none;
-                    padding: 12px 30px;
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 18px;
-                    min-width: 120px;
-                }
-                
-                #cancelButton:hover {
-                    background-color: #5A6268;
-                }
-                
-                QLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                }
-            """
-            
-            self.setStyleSheet(style)
-            
+            from PyQt5.QtWidgets import QApplication, QGroupBox, QPushButton
+            screen = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
+            if not screen:
+                return
+            sw, sh = screen.width(), screen.height()
+            target_w = min(740, int(sw * 0.82))
+            target_h = min(640, int(sh * 0.85))
+            self.resize(target_w, target_h)
+
+            scale = min(sw / 1920.0, sh / 1080.0)
+            base = 14
+            point_size = max(10, int(base * (0.9 + scale * 0.6)))
+            f = self.font(); f.setPointSize(point_size); self.setFont(f)
+
+            if sw <= 1366:
+                for grp in self.findChildren(QGroupBox):
+                    lay = grp.layout()
+                    if lay:
+                        lay.setHorizontalSpacing(6)
+                        lay.setVerticalSpacing(6)
+                for btn in self.findChildren(QPushButton):
+                    btn.setMinimumHeight(32)
         except Exception as e:
-            logging.error(f"خطأ في إعداد تنسيقات النافذة: {e}")
+            logging.warning(f"Responsive design adjustment failed (expense edit): {e}")
