@@ -123,6 +123,7 @@ class DatabaseManager:
                         total_fee DECIMAL(10,2) NOT NULL,
                         start_date DATE NOT NULL,
                         status TEXT DEFAULT 'نشط',
+                        notes TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
