@@ -28,9 +28,6 @@ def test_imports():
         from core.printing.word_manager import WordManager, create_students_word_document
         print("✓ word_manager متوفر")
         
-        # اختبار print_type_dialog
-        from ui.dialogs.print_type_dialog import PrintTypeDialog, show_print_type_dialog
-        print("✓ print_type_dialog متوفر")
         
         # اختبار print_manager المحدث
         from core.printing.print_manager import print_students_list
@@ -162,39 +159,6 @@ def test_word_creation():
         print(traceback.format_exc())
         return False
 
-def test_print_type_dialog():
-    """اختبار نافذة اختيار نوع الطباعة"""
-    print("\n" + "=" * 50)
-    print("اختبار نافذة اختيار نوع الطباعة...")
-    print("=" * 50)
-    
-    try:
-        from PyQt5.QtWidgets import QApplication
-        from ui.dialogs.print_type_dialog import PrintTypeDialog
-        
-        # إنشاء تطبيق Qt إذا لم يكن موجوداً
-        app = QApplication.instance()
-        if app is None:
-            app = QApplication(sys.argv)
-        
-        # إنشاء النافذة
-        dialog = PrintTypeDialog()
-        
-        print("✅ تم إنشاء نافذة اختيار نوع الطباعة بنجاح!")
-        print("   العنوان:", dialog.windowTitle())
-        print("   الحجم:", f"{dialog.width()}x{dialog.height()}")
-        
-        # اختبار الخيارات
-        if dialog.html_radio.isChecked():
-            print("   الخيار الافتراضي: HTML")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ خطأ في إنشاء نافذة اختيار نوع الطباعة: {e}")
-        import traceback
-        print(traceback.format_exc())
-        return False
 
 def run_all_tests():
     """تشغيل جميع الاختبارات"""
@@ -207,7 +171,6 @@ def run_all_tests():
     # تشغيل الاختبارات
     results['imports'] = test_imports()
     results['word_creation'] = test_word_creation()
-    results['dialog'] = test_print_type_dialog()
     
     # تقرير النتائج
     print("\n" + "=" * 50)

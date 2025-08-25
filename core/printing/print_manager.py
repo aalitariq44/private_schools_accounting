@@ -217,7 +217,7 @@ from ui.widgets.column_selection_dialog import ColumnSelectionDialog
 # Convenience functions for printing different templates
 
 def print_students_list(students, filter_info=None, parent=None, use_web_engine=True):
-    """طباعة قائمة الطلاب مع معاينة - يدعم HTML و Word"""
+    """طباعة قائمة الطلاب دائماً في Word"""
     
     logging.debug(f"print_students_list: استُدعيت مع {len(students)} طلاب")
     
@@ -238,65 +238,21 @@ def print_students_list(students, filter_info=None, parent=None, use_web_engine=
         'remaining': 'المتبقي'
     }
 
-    # اختيار الأعمدة
+    # اختيار الأعمدة للطباعة
     column_dialog = ColumnSelectionDialog(columns, parent=parent)
-    if column_dialog.exec_() == ColumnSelectionDialog.Accepted:
-        selected_column_keys = column_dialog.get_selected_columns()
+    if column_dialog.exec_() != ColumnSelectionDialog.Accepted:
+        return
+    # مفاتيح الأعمدة المختارة
+    selected_keys = column_dialog.get_selected_columns()
+    # قاموس الأعمدة المختارة
+    selected_columns = {k: columns[k] for k in selected_keys if k in columns}
+    logging.debug(f"print_students_list: الأعمدة المحددة للطباعة في Word: {selected_columns}")
+    # إنشاء ملف Word دائماً
+    from core.printing.word_manager import create_students_word_document
+    create_students_word_document(students, selected_columns, filter_info, parent)
+    logging.info("تم إنشاء ملف Word بنجاح")
         
-        # تحويل قائمة المفاتيح إلى قاموس مع الأسماء
-        selected_columns = {key: columns[key] for key in selected_column_keys if key in columns}
-        
-        logging.debug(f"print_students_list: الأعمدة المحددة: {selected_columns}")
-        
-        # اختيار نوع الطباعة
-        from ui.dialogs.print_type_dialog import show_print_type_dialog
-        print_type = show_print_type_dialog(parent)
-        
-        if print_type is None:
-            # المستخدم ألغى العملية
-            return
-        
-        if print_type == "word":
-            # إنشاء ملف Word
-            try:
-                from core.printing.word_manager import create_students_word_document
-                create_students_word_document(students, selected_columns, filter_info, parent)
-                logging.info("تم إنشاء ملف Word بنجاح")
-            except ImportError:
-                if parent:
-                    from PyQt5.QtWidgets import QMessageBox
-                    QMessageBox.critical(
-                        parent, 
-                        "خطأ", 
-                        "مكتبة python-docx غير مثبتة.\nسيتم استخدام طباعة HTML بدلاً من ذلك."
-                    )
-                # استخدام HTML كبديل
-                print_type = "html"
-            except Exception as e:
-                logging.error(f"خطأ في إنشاء ملف Word: {e}")
-                if parent:
-                    from PyQt5.QtWidgets import QMessageBox
-                    QMessageBox.critical(
-                        parent, 
-                        "خطأ", 
-                        f"فشل في إنشاء ملف Word:\n{str(e)}\n\nسيتم استخدام طباعة HTML بدلاً من ذلك."
-                    )
-                # استخدام HTML كبديل
-                print_type = "html"
-        
-        if print_type == "html":
-            # الطباعة التقليدية HTML
-            pm = PrintManager(parent, use_web_engine)
-            data = {
-                'students': students,
-                'selected_columns': selected_column_keys,  # استخدام المفاتيح للـ HTML
-                'all_columns': columns
-            }
-            if filter_info:
-                data['filter_info'] = filter_info
-            
-            logging.debug(f"Data being passed to print_students_list: {data}")
-            pm.preview_document(TemplateType.STUDENTS_LIST, data)
+    # نهاية الدالة print_students_list
 
 
 def print_student_report(data, parent=None, use_web_engine=True):
