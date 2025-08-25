@@ -83,24 +83,31 @@ class WordManager:
             # إضافة فراغ
             doc.add_paragraph()
             
-            # إضافة معلومات الفلتر إذا كانت متوفرة
+            # عرض الفلاتر المطبقة وإجمالي العدد في جدول صغير بمحاذاة اليمين
             if filter_info:
-                filter_paragraph = doc.add_paragraph()
-                filter_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-                filter_run = filter_paragraph.add_run(f'الفلاتر المطبقة: {filter_info}')
-                filter_run.font.size = Pt(10)
-                filter_run.italic = True
-                filter_run.font.name = 'Arial'
-                doc.add_paragraph()
-            
-            # إضافة ملخص العدد
-            summary_paragraph = doc.add_paragraph()
-            summary_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-            summary_run = summary_paragraph.add_run(f'إجمالي عدد الطلاب: {len(students)}')
-            summary_run.font.size = Pt(12)
-            summary_run.bold = True
-            summary_run.font.name = 'Arial'
-            
+                info_tbl = doc.add_table(rows=2, cols=1)
+            else:
+                info_tbl = doc.add_table(rows=1, cols=1)
+            info_tbl.alignment = WD_TABLE_ALIGNMENT.LEFT
+            # الصف الأول: الفلاتر
+            if filter_info:
+                cell0 = info_tbl.cell(0, 0)
+                p0 = cell0.paragraphs[0]
+                p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run0 = p0.add_run(f'الفلاتر المطبقة: {filter_info}')
+                run0.font.size = Pt(10)
+                run0.italic = True
+                run0.font.name = 'Arial'
+            # الصف الثاني أو الوحيد: الملخص
+            idx = 1 if filter_info else 0
+            cell1 = info_tbl.cell(idx, 0)
+            p1 = cell1.paragraphs[0]
+            p1.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            run1 = p1.add_run(f'إجمالي عدد الطلاب: {len(students)}')
+            run1.font.size = Pt(12)
+            run1.bold = True
+            run1.font.name = 'Arial'
+            # مسافة بعد الجدول الصغير
             doc.add_paragraph()
             
             # إنشاء الجدول
