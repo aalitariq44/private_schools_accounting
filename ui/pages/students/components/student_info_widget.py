@@ -222,9 +222,9 @@ class StudentInfoWidget(QWidget):
                 return
             
             # تحديث المعلومات بناءً على البنية الصحيحة لجدول students
-            # فهارس الأعمدة الصحيحة:
+            # فهارس الأعمدة الصحيحة (من PRAGMA table_info):
             # 1: name, 4: grade, 5: section, 7: gender, 8: birthdate, 9: phone
-            # 12: total_fee, 13: start_date, 14: status, 17: notes
+            # 12: total_fee, 13: start_date, 14: status, 15: notes
             # مع JOIN: 18: school_name, 19: school_name_en, 20: school_address, 21: school_phone, 22: school_logo_path
             
             # الاسم - الفهرس 1
@@ -268,10 +268,10 @@ class StudentInfoWidget(QWidget):
             # تاريخ المباشرة - الفهرس 13
             self.start_date_label.setText(str(student_data[13] or "--"))
             
-            # الملاحظات - الفهرس 17
+            # الملاحظات - الفهرس 15
             notes = ""
-            if len(student_data) > 17 and student_data[17]:
-                notes = str(student_data[17])
+            if len(student_data) > 15 and student_data[15]:
+                notes = str(student_data[15])
             self.update_notes_display(notes)
             
             # القسط الكلي - الفهرس 12
@@ -401,8 +401,8 @@ class StudentInfoWidget(QWidget):
             
             # تحميل الملاحظات الحالية مباشرة من بيانات الطالب
             current_notes = ""
-            if self.student_data and len(self.student_data) > 17:
-                current_notes = str(self.student_data[17] or "")
+            if self.student_data and len(self.student_data) > 15:
+                current_notes = str(self.student_data[15] or "")
             notes_edit.setPlainText(current_notes)
             
             layout.addWidget(notes_edit)
@@ -430,13 +430,13 @@ class StudentInfoWidget(QWidget):
                         # تحديث البيانات المحلية
                         if self.student_data:
                             student_data_list = list(self.student_data)
-                            # الملاحظات في الفهرس 17
-                            if len(student_data_list) > 17:
-                                student_data_list[17] = notes_text
+                            # الملاحظات في الفهرس 15
+                            if len(student_data_list) > 15:
+                                student_data_list[15] = notes_text
                             else:
-                                while len(student_data_list) < 18:
+                                while len(student_data_list) < 16:
                                     student_data_list.append("")
-                                student_data_list[17] = notes_text
+                                student_data_list[15] = notes_text
                             self.student_data = tuple(student_data_list)
                         
                         # تحديث العرض
@@ -480,6 +480,6 @@ class StudentInfoWidget(QWidget):
     
     def get_notes(self):
         """الحصول على الملاحظات الحالية"""
-        if self.student_data and len(self.student_data) > 17:
-            return str(self.student_data[17] or "")
+        if self.student_data and len(self.student_data) > 15:
+            return str(self.student_data[15] or "")
         return ""
