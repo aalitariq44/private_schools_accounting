@@ -10,3 +10,4 @@ supabase>=2.3.0
 storage3>=0.7.0
 arabic-reshaper>=3.0.0
 python-bidi>=0.4.0
+python-docx>=0.8.11

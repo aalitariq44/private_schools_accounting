@@ -333,7 +333,7 @@ class StudentsPage(QWidget):
             self.add_group_students_button.setObjectName("groupButton")
             actions_layout.addWidget(self.add_group_students_button)
             
-            self.print_list_button = QPushButton("طباعة قائمة الطلاب")
+            self.print_list_button = QPushButton("طباعة قائمة الطلاب (HTML/Word)")
             self.print_list_button.setObjectName("secondaryButton")  # Use secondary style for different color
             actions_layout.addWidget(self.print_list_button)
             
@@ -1009,7 +1009,7 @@ class StudentsPage(QWidget):
             
             logging.debug(f"print_students_list_ordered: معلومات الفلتر: {filter_text}")
             
-            # طباعة القائمة مع البيانات المنسقة
+            # طباعة القائمة مع البيانات المنسقة (الآن يدعم HTML و Word)
             from core.printing.print_manager import print_students_list
             logging.debug("print_students_list_ordered: استدعاء print_students_list")
             print_students_list(students_for_print, filter_text, self)
