@@ -655,16 +655,24 @@ class SchoolsPage(QWidget):
                 }
                 #searchInput:focus { border:1px solid #2F6ED1; }
                 #refreshButton {
-                    background: #FFFFFF;
-                    color: #2F6ED1;
-                    border: 1px solid #C5CBD0;
-                    padding: 4px 10px;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    font-weight: 600;
+                    background:#007BFF; /* Primary blue */
+                    color:#FFFFFF;
+                    border:1px solid #007BFF;
+                    padding:6px 12px; /* Slightly larger padding */
+                    border-radius:5px; /* Slightly more rounded */
+                    font-size:13px; /* Slightly larger font */
+                    font-weight:600;
+                    min-width:110px; /* Consistent width with dashboard buttons */
+                    transition: all 0.3s ease; /* Smooth transition for hover effects */
                 }
-                #refreshButton:hover { background:#2F6ED1; color:#FFFFFF; border:1px solid #2F6ED1; }
-                #refreshButton:pressed { background:#2559A8; }
+                #refreshButton:hover {
+                    background:#0056B3; /* Darker blue on hover */
+                    border:1px solid #0056B3;
+                }
+                #refreshButton:pressed {
+                    background:#004085; /* Even darker on pressed */
+                    border:1px solid #004085;
+                }
                 #tableFrame {
                     background-color: #FFFFFF;
                     border: 1px solid #DDE1E4;
@@ -673,12 +681,13 @@ class SchoolsPage(QWidget):
                 #schoolsTable { border:none; background:#FFFFFF; gridline-color:#E2E5E8; font-size:12px; selection-background-color:#2F6ED1; selection-color:#FFFFFF; }
                 #schoolsTable::item { padding:0px; }
                 #schoolsTable QHeaderView::section {
-                    background:#F0F2F4;
+                    background:#E0E0E0; /* Lighter grey for a cleaner look */
                     color:#2C3E50;
-                    padding:4px 6px;
-                    font-size:12px;
-                    font-weight:600;
-                    border:1px solid #D4D8DB;
+                    padding:6px 8px; /* Slightly more padding */
+                    font-size:13px; /* Slightly larger font */
+                    font-weight:700; /* Bolder font */
+                    border:1px solid #C5CBD0; /* Slightly darker border */
+                    border-bottom:2px solid #007BFF; /* Highlight bottom border with primary blue */
                 }
                 #statusFrame {
                     background:#FFFFFF;

@@ -145,15 +145,15 @@ class DashboardPage(QWidget):
                 }}
                 #statValue {{
                     background: transparent; /* Remove white background */
-                    color: #FFFFFF; /* White text for better contrast on colored background */
+                    color: #000000; /* Black text */
                     font-size:14px;
                     font-weight:600;
                 }}
                 #statTitle {{
                     background: transparent; /* Remove white background */
-                    color:#E0E0E0; /* Lighter white for title */
+                    color:#333333; /* Darker grey for title */
                     font-size:12px;
-                    font-weight:500;
+                    font-weight:600; /* Changed to bold */
                 }}
             """)
             
