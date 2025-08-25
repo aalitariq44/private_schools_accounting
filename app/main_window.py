@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-النافذة الرئيسية لتطبيق حسابات المدارس الأهلية
+النافذة الرئيسية لتطبيق غريديا الأهلية
 """
 
 import logging
@@ -234,11 +234,18 @@ class MainWindow(QMainWindow):
             header_layout.setContentsMargins(margin, margin, margin, margin)
             
             # عنوان التطبيق
-            title_label = QLabel("حسابات المدارس")
+            title_label = QLabel("غريديا")
             title_label.setObjectName("appTitle")
             title_label.setAlignment(Qt.AlignCenter)
-            title_label.setWordWrap(True)
+            # إضافة بادنك حول النص
+            title_label.setStyleSheet("padding: 2px 6px;")
             header_layout.addWidget(title_label)
+            # شرح تحت العنوان بخط صغير في سطر واحد
+            subtitle_label = QLabel("نظام حسابات المدارس الاهلية")
+            subtitle_label.setObjectName("appSubtitle")
+            subtitle_label.setAlignment(Qt.AlignCenter)
+            subtitle_label.setStyleSheet("font-size:12px; color:#FFFFFF;")
+            header_layout.addWidget(subtitle_label)
             
             layout.addWidget(header_frame)
             
@@ -468,7 +475,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.error(f"خطأ في تحميل صفحة لوحة التحكم: {e}")
             # إنشاء صفحة بديلة
-            placeholder = self.create_placeholder_page("لوحة التحكم", "مرحباً بك في نظام حسابات المدارس الأهلية")
+            placeholder = self.create_placeholder_page("لوحة التحكم", "مرحباً بك في نظام غريديا الأهلية")
             self.pages["dashboard"] = placeholder
             self.pages_stack.addWidget(placeholder)
     
@@ -854,7 +861,7 @@ class MainWindow(QMainWindow):
                 {config.APP_NAME}
                 الإصدار: {config.APP_VERSION}
                 
-                تطبيق محاسبي متكامل لإدارة حسابات المدارس الأهلية
+                تطبيق محاسبي متكامل لإدارة غريديا الأهلية
                 
                 تطوير: {config.APP_ORGANIZATION}
             """)
@@ -917,6 +924,12 @@ class MainWindow(QMainWindow):
                     font-size: {style_vars['header_font_size']}px;
                     font-weight: bold;
                     padding: {style_vars['base_padding']}px;
+                }}
+                
+                #appSubtitle {{
+                    color: #FFFFFF;
+                    font-size: 12px;
+                    padding: 0;
                 }}
                 
                 #sidebarScrollArea {{
