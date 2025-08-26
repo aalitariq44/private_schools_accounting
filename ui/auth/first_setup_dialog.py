@@ -29,8 +29,8 @@ class FirstSetupDialog(QDialog):
         """إعداد واجهة المستخدم"""
         try:
             # إعداد النافذة
-            self.setWindowTitle("إعداد أولي - حسابات المدارس الأهلية")
-            self.setFixedSize(450, 350)
+            self.setWindowTitle("الإعداد الأولي - كلمة المرور")
+            self.setFixedSize(400, 300)
             self.setModal(True)
             self.setLayoutDirection(Qt.RightToLeft)
             
@@ -39,13 +39,11 @@ class FirstSetupDialog(QDialog):
             
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
-            main_layout.setSpacing(20)
-            main_layout.setContentsMargins(30, 30, 30, 30)
+            main_layout.setSpacing(15)
+            main_layout.setContentsMargins(20, 20, 20, 20)
             
-            # عنوان الترحيب
-            self.create_header(main_layout)
-            
-            # قسم إدخال كلمة المرور
+            # قسم الواجهة (مبسطة)
+            self.create_simple_header(main_layout)
             self.create_password_section(main_layout)
             
             # الأزرار
@@ -97,6 +95,30 @@ class FirstSetupDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في إنشاء رأس النافذة: {e}")
             raise
+
+    def create_simple_header(self, layout):
+        """إنشاء رأس مبسط"""
+        try:
+            header_frame = QFrame()
+            header_frame.setObjectName("headerFrame")
+            header_layout = QVBoxLayout(header_frame)
+            header_layout.setAlignment(Qt.AlignCenter)
+
+            title = QLabel("الإعداد الأولي")
+            title.setObjectName("welcomeLabel")
+            title.setAlignment(Qt.AlignCenter)
+            header_layout.addWidget(title)
+
+            info = QLabel("قم بتعيين كلمة مرور للدخول إلى النظام")
+            info.setObjectName("infoLabel")
+            info.setAlignment(Qt.AlignCenter)
+            info.setWordWrap(True)
+            header_layout.addWidget(info)
+
+            layout.addWidget(header_frame)
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء الرأس المبسط: {e}")
+            raise
     
     def create_password_section(self, layout):
         """إنشاء قسم إدخال كلمة المرور"""
@@ -107,16 +129,18 @@ class FirstSetupDialog(QDialog):
             password_layout = QVBoxLayout(password_frame)
             password_layout.setSpacing(15)
             
-            # اسم المؤسسة
-            organization_label = QLabel("اسم المؤسسة:")
-            organization_label.setObjectName("fieldLabel")
-            password_layout.addWidget(organization_label)
-            
-            self.organization_input = QLineEdit()
+            # اسم المؤسسة (ثابت - نسخة تجريبية)
+            org_row = QHBoxLayout()
+            org_label_title = QLabel("اسم المؤسسة:")
+            org_label_title.setObjectName("fieldLabel")
+            org_row.addWidget(org_label_title)
+            self.organization_input = QLineEdit("Trial version")
             self.organization_input.setObjectName("organizationInput")
-            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة التعليمية...")
-            self.organization_input.textChanged.connect(self.validate_inputs)
-            password_layout.addWidget(self.organization_input)
+            self.organization_input.setReadOnly(True)
+            self.organization_input.setEnabled(False)
+            self.organization_input.setToolTip("لا يمكن تعديل اسم المؤسسة في النسخة التجريبية")
+            org_row.addWidget(self.organization_input)
+            password_layout.addLayout(org_row)
             
             # كلمة المرور الأولى
             password1_label = QLabel("كلمة المرور:")
@@ -184,26 +208,15 @@ class FirstSetupDialog(QDialog):
     def validate_inputs(self):
         """التحقق من صحة المدخلات"""
         try:
-            organization_name = self.organization_input.text().strip()
+            # اسم المؤسسة ثابت في النسخة التجريبية
+            organization_name = "Trial version"
             password1 = self.password1_input.text().strip()
             password2 = self.password2_input.text().strip()
             
             # تنظيف رسالة التحقق
             self.validation_label.clear()
             
-            # التحقق من وجود اسم المؤسسة
-            if not organization_name:
-                self.validation_label.setText("يرجى إدخال اسم المؤسسة")
-                self.validation_label.setStyleSheet("color: #E74C3C;")
-                self.save_button.setEnabled(False)
-                return
-            
-            # التحقق من طول اسم المؤسسة
-            if len(organization_name) < 3:
-                self.validation_label.setText("اسم المؤسسة قصير جداً (الحد الأدنى 3 أحرف)")
-                self.validation_label.setStyleSheet("color: #E74C3C;")
-                self.save_button.setEnabled(False)
-                return
+            # (لا حاجة للتحقق من اسم المؤسسة لأنه ثابت)
             
             # التحقق من وجود كلمتي المرور
             if not password1 or not password2:
@@ -236,13 +249,9 @@ class FirstSetupDialog(QDialog):
     def save_password(self):
         """حفظ كلمة المرور واسم المؤسسة"""
         try:
-            organization_name = self.organization_input.text().strip()
+            # اسم المؤسسة ثابت
+            organization_name = "Trial version"
             password = self.password1_input.text().strip()
-            
-            # التحقق من اسم المؤسسة
-            if not organization_name or len(organization_name) < 3:
-                self.show_error("يرجى إدخال اسم صحيح للمؤسسة")
-                return
             
             # التحقق من كلمة المرور
             if len(password) < config.PASSWORD_MIN_LENGTH:
@@ -298,104 +307,103 @@ class FirstSetupDialog(QDialog):
         try:
             style = """
                 QDialog {
-                    background-color: #ECF0F1;
+                    background-color: #F7F9FA;
                     font-family: 'Segoe UI', Tahoma, Arial;
                 }
                 
                 #headerFrame {
-                    background-color: white;
-                    border-radius: 10px;
-                    padding: 20px;
-                    border: 1px solid #BDC3C7;
+                    background-color: transparent;
+                    padding: 5px;
                 }
                 
                 #welcomeLabel {
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: bold;
-                    color: #2C3E50;
-                    margin: 10px 0;
+                    color: #1F2D3A;
+                    margin: 4px 0;
                 }
                 
                 #infoLabel {
-                    font-size: 18px;
-                    color: #7F8C8D;
-                    margin-bottom: 10px;
+                    font-size: 13px;
+                    color: #5E6B74;
+                    margin-bottom: 4px;
                 }
                 
                 #passwordFrame {
-                    background-color: white;
-                    border-radius: 10px;
-                    padding: 20px;
-                    border: 1px solid #BDC3C7;
+                    background-color: #FFFFFF;
+                    border-radius: 8px;
+                    padding: 15px;
+                    border: 1px solid #D9E1E6;
                 }
                 
                 #fieldLabel {
-                    font-size: 18px;
+                    font-size: 14px;
                     font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 5px;
+                    color: #1F2D3A;
+                    margin-bottom: 2px;
                 }
                 
                 #passwordInput {
-                    padding: 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
+                    padding: 8px;
+                    border: 1px solid #C3CDD4;
+                    border-radius: 5px;
+                    font-size: 14px;
                     background-color: white;
                 }
                 
                 #organizationInput {
-                    padding: 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
+                    padding: 6px;
+                    border: 1px solid #E0E6EA;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    background-color: #F0F3F5;
+                    color: #56616A;
                 }
                 
                 #passwordInput:focus, #organizationInput:focus {
-                    border-color: #3498DB;
+                    border-color: #2D8CFF;
                     outline: none;
                 }
                 
                 #validationLabel {
-                    font-size: 18px;
+                    font-size: 13px;
                     font-weight: bold;
-                    margin-top: 5px;
+                    margin-top: 4px;
                 }
                 
                 #saveButton {
-                    background-color: #27AE60;
+                    background-color: #28A745;
                     color: white;
                     border: none;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-size: 18px;
+                    padding: 10px 18px;
+                    border-radius: 5px;
+                    font-size: 14px;
                     font-weight: bold;
-                    min-width: 150px;
+                    min-width: 120px;
                 }
                 
                 #saveButton:hover {
-                    background-color: #229954;
+                    background-color: #218838;
                 }
                 
                 #saveButton:disabled {
-                    background-color: #BDC3C7;
-                    color: #7F8C8D;
+                    background-color: #DEE2E6;
+                    color: #8A959C;
                 }
                 
                 #cancelButton {
-                    background-color: #E74C3C;
+                    background-color: #DC3545;
                     color: white;
                     border: none;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-size: 18px;
+                    padding: 10px 18px;
+                    border-radius: 5px;
+                    font-size: 14px;
                     font-weight: bold;
                     min-width: 100px;
                 }
                 
                 #cancelButton:hover {
-                    background-color: #C0392B;
+                    background-color: #C82333;
                 }
             """
             
