@@ -355,6 +355,45 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.error(f"خطأ في إنشاء منطقة المحتوى: {e}")
             raise
+
+    def show_trial_purchase_info(self):
+        """عرض نافذة معلومات شراء النسخة الكاملة."""
+        try:
+            from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
+            dialog = QDialog(self)
+            dialog.setWindowTitle("ترقية إلى النسخة الكاملة")
+            dialog.setModal(True)
+            dialog.resize(420, 260)
+            layout = QVBoxLayout(dialog)
+            layout.setContentsMargins(20, 20, 20, 20)
+            layout.setSpacing(12)
+
+            title = QLabel("شراء النسخة الكاملة")
+            title.setStyleSheet("font-size:18px; font-weight:700; color:#333;")
+            title.setAlignment(Qt.AlignCenter)
+            layout.addWidget(title)
+
+            body = QLabel(
+                "لشراء النسخة الكاملة تواصل معنا:\n\n"
+                "واتساب: 07859371340\n"
+                "تليجرام: @tech_solu"
+            )
+            body.setAlignment(Qt.AlignCenter)
+            body.setStyleSheet("font-size:14px; line-height:150%;")
+            layout.addWidget(body)
+
+            close_btn = QPushButton("إغلاق")
+            close_btn.setCursor(Qt.PointingHandCursor)
+            close_btn.setStyleSheet(
+                "background:#357abd; color:#fff; font-weight:600; padding:8px 22px;"
+                "border:none; border-radius:6px;"
+            )
+            close_btn.clicked.connect(dialog.accept)
+            layout.addWidget(close_btn, alignment=Qt.AlignCenter)
+
+            dialog.exec_()
+        except Exception as e:
+            logging.error(f"فشل عرض نافذة شراء النسخة الكاملة: {e}")
     
     def create_content_header(self, layout):
         """إنشاء شريط عنوان المحتوى"""
@@ -383,6 +422,31 @@ class MainWindow(QMainWindow):
                 header_layout.addWidget(self.academic_year_widget)
             except ImportError as e:
                 logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
+
+            # شارة النسخة التجريبية (تظهر فقط إذا كانت النسخة تجريبية)
+            try:
+                import config
+                if getattr(config, 'TRIAL_MODE', False):
+                    self.trial_badge = QPushButton("هذه النسخة التجريبية - اضغط لشراء النسخة الكاملة")
+                    self.trial_badge.setObjectName("trialBadge")
+                    self.trial_badge.setCursor(Qt.PointingHandCursor)
+                    self.trial_badge.setToolTip("اضغط لمعرفة كيفية شراء النسخة الكاملة")
+                    self.trial_badge.clicked.connect(self.show_trial_purchase_info)
+                    self.trial_badge.setStyleSheet(
+                        """
+                        QPushButton#trialBadge {
+                            background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #ff930f, stop:1 #ff5f4d);
+                            color: #ffffff; font-weight:600; padding:6px 14px; border:none; border-radius:16px;
+                            font-size:13px;
+                        }
+                        QPushButton#trialBadge:hover { background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 #ffad42, stop:1 #ff765f); }
+                        QPushButton#trialBadge:pressed { background:#e65332; }
+                        """
+                    )
+                    # وضع قبل زر النسخ الاحتياطي ليكون أقرب للوسط
+                    header_layout.addWidget(self.trial_badge)
+            except Exception as e:
+                logging.warning(f"تعذر إنشاء شارة النسخة التجريبية: {e}")
 
             # زر النسخ الاحتياطي السريع
             self.quick_backup_btn = QPushButton("نسخ احتياطي سريع")

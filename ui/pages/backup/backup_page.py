@@ -6,7 +6,6 @@
 """
 
 import logging
-import webbrowser
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -426,13 +425,6 @@ class BackupPage(QWidget):
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(10, 8, 10, 8)
         layout.setSpacing(8)
-        
-        # زر التحميل
-        download_btn = QPushButton("تحميل")
-        download_btn.setObjectName("smallButton")
-        download_btn.clicked.connect(lambda: self.download_backup(backup))
-        layout.addWidget(download_btn)
-        
         # زر الحذف
         delete_btn = QPushButton("حذف")
         delete_btn.setObjectName("smallDangerButton")
@@ -441,26 +433,6 @@ class BackupPage(QWidget):
         
         return widget
     
-    def download_backup(self, backup):
-        """تحميل نسخة احتياطية"""
-        try:
-            # الحصول على رابط التحميل
-            download_url = backup_manager.get_backup_url(backup['path'])
-            
-            if download_url:
-                # فتح الرابط في المتصفح
-                webbrowser.open(download_url)
-                QMessageBox.information(
-                    self, "تحميل", 
-                    "تم فتح رابط التحميل في المتصفح\nسيبدأ التحميل تلقائياً"
-                )
-                log_user_action(f"backup - download_backup: {backup['filename']}")
-            else:
-                QMessageBox.warning(self, "خطأ", "فشل في إنشاء رابط التحميل")
-                
-        except Exception as e:
-            logging.error(f"خطأ في تحميل النسخة الاحتياطية: {e}")
-            QMessageBox.critical(self, "خطأ", f"خطأ في التحميل:\n{e}")
     
     def delete_backup(self, backup):
         """حذف نسخة احتياطية"""
