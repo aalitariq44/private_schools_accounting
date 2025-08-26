@@ -6,11 +6,11 @@
 
 import logging
 from PyQt5.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
-    QPushButton, QFrame, QMessageBox, QWidget
+    QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QFrame, QMessageBox
 )
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont, QPixmap, QIcon
+from PyQt5.QtGui import QFont
 
 import config
 from core.utils.logger import auth_logger
@@ -21,16 +21,20 @@ class FirstSetupDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # المتغيرات الداخلية
         self.password = None
+        self._existing_org_folders = None  # سيتم جلبها مرة واحدة من Supabase
+        self._org_check_in_progress = False
+        # بناء الواجهة
         self.setup_ui()
         self.setup_styles()
         
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
         try:
-            # إعداد النافذة
-            self.setWindowTitle("إعداد أولي - حسابات المدارس الأهلية")
-            self.setFixedSize(450, 350)
+            # إعداد النافذة (بدون setFixedSize لتجنب التشوه الأولي)
+            self.setWindowTitle("الإعداد الأولي - حسابات المدارس الأهلية")
+            self.setMinimumWidth(420)
             self.setModal(True)
             self.setLayoutDirection(Qt.RightToLeft)
             
@@ -39,17 +43,88 @@ class FirstSetupDialog(QDialog):
             
             # التخطيط الرئيسي
             main_layout = QVBoxLayout()
-            main_layout.setSpacing(20)
-            main_layout.setContentsMargins(30, 30, 30, 30)
-            
-            # عنوان الترحيب
-            self.create_header(main_layout)
-            
-            # قسم إدخال كلمة المرور
-            self.create_password_section(main_layout)
-            
+            main_layout.setSpacing(15)
+            main_layout.setContentsMargins(24, 24, 24, 24)
+
+            # عنوان بسيط
+            title_label = QLabel("مرحباً بك! إعداد أول كلمة مرور")
+            title_label.setObjectName("dialogTitle")
+            title_label.setAlignment(Qt.AlignCenter)
+            main_layout.addWidget(title_label)
+
+            info_label = QLabel("يرجى إدخال اسم المؤسسة وكلمة المرور (لن تتمكن من تغيير الاسم لاحقاً بسهولة).")
+            info_label.setObjectName("infoLabel")
+            info_label.setWordWrap(True)
+            info_label.setAlignment(Qt.AlignCenter)
+            main_layout.addWidget(info_label)
+
+            # إطار الحقول
+            form_frame = QFrame()
+            form_frame.setObjectName("formFrame")
+            form_layout = QVBoxLayout(form_frame)
+            form_layout.setSpacing(10)
+            form_layout.setContentsMargins(18, 18, 18, 18)
+
+            # اسم المؤسسة
+            org_label = QLabel("اسم المؤسسة:")
+            org_label.setObjectName("fieldLabel")
+            form_layout.addWidget(org_label)
+
+            self.organization_input = QLineEdit()
+            self.organization_input.setObjectName("organizationInput")
+            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة التعليمية...")
+            self.organization_input.textChanged.connect(self.validate_inputs)
+            form_layout.addWidget(self.organization_input)
+
+            # كلمة المرور
+            pwd1_label = QLabel("كلمة المرور:")
+            pwd1_label.setObjectName("fieldLabel")
+            form_layout.addWidget(pwd1_label)
+
+            self.password1_input = QLineEdit()
+            self.password1_input.setObjectName("passwordInput")
+            self.password1_input.setEchoMode(QLineEdit.Password)
+            self.password1_input.setPlaceholderText("أدخل كلمة المرور...")
+            self.password1_input.textChanged.connect(self.validate_inputs)
+            form_layout.addWidget(self.password1_input)
+
+            # تأكيد كلمة المرور
+            pwd2_label = QLabel("تأكيد كلمة المرور:")
+            pwd2_label.setObjectName("fieldLabel")
+            form_layout.addWidget(pwd2_label)
+
+            self.password2_input = QLineEdit()
+            self.password2_input.setObjectName("passwordInput")
+            self.password2_input.setEchoMode(QLineEdit.Password)
+            self.password2_input.setPlaceholderText("أعد كتابة كلمة المرور...")
+            self.password2_input.textChanged.connect(self.validate_inputs)
+            form_layout.addWidget(self.password2_input)
+
+            # رسالة التحقق
+            self.validation_label = QLabel()
+            self.validation_label.setObjectName("validationLabel")
+            self.validation_label.setAlignment(Qt.AlignCenter)
+            self.validation_label.setWordWrap(True)
+            form_layout.addWidget(self.validation_label)
+
+            main_layout.addWidget(form_frame)
+
             # الأزرار
-            self.create_buttons(main_layout)
+            buttons_layout = QHBoxLayout()
+            buttons_layout.setSpacing(12)
+
+            self.cancel_button = QPushButton("إلغاء")
+            self.cancel_button.setObjectName("cancelButton")
+            self.cancel_button.clicked.connect(self.reject)
+            buttons_layout.addWidget(self.cancel_button)
+
+            self.save_button = QPushButton("حفظ وإنشاء الحساب")
+            self.save_button.setObjectName("saveButton")
+            self.save_button.clicked.connect(self.save_password)
+            self.save_button.setEnabled(False)
+            buttons_layout.addWidget(self.save_button)
+
+            main_layout.addLayout(buttons_layout)
             
             self.setLayout(main_layout)
             
@@ -57,129 +132,46 @@ class FirstSetupDialog(QDialog):
             logging.error(f"خطأ في إعداد واجهة الإعداد الأولي: {e}")
             raise
     
-    def create_header(self, layout):
-        """إنشاء رأس النافذة"""
-        try:
-            # إطار الرأس
-            header_frame = QFrame()
-            header_frame.setObjectName("headerFrame")
-            header_layout = QVBoxLayout(header_frame)
-            header_layout.setAlignment(Qt.AlignCenter)
-            
-            # أيقونة التطبيق (إذا توفرت)
-            icon_label = QLabel()
-            icon_label.setAlignment(Qt.AlignCenter)
-            icon_label.setFixedSize(80, 80)
-            icon_label.setStyleSheet("""
-                QLabel {
-                    background-color: #3498DB;
-                    border-radius: 40px;
-                    border: 3px solid #2C3E50;
-                }
-            """)
-            header_layout.addWidget(icon_label)
-            
-            # عنوان الترحيب
-            welcome_label = QLabel("مرحباً بك!")
-            welcome_label.setObjectName("welcomeLabel")
-            welcome_label.setAlignment(Qt.AlignCenter)
-            header_layout.addWidget(welcome_label)
-            
-            # نص توضيحي
-            info_label = QLabel("يرجى إعداد كلمة مرور للدخول إلى النظام")
-            info_label.setObjectName("infoLabel")
-            info_label.setAlignment(Qt.AlignCenter)
-            info_label.setWordWrap(True)
-            header_layout.addWidget(info_label)
-            
-            layout.addWidget(header_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء رأس النافذة: {e}")
-            raise
+    # تم الاستغناء عن create_header و create_password_section و create_buttons في التصميم المبسط
     
-    def create_password_section(self, layout):
-        """إنشاء قسم إدخال كلمة المرور"""
+    # الدوال القديمة create_password_section و create_buttons أزيلت في النسخة المبسطة للحفاظ على بساطة الكود
+
+    def _sanitize_folder_name(self, name: str) -> str:
+        """تحويل اسم المؤسسة إلى اسم مجلد آمن كما في مدير النسخ"""
+        import re
+        if not name:
+            return "organization"
+        safe = re.sub(r'[<>:"/\\|?*]', '', name)
+        return safe.strip().replace(' ', '_')
+
+    def _load_existing_org_folders(self):
+        """جلب أسماء المجلدات (المؤسسات) الموجودة في البكت (يجلب مرة واحدة)."""
+        if self._existing_org_folders is not None or self._org_check_in_progress:
+            return
+        self._org_check_in_progress = True
         try:
-            # إطار كلمة المرور
-            password_frame = QFrame()
-            password_frame.setObjectName("passwordFrame")
-            password_layout = QVBoxLayout(password_frame)
-            password_layout.setSpacing(15)
-            
-            # اسم المؤسسة
-            organization_label = QLabel("اسم المؤسسة:")
-            organization_label.setObjectName("fieldLabel")
-            password_layout.addWidget(organization_label)
-            
-            self.organization_input = QLineEdit()
-            self.organization_input.setObjectName("organizationInput")
-            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة التعليمية...")
-            self.organization_input.textChanged.connect(self.validate_inputs)
-            password_layout.addWidget(self.organization_input)
-            
-            # كلمة المرور الأولى
-            password1_label = QLabel("كلمة المرور:")
-            password1_label.setObjectName("fieldLabel")
-            password_layout.addWidget(password1_label)
-            
-            self.password1_input = QLineEdit()
-            self.password1_input.setObjectName("passwordInput")
-            self.password1_input.setEchoMode(QLineEdit.Password)
-            self.password1_input.setPlaceholderText("أدخل كلمة المرور...")
-            self.password1_input.textChanged.connect(self.validate_inputs)
-            password_layout.addWidget(self.password1_input)
-            
-            # تأكيد كلمة المرور
-            password2_label = QLabel("تأكيد كلمة المرور:")
-            password2_label.setObjectName("fieldLabel")
-            password_layout.addWidget(password2_label)
-            
-            self.password2_input = QLineEdit()
-            self.password2_input.setObjectName("passwordInput")
-            self.password2_input.setEchoMode(QLineEdit.Password)
-            self.password2_input.setPlaceholderText("أعد كتابة كلمة المرور...")
-            self.password2_input.textChanged.connect(self.validate_inputs)
-            password_layout.addWidget(self.password2_input)
-            
-            # رسالة التحقق
-            self.validation_label = QLabel()
-            self.validation_label.setObjectName("validationLabel")
-            self.validation_label.setAlignment(Qt.AlignCenter)
-            self.validation_label.setWordWrap(True)
-            password_layout.addWidget(self.validation_label)
-            
-            layout.addWidget(password_frame)
-            
+            try:
+                from supabase import create_client  # type: ignore
+            except ImportError:
+                self._existing_org_folders = set()
+                return
+            import config
+            supabase = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+            # سرد المجلدات داخل backups
+            items = supabase.storage.from_(config.SUPABASE_BUCKET).list("backups")
+            folders = set()
+            if items:
+                for it in items:
+                    if isinstance(it, dict):
+                        name = it.get('name')
+                        if name:
+                            folders.add(name)
+            self._existing_org_folders = folders
         except Exception as e:
-            logging.error(f"خطأ في إنشاء قسم كلمة المرور: {e}")
-            raise
-    
-    def create_buttons(self, layout):
-        """إنشاء الأزرار"""
-        try:
-            # إطار الأزرار
-            buttons_layout = QHBoxLayout()
-            buttons_layout.setSpacing(15)
-            
-            # زر الإلغاء
-            self.cancel_button = QPushButton("إلغاء")
-            self.cancel_button.setObjectName("cancelButton")
-            self.cancel_button.clicked.connect(self.reject)
-            buttons_layout.addWidget(self.cancel_button)
-            
-            # زر الحفظ
-            self.save_button = QPushButton("حفظ وإنشاء الحساب")
-            self.save_button.setObjectName("saveButton")
-            self.save_button.clicked.connect(self.save_password)
-            self.save_button.setEnabled(False)
-            buttons_layout.addWidget(self.save_button)
-            
-            layout.addLayout(buttons_layout)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء الأزرار: {e}")
-            raise
+            logging.warning(f"تعذر جلب قائمة المؤسسات من Supabase: {e}")
+            self._existing_org_folders = set()
+        finally:
+            self._org_check_in_progress = False
     
     def validate_inputs(self):
         """التحقق من صحة المدخلات"""
@@ -205,6 +197,19 @@ class FirstSetupDialog(QDialog):
                 self.save_button.setEnabled(False)
                 return
             
+            # التحقق من توفر قائمة المؤسسات (مرة واحدة فقط - غير حظر واجهة المستخدم بشكل كبير)
+            if self._existing_org_folders is None:
+                QTimer.singleShot(0, self._load_existing_org_folders)
+
+            # التحقق من عدم تكرار اسم المؤسسة في البكت (إذا كانت القائمة جاهزة)
+            if self._existing_org_folders is not None:
+                safe_name = self._sanitize_folder_name(organization_name)
+                if safe_name in self._existing_org_folders:
+                    self.validation_label.setText("اسم المؤسسة مستخدم مسبقاً على الخادم، اختر اسماً مختلفاً")
+                    self.validation_label.setStyleSheet("color: #E74C3C;")
+                    self.save_button.setEnabled(False)
+                    return
+
             # التحقق من وجود كلمتي المرور
             if not password1 or not password2:
                 self.save_button.setEnabled(False)
@@ -297,108 +302,21 @@ class FirstSetupDialog(QDialog):
         """إعداد تنسيقات النافذة"""
         try:
             style = """
-                QDialog {
-                    background-color: #ECF0F1;
-                    font-family: 'Segoe UI', Tahoma, Arial;
-                }
-                
-                #headerFrame {
-                    background-color: white;
-                    border-radius: 10px;
-                    padding: 20px;
-                    border: 1px solid #BDC3C7;
-                }
-                
-                #welcomeLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin: 10px 0;
-                }
-                
-                #infoLabel {
-                    font-size: 18px;
-                    color: #7F8C8D;
-                    margin-bottom: 10px;
-                }
-                
-                #passwordFrame {
-                    background-color: white;
-                    border-radius: 10px;
-                    padding: 20px;
-                    border: 1px solid #BDC3C7;
-                }
-                
-                #fieldLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #2C3E50;
-                    margin-bottom: 5px;
-                }
-                
-                #passwordInput {
-                    padding: 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                }
-                
-                #organizationInput {
-                    padding: 12px;
-                    border: 2px solid #BDC3C7;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    background-color: white;
-                }
-                
-                #passwordInput:focus, #organizationInput:focus {
-                    border-color: #3498DB;
-                    outline: none;
-                }
-                
-                #validationLabel {
-                    font-size: 18px;
-                    font-weight: bold;
-                    margin-top: 5px;
-                }
-                
-                #saveButton {
-                    background-color: #27AE60;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    min-width: 150px;
-                }
-                
-                #saveButton:hover {
-                    background-color: #229954;
-                }
-                
-                #saveButton:disabled {
-                    background-color: #BDC3C7;
-                    color: #7F8C8D;
-                }
-                
-                #cancelButton {
-                    background-color: #E74C3C;
-                    color: white;
-                    border: none;
-                    padding: 12px 24px;
-                    border-radius: 6px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    min-width: 100px;
-                }
-                
-                #cancelButton:hover {
-                    background-color: #C0392B;
-                }
+                QDialog { background-color: #F5F7F8; font-family: 'Segoe UI', Tahoma; }
+                #dialogTitle { font-size: 17px; font-weight: bold; color: #2C3E50; }
+                #infoLabel { font-size: 13px; color: #555; margin-bottom: 4px; }
+                #formFrame { background: #FFFFFF; border: 1px solid #D0D7DE; border-radius: 8px; }
+                #fieldLabel { font-size: 14px; font-weight: 600; color: #2C3E50; }
+                #passwordInput, #organizationInput { padding: 8px 10px; border: 1px solid #C5CCD3; border-radius: 5px; font-size: 14px; background: #FFFFFF; }
+                #passwordInput:focus, #organizationInput:focus { border: 1px solid #3498DB; }
+                #validationLabel { font-size: 13px; font-weight: 600; margin-top: 4px; }
+                QPushButton { border: none; padding: 10px 18px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+                #saveButton { background: #27AE60; color: #fff; }
+                #saveButton:hover:!disabled { background: #229954; }
+                #saveButton:disabled { background: #BFC8CE; color: #7F8C8D; }
+                #cancelButton { background: #E74C3C; color: #fff; }
+                #cancelButton:hover { background: #C0392B; }
             """
-            
             self.setStyleSheet(style)
             
         except Exception as e:
@@ -416,3 +334,20 @@ class FirstSetupDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في معالجة ضغط المفاتيح: {e}")
             super().keyPressEvent(event)
+
+    def showEvent(self, event):  # إصلاح مشكلة ظهور غير مكتمل حتى يتم تحريك النافذة
+        try:
+            super().showEvent(event)
+            QTimer.singleShot(0, self._finalize_geometry)
+        except Exception as e:
+            logging.error(f"خطأ في showEvent: {e}")
+            super().showEvent(event)
+
+    def _finalize_geometry(self):
+        """ضبط الحجم النهائي بعد العرض لمنع التشوه الأولي"""
+        try:
+            self.adjustSize()
+            # تثبيت الحجم الحالي بعد الحساب لضمان ثبات الشكل
+            self.setFixedSize(self.size())
+        except Exception as e:
+            logging.error(f"خطأ في _finalize_geometry: {e}")
