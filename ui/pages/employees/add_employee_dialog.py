@@ -13,6 +13,7 @@ from PyQt5.QtGui import QFont
 
 from core.database.connection import db_manager
 from core.utils.logger import log_database_operation
+from core.utils.trial_manager import can_add_entity
 
 
 class AddEmployeeDialog(QDialog):
@@ -182,6 +183,12 @@ class AddEmployeeDialog(QDialog):
 
     def add_employee(self):
         if not self.validate_data():
+            return
+        # تحقق حدود النسخة التجريبية للموظفين
+        allowed, message = can_add_entity('employees', 1)
+        if not allowed:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "نسخة تجريبية", message)
             return
         try:
             job_type = self.job_combo.currentData()

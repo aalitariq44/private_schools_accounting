@@ -17,6 +17,7 @@ import logging
 
 # Import the database manager
 from core.database.connection import db_manager
+from core.utils.trial_manager import can_add_entity
 
 class AddStudentDialog(QDialog):
     student_added = pyqtSignal()
@@ -311,6 +312,12 @@ class AddStudentDialog(QDialog):
         errors = self.validate_inputs()
         if errors:
             QMessageBox.warning(self, "خطأ في البيانات", "\\n".join(errors))
+            return
+
+        # التحقق من حدود النسخة التجريبية (طالب واحد)
+        allowed, message = can_add_entity('students', 1)
+        if not allowed:
+            QMessageBox.warning(self, "نسخة تجريبية", message)
             return
         
         try:

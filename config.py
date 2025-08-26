@@ -76,3 +76,10 @@ SUPABASE_BUCKET = "private-schools-accounting"
 
 # وضع التطوير (True لتفعيل وضع التطوير، False للإنتاج)
 DEBUG_MODE = True
+
+# إعدادات النسخة التجريبية (Trial)
+# عند تفعيل TRIAL_MODE سيتم تطبيق الحدود أدناه على أعداد الكيانات.
+TRIAL_MODE = True  # اضبطها على False لإيقاف القيود
+TRIAL_STUDENTS_LIMIT = 10
+TRIAL_TEACHERS_LIMIT = 4
+TRIAL_EMPLOYEES_LIMIT = 4

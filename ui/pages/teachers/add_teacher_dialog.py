@@ -14,6 +14,7 @@ from PyQt5.QtGui import QFont
 
 from core.database.connection import db_manager
 from core.utils.logger import log_database_operation
+from core.utils.trial_manager import can_add_entity
 
 
 class AddTeacherDialog(QDialog):
@@ -195,6 +196,12 @@ class AddTeacherDialog(QDialog):
     # ------------- Save Operation -------------
     def add_teacher(self):
         if not self.validate_data():
+            return
+        # تحقق حدود النسخة التجريبية للمعلمين
+        allowed, message = can_add_entity('teachers', 1)
+        if not allowed:
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "نسخة تجريبية", message)
             return
         try:
             teacher_data = {

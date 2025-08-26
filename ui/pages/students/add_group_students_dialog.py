@@ -20,6 +20,7 @@ from PyQt5.QtGui import QFont, QPixmap, QIcon
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
+from core.utils.trial_manager import can_add_entity
 
 class AddGroupStudentsDialog(QDialog):
     """نافذة إضافة مجموعة طلاب"""
@@ -410,6 +411,13 @@ class AddGroupStudentsDialog(QDialog):
         try:
             # التحقق من صحة البيانات
             if not self.validate_shared_data() or not self.validate_students_data():
+                return
+
+            # تحقق حدود النسخة التجريبية قبل الإضافة (عدد الصفوف في الجدول يمثل عدد الطلاب المطلوب إضافتهم)
+            rows_to_add = self.students_table.rowCount()
+            allowed, message = can_add_entity('students', rows_to_add)
+            if not allowed:
+                QMessageBox.warning(self, "نسخة تجريبية", message)
                 return
                 
             # جمع البيانات المشتركة
