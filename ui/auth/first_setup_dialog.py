@@ -30,7 +30,8 @@ class FirstSetupDialog(QDialog):
         try:
             # إعداد النافذة
             self.setWindowTitle("الإعداد الأولي - كلمة المرور")
-            self.setFixedSize(400, 300)
+            # سنضبط الحجم النهائي بعد تهيئة كل شيء لتفادي التشوه عند الظهور الأول
+            self.setMinimumSize(360, 260)
             self.setModal(True)
             self.setLayoutDirection(Qt.RightToLeft)
             
@@ -50,6 +51,9 @@ class FirstSetupDialog(QDialog):
             self.create_buttons(main_layout)
             
             self.setLayout(main_layout)
+
+            # ضبط الحجم بعد دورة الحدث الأولى لضمان حساب sizeHint بعد تلميع الأنماط
+            QTimer.singleShot(0, self.finalize_size)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة الإعداد الأولي: {e}")
@@ -424,3 +428,12 @@ class FirstSetupDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في معالجة ضغط المفاتيح: {e}")
             super().keyPressEvent(event)
+
+    def finalize_size(self):
+        """ضبط الحجم النهائي بعد اكتمال بناء الواجهة لمنع الوميض/التشوه"""
+        try:
+            self.adjustSize()
+            # تثبيت الحجم حسب التلميح النهائي فقط (يمكنك إزالة التثبيت إذا رغبت بالسماح بالتكبير)
+            self.setFixedSize(self.sizeHint())
+        except Exception as e:
+            logging.error(f"خطأ في finalize_size: {e}")
