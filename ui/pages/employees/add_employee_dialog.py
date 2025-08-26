@@ -187,7 +187,6 @@ class AddEmployeeDialog(QDialog):
         # تحقق حدود النسخة التجريبية للموظفين
         allowed, message = can_add_entity('employees', 1)
         if not allowed:
-            from PyQt5.QtWidgets import QMessageBox
             QMessageBox.warning(self, "نسخة تجريبية", message)
             return
         try:

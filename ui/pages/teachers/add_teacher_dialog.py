@@ -198,9 +198,9 @@ class AddTeacherDialog(QDialog):
         if not self.validate_data():
             return
         # تحقق حدود النسخة التجريبية للمعلمين
+        # نجعل التحقق حسب المدرسة المحددة لذكاء أكثر في العد
         allowed, message = can_add_entity('teachers', 1)
         if not allowed:
-            from PyQt5.QtWidgets import QMessageBox
             QMessageBox.warning(self, "نسخة تجريبية", message)
             return
         try:

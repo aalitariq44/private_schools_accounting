@@ -5,7 +5,7 @@
 توفر هذه الوحدة دوال بسيطة للتحقق من حدود النسخة التجريبية
 (عدد الطلاب، المعلمين، الموظفين) قبل السماح بالإضافة.
 """
-from typing import Tuple
+from typing import Tuple, Dict, Any, Optional
 import logging
 
 import config
@@ -31,16 +31,32 @@ def is_trial_mode() -> bool:
     return getattr(config, 'TRIAL_MODE', False)
 
 
-def get_current_count(table: str) -> int:
+def get_current_count(table: str, filters: Optional[Dict[str, Any]] = None) -> int:
+    """جلب العدد الحالي مع إمكانية التصفية.
+
+    Args:
+        table: اسم الجدول.
+        filters: قاموس {العمود: القيمة} لبناء جملة WHERE ديناميكياً.
+    """
     try:
-        row = db_manager.execute_fetch_one(f"SELECT COUNT(*) as c FROM {table}")
+        if filters:
+            where_clauses = []
+            params = []
+            for col, val in filters.items():
+                where_clauses.append(f"{col} = ?")
+                params.append(val)
+            where_sql = " WHERE " + " AND " .join(where_clauses)
+        else:
+            where_sql = ""
+            params = []
+        row = db_manager.execute_fetch_one(f"SELECT COUNT(*) as c FROM {table}{where_sql}", tuple(params))
         return int(row['c']) if row else 0
     except Exception as e:
         logging.error(f"فشل في إحضار عدد السجلات من {table}: {e}")
         return 0
 
 
-def can_add_entity(table: str, additional: int = 1) -> Tuple[bool, str]:
+def can_add_entity(table: str, additional: int = 1, filters: Optional[Dict[str, Any]] = None) -> Tuple[bool, str]:
     """التحقق مما إذا كان يمكن إضافة كيان (أو مجموعة كيانات) في وضع النسخة التجريبية.
 
     Args:
@@ -55,7 +71,7 @@ def can_add_entity(table: str, additional: int = 1) -> Tuple[bool, str]:
     if table not in ENTITY_LIMITS:
         return True, ""
     limit = ENTITY_LIMITS[table]()
-    current = get_current_count(table)
+    current = get_current_count(table, filters)
     if current + additional > limit:
         msg_tpl = MESSAGES.get(table, "تم تجاوز حد النسخة التجريبية")
         return False, msg_tpl.format(limit=limit)
