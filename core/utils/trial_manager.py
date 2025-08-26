@@ -15,12 +15,16 @@ ENTITY_LIMITS = {
     'students': lambda: config.TRIAL_STUDENTS_LIMIT,
     'teachers': lambda: config.TRIAL_TEACHERS_LIMIT,
     'employees': lambda: config.TRIAL_EMPLOYEES_LIMIT,
+    'external_income': lambda: 4,  # حد النسخة التجريبية المطلوب للإيرادات الخارجية
+    'expenses': lambda: 4,         # حد النسخة التجريبية المطلوب للمصروفات
 }
 
 MESSAGES = {
     'students': "هذه نسخة تجريبية: الحد الأقصى للطلاب هو {limit} طالب فقط.",
     'teachers': "هذه نسخة تجريبية: الحد الأقصى للمعلمين هو {limit} معلمين فقط.",
     'employees': "هذه نسخة تجريبية: الحد الأقصى للموظفين هو {limit} موظفين فقط.",
+    'external_income': "هذه نسخة تجريبية: الحد الأقصى للإيرادات الخارجية هو {limit} فقط.",
+    'expenses': "هذه نسخة تجريبية: الحد الأقصى للمصروفات هو {limit} فقط.",
 }
 
 def is_trial_mode() -> bool:

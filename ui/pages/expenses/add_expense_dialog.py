@@ -17,6 +17,7 @@ from PyQt5.QtGui import QFont
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
+from core.utils.trial_manager import can_add_entity
 
 
 class AddExpenseDialog(QDialog):
@@ -199,6 +200,12 @@ class AddExpenseDialog(QDialog):
             errors = self.validate_inputs()
             if errors:
                 QMessageBox.warning(self, "خطأ في البيانات", "\n".join(errors))
+                return
+
+            # التحقق من حدود النسخة التجريبية (مصروف واحد)
+            allowed, message = can_add_entity('expenses', 1)
+            if not allowed:
+                QMessageBox.warning(self, "نسخة تجريبية", message)
                 return
             
             # تحضير البيانات
