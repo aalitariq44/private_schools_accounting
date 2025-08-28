@@ -370,14 +370,15 @@ class ReportLabPrintManager:
         """تحويل الرقم إلى كلمات عربية"""
         # تنفيذ بسيط لتحويل الأرقام إلى كلمات
         # يمكن توسيعه لاحقاً لدعم أكثر شمولية
-        
+        # الوحدات والعشرات والمئات
         units = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة']
-        tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة']
+        # ملاحظة: كان هناك خطأ سابق حيث وُضِعت ألفاظ المئات داخل قائمة العشرات مما سبب ظهور 150 كـ "مائة وخمسمائة"
+        tens = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون']
         hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة']
-        
+
         if number == 0:
             return 'صفر'
-        
+
         num = int(number)
         if num > 999999:
             return f'{num:,}'
@@ -400,28 +401,31 @@ class ReportLabPrintManager:
                 return k_str
 
         result = []
-        
+
         h = num // 100
         if h > 0:
             result.append(hundreds[h])
-        
+
         rem = num % 100
         if rem > 0:
             if rem >= 20:
                 t = rem // 10
                 u = rem % 10
+                # نمط (وحدة + عشرون) مثل "واحد وعشرون"
                 if u > 0:
                     result.append(units[u])
                 result.append(tens[t])
             elif rem >= 11:
-                teens = ['أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 
+                teens = ['أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر',
                          'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر']
                 result.append(teens[rem - 11])
             elif rem == 10:
                 result.append('عشرة')
             else:
                 result.append(units[rem])
-        
+
+        # إزالة العناصر الفارغة ثم ربطها بـ "و"
+        result = [part.strip() for part in result if part.strip()]
         return ' و'.join(result)
     
     def preview_installment_receipt(self, data: Dict[str, Any]) -> str:
