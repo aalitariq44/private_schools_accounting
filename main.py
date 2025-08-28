@@ -50,6 +50,7 @@ import config
 from core.utils.logger import setup_logging
 from core.database.connection import DatabaseManager
 from core.auth.login_manager import AuthManager
+from core.licensing import initialize_license_system
 from ui.auth.login_window import LoginWindow
 from app.main_window import MainWindow
 
@@ -120,6 +121,7 @@ class SchoolAccountingApp:
         self.app = None
         self.main_window = None
         self.login_window = None
+        self.license_system = None
         self.setup_logging()
         
     def setup_logging(self):
@@ -217,6 +219,30 @@ class SchoolAccountingApp:
             self.show_error_dialog("خطأ", f"خطأ في إعداد قاعدة البيانات: {e}")
             return False
     
+    def check_license(self):
+        """فحص نظام التراخيص"""
+        try:
+            logging.info("بدء فحص نظام التراخيص...")
+            
+            # تهيئة نظام التراخيص
+            success, license_system = initialize_license_system(self.app)
+            
+            if success:
+                self.license_system = license_system
+                logging.info("تم التحقق من الترخيص بنجاح")
+                return True
+            else:
+                logging.warning("فشل في التحقق من الترخيص")
+                return False
+                
+        except Exception as e:
+            logging.error(f"خطأ في فحص نظام التراخيص: {e}")
+            self.show_error_dialog(
+                "خطأ في نظام التراخيص", 
+                f"حدث خطأ في فحص الترخيص:\n{str(e)}\n\nيرجى التواصل مع الدعم الفني."
+            )
+            return False
+    
     def show_error_dialog(self, title, message):
         """عرض رسالة خطأ"""
         msg = QMessageBox()
@@ -297,6 +323,11 @@ class SchoolAccountingApp:
             if not self.setup_application():
                 self.show_error_dialog("خطأ", "فشل في إعداد التطبيق")
                 return 1
+            
+            # فحص نظام التراخيص (يجب أن يكون أول شيء بعد إعداد التطبيق)
+            if not self.check_license():
+                logging.info("تم إنهاء التطبيق بسبب فشل فحص الترخيص")
+                return 0
             
             # إعداد قاعدة البيانات
             if not self.setup_database():

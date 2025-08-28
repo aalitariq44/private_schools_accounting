@@ -1,0 +1,17 @@
+Collecting cryptography
+  Downloading cryptography-45.0.6-cp37-abi3-win_amd64.whl.metadata (5.7 kB)
+Requirement already satisfied: requests in c:\users\pc\appdata\local\programs\python\python38\lib\site-packages (2.32.4)
+Collecting cffi>=1.14 (from cryptography)
+  Downloading cffi-1.17.1-cp38-cp38-win_amd64.whl.metadata (1.6 kB)
+Requirement already satisfied: charset_normalizer<4,>=2 in c:\users\pc\appdata\local\programs\python\python38\lib\site-packages (from requests) (3.4.3)
+Requirement already satisfied: idna<4,>=2.5 in c:\users\pc\appdata\local\programs\python\python38\lib\site-packages (from requests) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in c:\users\pc\appdata\local\programs\python\python38\lib\site-packages (from requests) (2.2.3)
+Requirement already satisfied: certifi>=2017.4.17 in c:\users\pc\appdata\local\programs\python\python38\lib\site-packages (from requests) (2025.8.3)
+Collecting pycparser (from cffi>=1.14->cryptography)
+  Downloading pycparser-2.22-py3-none-any.whl.metadata (943 bytes)
+Downloading cryptography-45.0.6-cp37-abi3-win_amd64.whl (3.4 MB)
+   ---------------------------------------- 3.4/3.4 MB 54.5 kB/s eta 0:00:00
+Downloading cffi-1.17.1-cp38-cp38-win_amd64.whl (181 kB)
+Downloading pycparser-2.22-py3-none-any.whl (117 kB)
+Installing collected packages: pycparser, cffi, cryptography
+Successfully installed cffi-1.17.1 cryptography-45.0.6 pycparser-2.22
