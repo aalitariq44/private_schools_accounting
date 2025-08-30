@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
     QMenu, QComboBox, QDateEdit, QSpinBox, QAction, QDialog,
-    QSizePolicy
+    QSizePolicy, QInputDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate, QVariant
 from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase, QColor
@@ -1204,15 +1204,14 @@ class StudentsPage(QWidget):
     def delete_student(self, student_id):
         """حذف طالب"""
         try:
-            # تأكيد الحذف
-            reply = QMessageBox.question(
+            # طلب كتابة 1234 للتأكيد
+            text, ok = QInputDialog.getText(
                 self, "تأكيد الحذف",
-                "هل أنت متأكد من حذف هذا الطالب؟\\nسيتم حذف جميع البيانات المرتبطة به.",
-                QMessageBox.Yes | QMessageBox.No,
-                QMessageBox.No
+                "اكتب '1234' لتأكيد حذف هذا الطالب:\nسيتم حذف جميع البيانات المرتبطة به.",
+                QLineEdit.Normal
             )
             
-            if reply == QMessageBox.Yes:
+            if ok and text == "1234":
                 # حذف الطالب من قاعدة البيانات
                 query = "DELETE FROM students WHERE id = ?"
                 affected_rows = db_manager.execute_update(query, (student_id,))
@@ -1223,6 +1222,8 @@ class StudentsPage(QWidget):
                     log_user_action(f"حذف الطالب {student_id}", "نجح")
                 else:
                     QMessageBox.warning(self, "خطأ", "لم يتم العثور على الطالب")
+            elif ok and text != "1234":
+                QMessageBox.warning(self, "خطأ", "الكود المدخل غير صحيح. لم يتم الحذف.")
                     
         except Exception as e:
             logging.error(f"خطأ في حذف الطالب: {e}")
