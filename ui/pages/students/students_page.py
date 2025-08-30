@@ -323,7 +323,7 @@ class StudentsPage(QWidget):
             
             self.font_size_combo = QComboBox()
             self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(["صغير", "متوسط", "كبير", "كبير جدا"])
+            self.font_size_combo.addItems(["صغير جدا", "صغير", "متوسط", "كبير", "كبير جدا"])
             self.font_size_combo.setCurrentText(self.current_font_size)
             self.font_size_combo.setMinimumWidth(100)
             actions_layout.addWidget(self.font_size_combo)
@@ -1063,7 +1063,21 @@ class StudentsPage(QWidget):
     
     def get_font_sizes(self):
         """الحصول على أحجام الخطوط حسب الخيار المختار"""
-        if self.current_font_size == "صغير":
+        if self.current_font_size == "صغير جدا":
+            return {
+                'base': 10,
+                'filter_label': 10,
+                'filter_combo': 9,
+                'search_input': 9,
+                'buttons': 9,
+                'table': 9,
+                'table_header': 9,
+                'summary_title': 10,
+                'summary_label': 8,
+                'summary_value': 11,
+                'stat_label': 8
+            }
+        elif self.current_font_size == "صغير":
             return {
                 'base': 13,
                 'filter_label': 13,
