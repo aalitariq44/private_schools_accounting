@@ -1084,9 +1084,9 @@ class StudentsPage(QWidget):
         """إعداد تنسيقات الصفحة"""
         try:
             # استخدام FontSizeManager لإنشاء CSS
-            style = FontSizeManager.generate_css_styles(self.current_font_size, self.cairo_family)
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
             self.setStyleSheet(style)
-            
+
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
     

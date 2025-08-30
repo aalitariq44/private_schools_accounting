@@ -120,23 +120,27 @@ class FontSizeManager:
         return FontSizeManager.DEFAULT_SIZE
 
     @staticmethod
-    def generate_css_styles(size_name, cairo_font="'Cairo', 'Segoe UI', Tahoma, Arial"):
+    def generate_css_styles(size_name, cairo_font=None):
         """
         إنشاء أنماط CSS بناءً على حجم الخط المحدد
 
         Args:
             size_name (str): اسم حجم الخط
-            cairo_font (str): اسم خط Cairo
+            cairo_font (str): اسم خط Cairo (إذا لم يتم تمرير شيء، سيتم تحميل الخط تلقائياً)
 
         Returns:
             str: نص CSS جاهز للاستخدام
         """
+        # إذا لم يتم تمرير خط Cairo، قم بتحميله
+        if cairo_font is None:
+            cairo_font = FontSizeManager.load_cairo_font()
+
         font_sizes = FontSizeManager.get_font_sizes(size_name)
 
         css = f"""
             QWidget {{
                 background-color: #F5F6F7;
-                font-family: {cairo_font};
+                font-family: '{cairo_font}', 'Segoe UI', Tahoma, Arial;
                 font-size: {font_sizes['base']}px;
             }}
 
@@ -276,9 +280,10 @@ class FontSizeManager:
         try:
             from PyQt5.QtGui import QFontDatabase
             from pathlib import Path
+            import config
 
-            # مسار مجلد الخطوط
-            font_dir = Path(__file__).parent.parent.parent.parent / "resources" / "fonts"
+            # مسار مجلد الخطوط الصحيح
+            font_dir = config.RESOURCES_DIR / "fonts"
 
             # تحميل خطوط Cairo
             font_db = QFontDatabase()
