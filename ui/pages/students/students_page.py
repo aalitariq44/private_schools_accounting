@@ -346,7 +346,7 @@ class StudentsPage(QWidget):
             self.add_group_students_button.setObjectName("groupButton")
             actions_layout.addWidget(self.add_group_students_button)
             
-            self.print_list_button = QPushButton("طباعة قائمة الطلاب في Word")
+            self.print_list_button = QPushButton("طباعة قائمة الطلاب")
             self.print_list_button.setObjectName("secondaryButton")  # Use secondary style for different color
             actions_layout.addWidget(self.print_list_button)
             
