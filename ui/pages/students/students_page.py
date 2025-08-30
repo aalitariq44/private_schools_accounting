@@ -76,6 +76,8 @@ class GradeTableWidgetItem(QTableWidgetItem):
             return 999  # قيمة عالية للصفوف غير المعرفة
         
         grade_mapping = {
+            # المستمع (0)
+            "مستمع": 0,
             # المرحلة الابتدائية (1-6)
             "الأول الابتدائي": 1,
             "الثاني الابتدائي": 2,
@@ -257,7 +259,7 @@ class StudentsPage(QWidget):
             
             self.grade_combo = QComboBox()
             self.grade_combo.setObjectName("filterCombo")
-            self.grade_combo.addItems(["جميع الصفوف", "الأول الابتدائي", "الثاني الابتدائي", 
+            self.grade_combo.addItems(["جميع الصفوف", "مستمع", "الأول الابتدائي", "الثاني الابتدائي", 
                                       "الثالث الابتدائي", "الرابع الابتدائي", "الخامس الابتدائي", 
                                       "السادس الابتدائي", "الأول المتوسط", "الثاني المتوسط", 
                                       "الثالث المتوسط", "الرابع العلمي", "الرابع الأدبي",
