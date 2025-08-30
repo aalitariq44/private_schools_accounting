@@ -230,7 +230,7 @@ class AdvancedSettingsDialog(QDialog):
             self.schools_table.setRowCount(0)
             
             query = """
-                SELECT id, name_ar, name_en, school_types, principal_name, phone
+                SELECT id, name_ar, name_en, school_types, phone
                 FROM schools 
                 ORDER BY name_ar
             """
@@ -249,8 +249,8 @@ class AdvancedSettingsDialog(QDialog):
                         school[1] or "",  # الاسم بالعربية
                         school[2] or "",  # الاسم بالإنجليزية
                         school[3] or "",  # نوع المدرسة
-                        school[4] or "",  # المدير
-                        school[5] or ""   # الهاتف
+                        "",  # المدير - فارغ
+                        school[4] or ""   # الهاتف
                     ]
                     
                     for col, item_text in enumerate(items):
@@ -314,7 +314,7 @@ class AdvancedSettingsDialog(QDialog):
             for row in range(self.schools_table.rowCount()):
                 row_visible = False
                 
-                for col in range(1, 6):  # من الاسم إلى الهاتف
+                for col in [1, 2, 3, 5]:  # من الاسم إلى الهاتف، مستثنى المدير
                     item = self.schools_table.item(row, col)
                     if item and search_text in item.text().lower():
                         row_visible = True
@@ -350,7 +350,7 @@ class AdvancedSettingsDialog(QDialog):
         try:
             # الحصول على بيانات المدرسة أولاً
             query = """
-                SELECT id, name_ar, name_en, principal_name, phone, address, 
+                SELECT id, name_ar, name_en, phone, address, 
                        school_types, logo_path, created_at
                 FROM schools WHERE id = ?
             """
@@ -369,12 +369,11 @@ class AdvancedSettingsDialog(QDialog):
                     'id': result[0],
                     'name_ar': result[1],
                     'name_en': result[2],
-                    'principal_name': result[3],
-                    'phone': result[4],
-                    'address': result[5],
-                    'school_types': result[6],
-                    'logo_path': result[7],
-                    'created_at': result[8]
+                    'phone': result[3],
+                    'address': result[4],
+                    'school_types': result[5],
+                    'logo_path': result[6],
+                    'created_at': result[7]
                 }
                 
                 # فتح نافذة التعديل مع البيانات

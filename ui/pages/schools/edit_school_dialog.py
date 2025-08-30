@@ -159,16 +159,6 @@ class EditSchoolDialog(QDialog):
             grid_layout.addWidget(name_en_label, 1, 0)
             grid_layout.addWidget(self.name_en_input, 1, 1)
             
-            # اسم المدير
-            principal_label = QLabel("اسم المدير *:")
-            principal_label.setObjectName("fieldLabel")
-            self.principal_input = QLineEdit()
-            self.principal_input.setObjectName("requiredInput")
-            self.principal_input.setPlaceholderText("مثال: أحمد محمد علي")
-            
-            grid_layout.addWidget(principal_label, 2, 0)
-            grid_layout.addWidget(self.principal_input, 2, 1)
-            
             layout.addWidget(group)
             
         except Exception as e:
@@ -335,7 +325,6 @@ class EditSchoolDialog(QDialog):
         try:
             # ربط التحقق من صحة البيانات
             self.name_ar_input.textChanged.connect(self.validate_form)
-            self.principal_input.textChanged.connect(self.validate_form)
             self.primary_checkbox.toggled.connect(self.validate_form)
             self.middle_checkbox.toggled.connect(self.validate_form)
             self.high_checkbox.toggled.connect(self.validate_form)
@@ -350,7 +339,6 @@ class EditSchoolDialog(QDialog):
             self.name_ar_input.setText(self.school_data.get('name_ar', ''))
             self.name_ar_input.setEnabled(self.enable_name_ar_edit)
             self.name_en_input.setText(self.school_data.get('name_en', ''))
-            self.principal_input.setText(self.school_data.get('principal_name', ''))
             
             # معلومات الاتصال
             self.phone_input.setText(self.school_data.get('phone', ''))
@@ -420,10 +408,6 @@ class EditSchoolDialog(QDialog):
             # التحقق من الاسم بالعربية
             if not self.name_ar_input.text().strip():
                 errors.append("اسم المدرسة بالعربية مطلوب")
-            
-            # التحقق من اسم المدير
-            if not self.principal_input.text().strip():
-                errors.append("اسم المدير مطلوب")
             
             # التحقق من نوع المدرسة
             if not (self.primary_checkbox.isChecked() or 
@@ -576,10 +560,6 @@ class EditSchoolDialog(QDialog):
                 QMessageBox.warning(self, "خطأ", "اسم المدرسة بالعربية مطلوب")
                 return
             
-            if not self.principal_input.text().strip():
-                QMessageBox.warning(self, "خطأ", "اسم المدير مطلوب")
-                return
-            
             school_types = self.get_school_types()
             if not school_types:
                 QMessageBox.warning(self, "خطأ", "يجب اختيار نوع واحد على الأقل للمدرسة")
@@ -606,7 +586,7 @@ class EditSchoolDialog(QDialog):
                 'id': self.school_data['id'],
                 'name_ar': self.name_ar_input.text().strip(),
                 'name_en': self.name_en_input.text().strip() or None,
-                'principal_name': self.principal_input.text().strip(),
+                'principal_name': '',
                 'phone': self.phone_input.text().strip() or None,
                 'address': self.address_input.toPlainText().strip() or None,
                 'school_types': ",".join(school_types) if school_types else None, # Store as comma-separated string
