@@ -310,6 +310,19 @@ class StudentsPage(QWidget):
             actions_layout = QHBoxLayout()
             actions_layout.setSpacing(6)
             
+            # مربع البحث
+            search_label = QLabel("البحث:")
+            search_label.setObjectName("filterLabel")
+            actions_layout.addWidget(search_label)
+            
+            self.search_input = QLineEdit()
+            self.search_input.setObjectName("searchInput")
+            self.search_input.setPlaceholderText("ابحث في أسماء الطلاب أو المعرف...")
+            self.search_input.setMinimumWidth(300)
+            actions_layout.addWidget(self.search_input)
+            
+            actions_layout.addStretch()
+            
             # فلتر حجم الخط
             font_size_label = QLabel("حجم الخط:")
             font_size_label.setObjectName("filterLabel")
@@ -321,19 +334,6 @@ class StudentsPage(QWidget):
             self.font_size_combo.setCurrentText(self.current_font_size)
             self.font_size_combo.setMinimumWidth(100)
             actions_layout.addWidget(self.font_size_combo)
-            
-            actions_layout.addStretch()
-            
-            # مربع البحث
-            search_label = QLabel("البحث:")
-            search_label.setObjectName("filterLabel")
-            actions_layout.addWidget(search_label)
-            
-            self.search_input = QLineEdit()
-            self.search_input.setObjectName("searchInput")
-            self.search_input.setPlaceholderText("ابحث في أسماء الطلاب أو المعرف...")
-            self.search_input.setMinimumWidth(300)
-            actions_layout.addWidget(self.search_input)
             
             actions_layout.addStretch()
             
