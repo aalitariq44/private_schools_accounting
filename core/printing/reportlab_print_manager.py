@@ -331,9 +331,12 @@ class ReportLabPrintManager:
         school_phone_text = self.reshape_arabic_text(f"للاستفسار: {school_phone}")
         
         right_align_x = self.page_width - self.margin - (2 * mm)
+        left_align_x = self.margin + (14 * mm)
 
         c.setFont(self.arabic_bold_font, 10)
         c.drawRightString(right_align_x, divider_y + 8 * mm, school_address_text)
+        accountant_name_text = self.reshape_arabic_text("اسم المحاسب")
+        c.drawString(left_align_x, divider_y + 8 * mm, accountant_name_text)
         c.setFont(self.arabic_font, 9)
         c.drawRightString(right_align_x, divider_y + 4 * mm, school_phone_text)
         # Column widths: left 80%, right 20%
