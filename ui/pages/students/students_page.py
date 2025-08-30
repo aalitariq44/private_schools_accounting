@@ -323,7 +323,7 @@ class StudentsPage(QWidget):
             
             self.font_size_combo = QComboBox()
             self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(["صغير", "متوسط", "كبير"])
+            self.font_size_combo.addItems(["صغير", "متوسط", "كبير", "كبير جدا"])
             self.font_size_combo.setCurrentText(self.current_font_size)
             self.font_size_combo.setMinimumWidth(100)
             actions_layout.addWidget(self.font_size_combo)
@@ -1104,6 +1104,20 @@ class StudentsPage(QWidget):
                 'summary_label': 15,
                 'summary_value': 20,
                 'stat_label': 15
+            }
+        elif self.current_font_size == "كبير جدا":
+            return {
+                'base': 22,
+                'filter_label': 22,
+                'filter_combo': 20,
+                'search_input': 20,
+                'buttons': 20,
+                'table': 20,
+                'table_header': 20,
+                'summary_title': 22,
+                'summary_label': 18,
+                'summary_value': 24,
+                'stat_label': 18
             }
         else:
             # افتراضي - صغير
