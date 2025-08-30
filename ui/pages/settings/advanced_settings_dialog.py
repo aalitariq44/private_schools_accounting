@@ -140,7 +140,7 @@ class AdvancedSettingsDialog(QDialog):
             self.schools_table.setObjectName("schoolsTable")
             
             # إعداد أعمدة الجدول
-            columns = ["الرقم", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "المدير", "الهاتف", "الإجراءات"]
+            columns = ["الرقم", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "الهاتف", "الإجراءات"]
             self.schools_table.setColumnCount(len(columns))
             self.schools_table.setHorizontalHeaderLabels(columns)
             
@@ -158,13 +158,12 @@ class AdvancedSettingsDialog(QDialog):
             header.setSectionResizeMode(1, QHeaderView.Stretch)  # الاسم بالعربية
             header.setSectionResizeMode(2, QHeaderView.Stretch)  # الاسم بالإنجليزية
             header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # نوع المدرسة
-            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # المدير
-            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الهاتف
-            header.setSectionResizeMode(6, QHeaderView.Fixed)  # الإجراءات
+            header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # الهاتف
+            header.setSectionResizeMode(5, QHeaderView.Fixed)  # الإجراءات
             
             # تحديد عرض أعمدة محددة
             self.schools_table.setColumnWidth(0, 60)  # الرقم
-            self.schools_table.setColumnWidth(6, 180)  # الإجراءات
+            self.schools_table.setColumnWidth(5, 180)  # الإجراءات
             
             # زيادة ارتفاع الصفوف لجعل الأزرار تظهر بشكل مناسب
             self.schools_table.verticalHeader().setDefaultSectionSize(55)
@@ -249,7 +248,6 @@ class AdvancedSettingsDialog(QDialog):
                         school[1] or "",  # الاسم بالعربية
                         school[2] or "",  # الاسم بالإنجليزية
                         school[3] or "",  # نوع المدرسة
-                        "",  # المدير - فارغ
                         school[4] or ""   # الهاتف
                     ]
                     
@@ -261,7 +259,7 @@ class AdvancedSettingsDialog(QDialog):
                     
                     # أزرار الإجراءات
                     actions_widget = self.create_actions_widget(school[0])
-                    self.schools_table.setCellWidget(row, 6, actions_widget)
+                    self.schools_table.setCellWidget(row, 5, actions_widget)
                 
                 # تحديث شريط الحالة
                 self.schools_count_label.setText(f"📊 العدد: {len(schools)} مدرسة")
@@ -314,7 +312,7 @@ class AdvancedSettingsDialog(QDialog):
             for row in range(self.schools_table.rowCount()):
                 row_visible = False
                 
-                for col in [1, 2, 3, 5]:  # من الاسم إلى الهاتف، مستثنى المدير
+                for col in [1, 2, 3, 4]:  # من الاسم إلى الهاتف
                     item = self.schools_table.item(row, col)
                     if item and search_text in item.text().lower():
                         row_visible = True
