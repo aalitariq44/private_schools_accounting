@@ -463,7 +463,7 @@ class SettingsPage(QWidget):
             advanced_btn.clicked.connect(self.open_advanced_settings)
             
             # نص توضيحي
-            info_label = QLabel("* يتطلب كلمة مرور للوصول إلى إعدادات إدارة المدارس")
+            info_label = QLabel("* إدارة المدارس والإعدادات المتقدمة")
             info_label.setFont(QFont("Arial", 9))
             info_label.setStyleSheet("color: #6C757D; font-style: italic;")
             

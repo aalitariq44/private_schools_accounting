@@ -611,25 +611,9 @@ class AdvancedSettingsDialog(QDialog):
 
 
 def show_advanced_settings(parent=None):
-    """عرض نافذة الإعدادات المتقدمة مع التحقق من كلمة المرور"""
+    """عرض نافذة الإعدادات المتقدمة"""
     try:
-        # طلب كلمة المرور
-        password, ok = QInputDialog.getText(
-            parent,
-            "كلمة المرور المطلوبة",
-            "أدخل كلمة المرور للوصول إلى الإعدادات المتقدمة:",
-            QLineEdit.Password
-        )
-        
-        if not ok:
-            return None
-        
-        # التحقق من كلمة المرور
-        if password != "ali4000ali90004444":
-            QMessageBox.warning(parent, "خطأ", "كلمة المرور غير صحيحة")
-            return None
-        
-        # عرض نافذة الإعدادات المتقدمة
+        # عرض نافذة الإعدادات المتقدمة مباشرة بدون طلب كلمة مرور
         dialog = AdvancedSettingsDialog(parent)
         return dialog.exec_()
         
