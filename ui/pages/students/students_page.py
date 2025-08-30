@@ -321,8 +321,6 @@ class StudentsPage(QWidget):
             self.search_input.setMinimumWidth(300)
             actions_layout.addWidget(self.search_input)
             
-            actions_layout.addStretch()
-            
             # فلتر حجم الخط
             font_size_label = QLabel("حجم الخط:")
             font_size_label.setObjectName("filterLabel")
