@@ -76,12 +76,22 @@ class ActivationDialog(QDialog):
         # نص تفسيري
         info_label = QLabel(
             "يرجى إدخال رمز التفعيل الخاص بك.\\n"
-            "إذا لم يكن لديك رمز تفعيل، يرجى التواصل مع الدعم الفني."
+            "إذا لم يكن لديك رمز تفعيل، يرجى التواصل معنا عبر:"
         )
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setWordWrap(True)
         info_label.setStyleSheet("color: #7f8c8d; line-height: 1.4;")
         layout.addWidget(info_label)
+        
+        # نص معلومات التواصل
+        contact_label = QLabel(
+            "واتساب: 07859371349"
+            "تليجرام: @tech_solu"
+        )
+        contact_label.setAlignment(Qt.AlignCenter)
+        contact_label.setWordWrap(True)
+        contact_label.setStyleSheet("color: #3498db; font-weight: bold; line-height: 1.4;")
+        layout.addWidget(contact_label)
         
         # حقل إدخال رمز التفعيل
         activation_layout = QVBoxLayout()
