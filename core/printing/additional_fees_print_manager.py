@@ -214,7 +214,7 @@ class AdditionalFeesPrintManager:
 
         # Add receipt number and print date
         c.setFont(self.arabic_font, 10)
-        receipt_text = self.reshape_arabic_text(f"رقم الإيصال: {receipt_number}")
+        receipt_text = self.reshape_arabic_text(f"رمز الإيصال: {receipt_number}")
         c.drawRightString(self.page_width - self.margin - 10, y_pos, receipt_text)
         date_text = self.reshape_arabic_text(f"تاريخ الطباعة: {print_date} - {print_time}")
         c.drawString(self.margin + 10, y_pos, date_text)
