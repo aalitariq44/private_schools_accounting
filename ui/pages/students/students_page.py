@@ -15,12 +15,16 @@ from PyQt5.QtWidgets import (
     QSizePolicy, QInputDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QDate, QVariant
-from PyQt5.QtGui import QFont, QPixmap, QIcon, QFontDatabase, QColor
+from PyQt5.QtGui import QPixmap, QIcon, QColor
 
-import config
+# استيراد وحدة أحجام الخطوط
+from .font_sizes import FontSizeManager, get_font_sizes
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 # from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة (moved inside method)
+
+# استيراد وحدة أحجام الخطوط
+from .font_sizes import FontSizeManager, get_font_sizes
 
 # استيراد نوافذ إدارة الطلاب
 from .add_student_dialog import AddStudentDialog
@@ -172,7 +176,7 @@ class StudentsPage(QWidget):
         self.selected_school_id = None
         
         # متغير لحجم الخط الحالي
-        self.current_font_size = "صغير"  # الخيارات: "صغير", "متوسط", "كبير"
+        self.current_font_size = FontSizeManager.get_default_size()  # الحصول على الحجم الافتراضي من المدير
         
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
@@ -187,17 +191,7 @@ class StudentsPage(QWidget):
     def setup_cairo_font(self):
         """تحميل وتطبيق خط Cairo"""
         try:
-            font_db = QFontDatabase()
-            font_dir = config.RESOURCES_DIR / "fonts"
-            
-            # تحميل خطوط Cairo
-            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
-            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
-            
-            # الحصول على اسم عائلة الخط
-            families = font_db.applicationFontFamilies(id_medium)
-            self.cairo_family = families[0] if families else "Arial"
-            
+            self.cairo_family = FontSizeManager.load_cairo_font()
             logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
             
         except Exception as e:
@@ -323,7 +317,7 @@ class StudentsPage(QWidget):
             
             self.font_size_combo = QComboBox()
             self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(["صغير جدا", "صغير", "متوسط", "كبير", "كبير جدا"])
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
             self.font_size_combo.setCurrentText(self.current_font_size)
             self.font_size_combo.setMinimumWidth(100)
             actions_layout.addWidget(self.font_size_combo)
@@ -1063,91 +1057,7 @@ class StudentsPage(QWidget):
     
     def get_font_sizes(self):
         """الحصول على أحجام الخطوط حسب الخيار المختار"""
-        if self.current_font_size == "صغير جدا":
-            return {
-                'base': 10,
-                'filter_label': 10,
-                'filter_combo': 9,
-                'search_input': 9,
-                'buttons': 9,
-                'table': 9,
-                'table_header': 9,
-                'summary_title': 10,
-                'summary_label': 8,
-                'summary_value': 11,
-                'stat_label': 8
-            }
-        elif self.current_font_size == "صغير":
-            return {
-                'base': 13,
-                'filter_label': 13,
-                'filter_combo': 12,
-                'search_input': 12,
-                'buttons': 12,
-                'table': 12,
-                'table_header': 12,
-                'summary_title': 13,
-                'summary_label': 11,
-                'summary_value': 14,
-                'stat_label': 11
-            }
-        elif self.current_font_size == "متوسط":
-            return {
-                'base': 15,
-                'filter_label': 15,
-                'filter_combo': 14,
-                'search_input': 14,
-                'buttons': 14,
-                'table': 14,
-                'table_header': 14,
-                'summary_title': 15,
-                'summary_label': 13,
-                'summary_value': 16,
-                'stat_label': 13
-            }
-        elif self.current_font_size == "كبير":
-            return {
-                'base': 18,
-                'filter_label': 18,
-                'filter_combo': 16,
-                'search_input': 16,
-                'buttons': 16,
-                'table': 16,
-                'table_header': 16,
-                'summary_title': 18,
-                'summary_label': 15,
-                'summary_value': 20,
-                'stat_label': 15
-            }
-        elif self.current_font_size == "كبير جدا":
-            return {
-                'base': 22,
-                'filter_label': 22,
-                'filter_combo': 20,
-                'search_input': 20,
-                'buttons': 20,
-                'table': 20,
-                'table_header': 20,
-                'summary_title': 22,
-                'summary_label': 18,
-                'summary_value': 24,
-                'stat_label': 18
-            }
-        else:
-            # افتراضي - صغير
-            return {
-                'base': 13,
-                'filter_label': 13,
-                'filter_combo': 12,
-                'search_input': 12,
-                'buttons': 12,
-                'table': 12,
-                'table_header': 12,
-                'summary_title': 13,
-                'summary_label': 11,
-                'summary_value': 14,
-                'stat_label': 11
-            }
+        return FontSizeManager.get_font_sizes(self.current_font_size)
     
     def update_sort_indicator(self, logical_index, order):
         """تحديث مؤشر الترتيب الحالي"""
@@ -1173,123 +1083,8 @@ class StudentsPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            # استخدام خط Cairo المحمل
-            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
-            
-            # الحصول على أحجام الخطوط الحالية
-            font_sizes = self.get_font_sizes()
-            
-            # تصميم مبسط متوافق مع الدقات الأصغر – إزالة التدرجات وتقليل الأحجام
-            style = f"""
-                QWidget {{
-                    background-color: #F5F6F7;
-                    font-family: {cairo_font};
-                    font-size: {font_sizes['base']}px;
-                }}
-
-                /* شريط الأدوات / الأقسام */
-                #toolbarFrame, #summaryFrame, #tableFrame {{
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                }}
-
-                #filterLabel {{
-                    font-weight: 600;
-                    color: #37474F;
-                    margin-right: 4px;
-                    font-size: {font_sizes['filter_label']}px;
-                }}
-
-                #filterCombo {{
-                    padding: 4px 6px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 3px;
-                    background: #FFFFFF;
-                    min-width: 85px;
-                    font-size: {font_sizes['filter_combo']}px;
-                }}
-
-                #searchInput {{
-                    padding: 4px 10px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 14px;
-                    font-size: {font_sizes['search_input']}px;
-                    background-color: #FFFFFF;
-                }}
-                #searchInput:focus {{
-                    border: 1px solid #5B8DEF;
-                    background: #FFFFFF;
-                }}
-
-                /* أزرار مسطحة بألوان هادئة */
-                #primaryButton, #groupButton, #secondaryButton {{
-                    background-color: #FFFFFF;
-                    color: #2F3A40;
-                    border: 1px solid #B5BCC0;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                    font-size: {font_sizes['buttons']}px;
-                }}
-                #primaryButton:hover, #groupButton:hover, #secondaryButton:hover {{
-                    background-color: #F0F3F5;
-                }}
-                #primaryButton:pressed, #groupButton:pressed, #secondaryButton:pressed {{
-                    background-color: #E2E6E9;
-                }}
-
-                /* تخصيص تمييز أنماط مختلفة عبر ظل خفيف فقط */
-                #primaryButton {{ border-color: #8E44AD; color: #4A2F63; }}
-                #groupButton {{ border-color: #2980B9; color: #1F5375; }}
-                #secondaryButton {{ border-color: #229954; color: #1B5E33; }}
-
-                /* الجدول */
-                QTableWidget {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    gridline-color: #E3E6E8;
-                    font-size: {font_sizes['table']}px;
-                }}
-                QTableWidget::item {{
-                    border-bottom: 1px solid #EEF0F1;
-                }}
-                QTableWidget::item:selected {{
-                    background-color: #5B8DEF;
-                    color: #FFFFFF;
-                }}
-                QHeaderView::section {{
-                    background: #ECEFF1;
-                    color: #37474F;
-                    padding: 4px 6px;
-                    border: 1px solid #D0D5D8;
-                    font-weight: 600;
-                    font-size: {font_sizes['table_header']}px;
-                }}
-
-                /* ملخص الإحصائيات */
-                #summaryTitle {{
-                    font-size: {font_sizes['summary_title']}px;
-                    font-weight: 600;
-                    color: #37474F;
-                }}
-                #summaryLabel {{
-                    font-size: {font_sizes['summary_label']}px;
-                    color: #455A64;
-                }}
-                #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
-                    font-size: {font_sizes['summary_value']}px;
-                    font-weight: 700;
-                    padding: 2px 4px;
-                }}
-                #summaryValueSuccess {{ color: #1B5E20; }}
-                #summaryValueWarning {{ color: #B35C00; }}
-                #statLabel {{
-                    font-size: {font_sizes['stat_label']}px;
-                    color: #546E7A;
-                }}
-            """
-            
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size, self.cairo_family)
             self.setStyleSheet(style)
             
         except Exception as e:
