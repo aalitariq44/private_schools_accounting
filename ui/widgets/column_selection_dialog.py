@@ -5,6 +5,7 @@ class ColumnSelectionDialog(QDialog):
     def __init__(self, columns, parent=None):
         super().__init__(parent)
         self.setWindowTitle("تحديد الأعمدة للطباعة")
+        self.resize(800, 600)  # تكبير النافذة لتسهيل الاستخدام
         self.setLayout(QVBoxLayout())
 
         self.list_widget = QListWidget()
