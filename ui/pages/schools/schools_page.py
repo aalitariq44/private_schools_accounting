@@ -126,7 +126,7 @@ class SchoolsPage(QWidget):
             self.schools_table.setStyleSheet("QTableWidget::item { padding: 0px; }")  # إزالة الحشو لإظهار أزرار الإجراءات بشكل صحيح
             
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "الشعار", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "المدير", "الهاتف"]
+            columns = ["المعرف", "الشعار", "الاسم بالعربية", "الاسم بالإنجليزية", "نوع المدرسة", "الهاتف"]
             self.schools_table.setColumnCount(len(columns))
             self.schools_table.setHorizontalHeaderLabels(columns)
             
@@ -144,8 +144,7 @@ class SchoolsPage(QWidget):
             header.setSectionResizeMode(2, QHeaderView.Stretch)  # الاسم بالعربية
             header.setSectionResizeMode(3, QHeaderView.Stretch)  # الاسم بالإنجليزية
             header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # نوع المدرسة
-            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # المدير
-            header.setSectionResizeMode(6, QHeaderView.ResizeToContents)  # الهاتف
+            header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # الهاتف
             
             # تحديد عرض عمود الشعار
             self.schools_table.setColumnWidth(1, 80)  # عرض عمود الشعار
@@ -201,7 +200,7 @@ class SchoolsPage(QWidget):
             
             # استعلام جميع المدارس
             query = """
-                SELECT id, name_ar, name_en, school_types, principal_name, 
+                SELECT id, name_ar, name_en, school_types, 
                        phone, address, logo_path, created_at
                 FROM schools 
                 ORDER BY id
@@ -239,15 +238,10 @@ class SchoolsPage(QWidget):
                 types_item.setFlags(types_item.flags() & ~Qt.ItemIsEditable)
                 self.schools_table.setItem(row_idx, 4, types_item)
                 
-                # المدير
-                principal_item = QTableWidgetItem(school['principal_name'] or "")
-                principal_item.setFlags(principal_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 5, principal_item)
-                
                 # الهاتف
                 phone_item = QTableWidgetItem(school['phone'] or "")
                 phone_item.setFlags(phone_item.flags() & ~Qt.ItemIsEditable)
-                self.schools_table.setItem(row_idx, 6, phone_item)
+                self.schools_table.setItem(row_idx, 5, phone_item)
                 
             
             # فرز حسب المعرف افتراضيا
@@ -388,8 +382,8 @@ class SchoolsPage(QWidget):
                 # البحث في جميع الأعمدة النصية (تخطي عمود الشعار)
                 row_visible = False
                 
-                # البحث في الأعمدة: 0=المعرف، 2=الاسم بالعربية، 3=الاسم بالإنجليزية، 4=نوع المدرسة، 5=المدير، 6=الهاتف
-                search_columns = [0, 2, 3, 4, 5, 6]
+                # البحث في الأعمدة: 0=المعرف، 2=الاسم بالعربية، 3=الاسم بالإنجليزية، 4=نوع المدرسة، 5=الهاتف
+                search_columns = [0, 2, 3, 4, 5]
                 for col in search_columns:
                     item = self.schools_table.item(row, col)
                     if item and search_text in item.text().lower():
@@ -467,7 +461,7 @@ class SchoolsPage(QWidget):
         try:
             # الحصول على بيانات المدرسة
             query = """
-                SELECT id, name_ar, name_en, principal_name, phone, address, school_types, logo_path, created_at
+                SELECT id, name_ar, name_en, phone, address, school_types, logo_path, created_at
                 FROM schools WHERE id = ?
             """
             
@@ -477,7 +471,6 @@ class SchoolsPage(QWidget):
                     'id': result[0]['id'],
                     'name_ar': result[0]['name_ar'],
                     'name_en': result[0]['name_en'],
-                    'principal_name': result[0]['principal_name'],
                     'phone': result[0]['phone'],
                     'address': result[0]['address'],
                     'school_types': result[0]['school_types'],
