@@ -18,13 +18,10 @@ from PyQt5.QtCore import Qt, pyqtSignal, QDate, QVariant
 from PyQt5.QtGui import QPixmap, QIcon, QColor
 
 # استيراد وحدة أحجام الخطوط
-from .font_sizes import FontSizeManager, get_font_sizes
+from ...font_sizes import FontSizeManager, get_font_sizes
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 # from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة (moved inside method)
-
-# استيراد وحدة أحجام الخطوط
-from .font_sizes import FontSizeManager, get_font_sizes
 
 # استيراد نوافذ إدارة الطلاب
 from .add_student_dialog import AddStudentDialog
