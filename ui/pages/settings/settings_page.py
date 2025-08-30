@@ -89,7 +89,7 @@ class SettingsPage(QWidget):
             # إعدادات الأمان
             self.create_security_section(scroll_layout)
             
-            # الإعدادات المتقدمة
+            # اعدادات المدارس المتقدمة
             self.create_advanced_section(scroll_layout)
             
             # مساحة مرنة
@@ -444,26 +444,26 @@ class SettingsPage(QWidget):
             """)
     
     def create_advanced_section(self, layout):
-        """إنشاء قسم الإعدادات المتقدمة"""
+        """إنشاء قسم اعدادات المدارس المتقدمة"""
         try:
-            # إطار الإعدادات المتقدمة
-            advanced_group = QGroupBox("الإعدادات المتقدمة")
+            # إطار اعدادات المدارس المتقدمة
+            advanced_group = QGroupBox("اعدادات المدارس المتقدمة")
             advanced_group.setObjectName("settingsGroup")
             advanced_layout = QGridLayout()
             advanced_layout.setSpacing(8)
             
-            # تسمية الإعدادات المتقدمة
+            # تسمية اعدادات المدارس المتقدمة
             advanced_label = QLabel("إدارة المدارس:")
             advanced_label.setFont(QFont("Arial", 11))
             
-            # زر الإعدادات المتقدمة
-            advanced_btn = QPushButton("الإعدادات المتقدمة")
+            # زر اعدادات المدارس المتقدمة
+            advanced_btn = QPushButton("اعدادات المدارس المتقدمة")
             advanced_btn.setObjectName("advancedButton")
             advanced_btn.setMinimumHeight(30)
             advanced_btn.clicked.connect(self.open_advanced_settings)
             
             # نص توضيحي
-            info_label = QLabel("* إدارة المدارس والإعدادات المتقدمة")
+            info_label = QLabel("* إدارة المدارس واعدادات المدارس المتقدمة")
             info_label.setFont(QFont("Arial", 9))
             info_label.setStyleSheet("color: #6C757D; font-style: italic;")
             
@@ -479,16 +479,16 @@ class SettingsPage(QWidget):
             layout.addWidget(advanced_group)
             
         except Exception as e:
-            logging.error(f"خطأ في إنشاء قسم الإعدادات المتقدمة: {e}")
+            logging.error(f"خطأ في إنشاء قسم اعدادات المدارس المتقدمة: {e}")
     
     def open_advanced_settings(self):
-        """فتح نافذة الإعدادات المتقدمة"""
+        """فتح نافذة اعدادات المدارس المتقدمة"""
         try:
             from .advanced_settings_dialog import show_advanced_settings
             show_advanced_settings(self)
         except Exception as e:
-            logging.error(f"خطأ في فتح الإعدادات المتقدمة: {e}")
-            QMessageBox.critical(self, "خطأ", f"خطأ في فتح الإعدادات المتقدمة: {str(e)}")
+            logging.error(f"خطأ في فتح اعدادات المدارس المتقدمة: {e}")
+            QMessageBox.critical(self, "خطأ", f"خطأ في فتح اعدادات المدارس المتقدمة: {str(e)}")
     
     def setup_styles(self):
         """إعداد أنماط الصفحة"""
