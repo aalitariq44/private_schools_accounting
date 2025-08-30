@@ -412,6 +412,20 @@ class AdvancedSettingsDialog(QDialog):
                 
                 school_name = result[0]
                 
+                # التحقق من وجود طلاب في المدرسة
+                students_query = "SELECT COUNT(*) FROM students WHERE school_id = ?"
+                cursor.execute(students_query, (school_id,))
+                students_count = cursor.fetchone()[0]
+                
+                if students_count > 0:
+                    QMessageBox.warning(
+                        self,
+                        "لا يمكن الحذف",
+                        f"لا يمكن حذف المدرسة '{school_name}' لأنها تحتوي على {students_count} طالب.\n\n"
+                        "يجب حذف جميع الطلاب من المدرسة أولاً قبل حذف المدرسة."
+                    )
+                    return
+                
                 # تأكيد الحذف
                 reply = QMessageBox.question(
                     self,
