@@ -338,13 +338,19 @@ class StudentsPage(QWidget):
             actions_layout.addStretch()
             
             # أزرار العمليات
-            self.add_student_button = QPushButton("إضافة طالب")
-            self.add_student_button.setObjectName("primaryButton")
-            actions_layout.addWidget(self.add_student_button)
+            self.add_students_button = QPushButton("إضافة طلاب")
+            self.add_students_button.setObjectName("primaryButton")
+            actions_layout.addWidget(self.add_students_button)
             
-            self.add_group_students_button = QPushButton("إضافة مجموعة طلاب")
-            self.add_group_students_button.setObjectName("groupButton")
-            actions_layout.addWidget(self.add_group_students_button)
+            # إنشاء قائمة الإضافة
+            self.add_students_menu = QMenu(self)
+            add_single_action = QAction("إضافة طالب", self)
+            add_single_action.triggered.connect(self.add_student)
+            self.add_students_menu.addAction(add_single_action)
+            
+            add_group_action = QAction("إضافة مجموعة طلاب", self)
+            add_group_action.triggered.connect(self.add_group_students)
+            self.add_students_menu.addAction(add_group_action)
             
             self.print_list_button = QPushButton("طباعة قائمة الطلاب")
             self.print_list_button.setObjectName("secondaryButton")  # Use secondary style for different color
@@ -516,8 +522,7 @@ class StudentsPage(QWidget):
         """ربط الإشارات والأحداث"""
         try:
             # ربط أزرار العمليات
-            self.add_student_button.clicked.connect(self.add_student)
-            self.add_group_students_button.clicked.connect(self.add_group_students)
+            self.add_students_button.clicked.connect(self.show_add_students_menu)
             self.print_list_button.clicked.connect(self.print_students_list_ordered)
             self.refresh_button.clicked.connect(self.refresh)
             self.clear_filters_button.clicked.connect(self.clear_filters)
@@ -1230,3 +1235,10 @@ class StudentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في الحصول على النافذة الرئيسية: {e}")
             return None
+    
+    def show_add_students_menu(self):
+        """عرض قائمة خيارات إضافة الطلاب"""
+        try:
+            self.add_students_menu.exec_(self.add_students_button.mapToGlobal(self.add_students_button.rect().bottomLeft()))
+        except Exception as e:
+            logging.error(f"خطأ في عرض قائمة إضافة الطلاب: {e}")
