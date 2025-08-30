@@ -171,6 +171,9 @@ class StudentsPage(QWidget):
         self.current_students = []
         self.selected_school_id = None
         
+        # متغير لحجم الخط الحالي
+        self.current_font_size = "صغير"  # الخيارات: "صغير", "متوسط", "كبير"
+        
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
         
@@ -312,6 +315,20 @@ class StudentsPage(QWidget):
             # الصف الثاني - البحث والعمليات
             actions_layout = QHBoxLayout()
             actions_layout.setSpacing(6)
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(["صغير", "متوسط", "كبير"])
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
+            
+            actions_layout.addStretch()
             
             # مربع البحث
             search_label = QLabel("البحث:")
@@ -519,6 +536,9 @@ class StudentsPage(QWidget):
             self.gender_combo.currentTextChanged.connect(self.apply_filters)
             self.payment_combo.currentTextChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
+            
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -777,6 +797,11 @@ class StudentsPage(QWidget):
             self.gender_combo.setCurrentIndex(0) # "جميع الطلاب"
             self.payment_combo.setCurrentIndex(0) # "الجميع"
             self.search_input.clear()
+            
+            # إعادة تعيين حجم الخط إلى الافتراضي
+            self.current_font_size = "صغير"
+            self.font_size_combo.setCurrentText("صغير")
+            
             self.apply_filters()
             log_user_action("مسح فلاتر صفحة الطلاب")
         except Exception as e:
@@ -1024,6 +1049,78 @@ class StudentsPage(QWidget):
             logging.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ أثناء طباعة قائمة الطلاب:\n{str(e)}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                self.setup_styles()
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def get_font_sizes(self):
+        """الحصول على أحجام الخطوط حسب الخيار المختار"""
+        if self.current_font_size == "صغير":
+            return {
+                'base': 13,
+                'filter_label': 13,
+                'filter_combo': 12,
+                'search_input': 12,
+                'buttons': 12,
+                'table': 12,
+                'table_header': 12,
+                'summary_title': 13,
+                'summary_label': 11,
+                'summary_value': 14,
+                'stat_label': 11
+            }
+        elif self.current_font_size == "متوسط":
+            return {
+                'base': 15,
+                'filter_label': 15,
+                'filter_combo': 14,
+                'search_input': 14,
+                'buttons': 14,
+                'table': 14,
+                'table_header': 14,
+                'summary_title': 15,
+                'summary_label': 13,
+                'summary_value': 16,
+                'stat_label': 13
+            }
+        elif self.current_font_size == "كبير":
+            return {
+                'base': 18,
+                'filter_label': 18,
+                'filter_combo': 16,
+                'search_input': 16,
+                'buttons': 16,
+                'table': 16,
+                'table_header': 16,
+                'summary_title': 18,
+                'summary_label': 15,
+                'summary_value': 20,
+                'stat_label': 15
+            }
+        else:
+            # افتراضي - صغير
+            return {
+                'base': 13,
+                'filter_label': 13,
+                'filter_combo': 12,
+                'search_input': 12,
+                'buttons': 12,
+                'table': 12,
+                'table_header': 12,
+                'summary_title': 13,
+                'summary_label': 11,
+                'summary_value': 14,
+                'stat_label': 11
+            }
+    
     def update_sort_indicator(self, logical_index, order):
         """تحديث مؤشر الترتيب الحالي"""
         try:
@@ -1051,12 +1148,15 @@ class StudentsPage(QWidget):
             # استخدام خط Cairo المحمل
             cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
             
+            # الحصول على أحجام الخطوط الحالية
+            font_sizes = self.get_font_sizes()
+            
             # تصميم مبسط متوافق مع الدقات الأصغر – إزالة التدرجات وتقليل الأحجام
-            style = """
+            style = f"""
                 QWidget {{
                     background-color: #F5F6F7;
-                    font-family: {font_family};
-                    font-size: 13px;
+                    font-family: {cairo_font};
+                    font-size: {font_sizes['base']}px;
                 }}
 
                 /* شريط الأدوات / الأقسام */
@@ -1070,7 +1170,7 @@ class StudentsPage(QWidget):
                     font-weight: 600;
                     color: #37474F;
                     margin-right: 4px;
-                    font-size: 13px;
+                    font-size: {font_sizes['filter_label']}px;
                 }}
 
                 #filterCombo {{
@@ -1079,14 +1179,14 @@ class StudentsPage(QWidget):
                     border-radius: 3px;
                     background: #FFFFFF;
                     min-width: 85px;
-                    font-size: 12px;
+                    font-size: {font_sizes['filter_combo']}px;
                 }}
 
                 #searchInput {{
                     padding: 4px 10px;
                     border: 1px solid #C3C7CA;
                     border-radius: 14px;
-                    font-size: 12px;
+                    font-size: {font_sizes['search_input']}px;
                     background-color: #FFFFFF;
                 }}
                 #searchInput:focus {{
@@ -1102,7 +1202,7 @@ class StudentsPage(QWidget):
                     padding: 6px 12px;
                     border-radius: 4px;
                     font-weight: 600;
-                    font-size: 12px;
+                    font-size: {font_sizes['buttons']}px;
                 }}
                 #primaryButton:hover, #groupButton:hover, #secondaryButton:hover {{
                     background-color: #F0F3F5;
@@ -1121,7 +1221,7 @@ class StudentsPage(QWidget):
                     background: #FFFFFF;
                     border: 1px solid #DDE1E4;
                     gridline-color: #E3E6E8;
-                    font-size: 12px;
+                    font-size: {font_sizes['table']}px;
                 }}
                 QTableWidget::item {{
                     border-bottom: 1px solid #EEF0F1;
@@ -1136,31 +1236,31 @@ class StudentsPage(QWidget):
                     padding: 4px 6px;
                     border: 1px solid #D0D5D8;
                     font-weight: 600;
-                    font-size: 12px;
+                    font-size: {font_sizes['table_header']}px;
                 }}
 
                 /* ملخص الإحصائيات */
                 #summaryTitle {{
-                    font-size: 13px;
+                    font-size: {font_sizes['summary_title']}px;
                     font-weight: 600;
                     color: #37474F;
                 }}
                 #summaryLabel {{
-                    font-size: 11px;
+                    font-size: {font_sizes['summary_label']}px;
                     color: #455A64;
                 }}
                 #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
-                    font-size: 14px;
+                    font-size: {font_sizes['summary_value']}px;
                     font-weight: 700;
                     padding: 2px 4px;
                 }}
                 #summaryValueSuccess {{ color: #1B5E20; }}
                 #summaryValueWarning {{ color: #B35C00; }}
                 #statLabel {{
-                    font-size: 11px;
+                    font-size: {font_sizes['stat_label']}px;
                     color: #546E7A;
                 }}
-            """.format(font_family=cairo_font)
+            """
             
             self.setStyleSheet(style)
             
