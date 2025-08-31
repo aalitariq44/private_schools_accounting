@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QScrollArea, QMessageBox, QComboBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFontDatabase
+from PyQt5.QtGui import QFontDatabase, QFont
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
@@ -63,8 +63,18 @@ class StudentDetailsPage(QWidget):
         try:
             font_db = QFontDatabase()
             # محاولة تحميل خط Cairo من مجلد الموارد
-            self.cairo_family = "Arial"  # خط افتراضي
-            logging.info(f"تم استخدام الخط: {self.cairo_family}")
+            import config
+            font_dir = config.RESOURCES_DIR / "fonts"
+            
+            # تحميل خطوط Cairo
+            id_medium = font_db.addApplicationFont(str(font_dir / "Cairo-Medium.ttf"))
+            id_bold = font_db.addApplicationFont(str(font_dir / "Cairo-Bold.ttf"))
+            
+            # الحصول على اسم عائلة الخط
+            families = font_db.applicationFontFamilies(id_medium)
+            self.cairo_family = families[0] if families else "Arial"
+            
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
             
         except Exception as e:
             logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
@@ -120,6 +130,7 @@ class StudentDetailsPage(QWidget):
             # زر الرجوع
             self.back_button = QPushButton("← رجوع")
             self.back_button.setObjectName("backButton")
+            self.back_button.setFont(QFont(self.cairo_family, 10))
             toolbar_layout.addWidget(self.back_button)
             
             # عنوان الصفحة
@@ -127,20 +138,24 @@ class StudentDetailsPage(QWidget):
             self.page_title.setObjectName("pageTitle")
             self.page_title.setAlignment(Qt.AlignCenter)
             self.page_title.setStyleSheet("color: white;")
+            self.page_title.setFont(QFont(self.cairo_family, 14, QFont.Bold))
             toolbar_layout.addWidget(self.page_title)
             # زر الرسوم الإضافية (جديد)
             self.additional_fees_button = QPushButton("الرسوم الإضافية")
             self.additional_fees_button.setObjectName("additionalFeesButton")
+            self.additional_fees_button.setFont(QFont(self.cairo_family, 10))
             toolbar_layout.addWidget(self.additional_fees_button)
             
             # زر التحديث
             self.refresh_button = QPushButton("تحديث")
             self.refresh_button.setObjectName("refreshButton")
+            self.refresh_button.setFont(QFont(self.cairo_family, 10))
             toolbar_layout.addWidget(self.refresh_button)
             
             # زر طباعة التفاصيل
             self.print_button = QPushButton("طباعة")
             self.print_button.setObjectName("primaryButton")
+            self.print_button.setFont(QFont(self.cairo_family, 10))
             toolbar_layout.addWidget(self.print_button)
             
             # إضافة فاصل
@@ -149,6 +164,7 @@ class StudentDetailsPage(QWidget):
             # قائمة تحكم بحجم الخط
             self.font_size_label = QLabel("حجم الخط:")
             self.font_size_label.setObjectName("filterLabel")
+            self.font_size_label.setFont(QFont(self.cairo_family, 10))
             toolbar_layout.addWidget(self.font_size_label)
             
             self.font_size_combo = QComboBox()
