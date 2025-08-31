@@ -100,6 +100,8 @@ class StudentInfoWidget(QWidget):
                 self.start_date_label.setFont(cairo_font)
             if hasattr(self, 'notes_display') and self.notes_display:
                 self.notes_display.setFont(cairo_font)
+            if hasattr(self, 'notes_display') and self.notes_display:
+                self.notes_display.setFont(cairo_font)
             if hasattr(self, 'total_fee_label') and self.total_fee_label:
                 self.total_fee_label.setFont(cairo_font)
             if hasattr(self, 'paid_amount_label') and self.paid_amount_label:
@@ -185,6 +187,17 @@ class StudentInfoWidget(QWidget):
             self.start_date_label.setObjectName("infoValue")
             self.start_date_label.setFont(QFont(self.cairo_family, 10))
             
+            # إنشاء حقل الملاحظات المصغر
+            self.notes_display = QLabel("--")
+            self.notes_display.setObjectName("infoValue")
+            self.notes_display.setWordWrap(True)
+            self.notes_display.setMaximumWidth(150)
+            self.notes_display.setMaximumHeight(40)
+            self.notes_display.setFont(QFont(self.cairo_family, 10))
+            
+            # إضافة إمكانية تعديل الملاحظات بالنقر المزدوج
+            self.notes_display.mouseDoubleClickEvent = self.edit_notes_dialog
+            
             # إضافة المعلومات للشبكة
             # الصف الأول
             name_label = QLabel("الاسم:")
@@ -223,28 +236,17 @@ class StudentInfoWidget(QWidget):
             status_label.setFont(QFont(self.cairo_family, 10))
             grid_layout.addWidget(status_label, 2, 0)
             grid_layout.addWidget(self.status_label, 2, 1)
-            
+
             start_date_label = QLabel("تاريخ المباشرة:")
             start_date_label.setFont(QFont(self.cairo_family, 10))
             grid_layout.addWidget(start_date_label, 2, 2)
             grid_layout.addWidget(self.start_date_label, 2, 3)
-            
-            # الصف الرابع - الملاحظات
+
+            # الملاحظات في نفس الصف
             notes_label = QLabel("ملاحظات:")
             notes_label.setFont(QFont(self.cairo_family, 10))
-            grid_layout.addWidget(notes_label, 3, 0)
-            
-            # إنشاء حقل الملاحظات المصغر
-            self.notes_display = QLabel("--")
-            self.notes_display.setObjectName("infoValue")
-            self.notes_display.setWordWrap(True)
-            self.notes_display.setMaximumWidth(200)
-            self.notes_display.setMaximumHeight(40)
-            self.notes_display.setFont(QFont(self.cairo_family, 10))
-            
-            # إضافة إمكانية تعديل الملاحظات بالنقر المزدوج
-            self.notes_display.mouseDoubleClickEvent = self.edit_notes_dialog
-            grid_layout.addWidget(self.notes_display, 3, 1, 1, 5)  # دمج عبر 5 أعمدة
+            grid_layout.addWidget(notes_label, 2, 4)
+            grid_layout.addWidget(self.notes_display, 2, 5)
             
             info_layout.addLayout(grid_layout)
             layout.addWidget(info_frame)
