@@ -489,7 +489,7 @@ class SalariesPage(QWidget):
                 items = [
                     str(salary['id']),
                     salary['staff_name'] or "",
-                    salary['school_name'] or "",
+                    salary['school_name'] or "عام",  # عرض "عام" إذا كانت المدرسة فارغة
                     type_ar,
                     f"{salary['base_salary']:,.0f} د.ع" if salary['base_salary'] else "0 د.ع",
                     f"{salary['paid_amount']:,.0f} د.ع",
