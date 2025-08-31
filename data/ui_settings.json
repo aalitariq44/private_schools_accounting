@@ -12,7 +12,7 @@
     "statistics_window_visible": false
   },
   "installments_page": {
-    "font_size": "صغير جدا",
+    "font_size": "كبير",
     "statistics_window_visible": false,
     "table_columns_visible": {
       "student_name": true,

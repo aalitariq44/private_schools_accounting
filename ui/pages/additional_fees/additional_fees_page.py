@@ -91,10 +91,8 @@ class AdditionalFeesPage(QWidget):
             # جدول الرسوم الإضافية
             self.create_fees_table(layout)
             
-            # إنشاء عناصر الملخص (لكن سنخفيها لإتاحة مساحة أكبر كما طلب المستخدم)
+            # إنشاء عناصر الملخص
             self.create_summary(layout)
-            if hasattr(self, 'summary_frame'):
-                self.summary_frame.setVisible(False)
             
             self.setLayout(layout)
             
@@ -126,11 +124,6 @@ class AdditionalFeesPage(QWidget):
             
             header_layout.addLayout(text_layout)
             header_layout.addStretch()
-            
-            # زر إحصائيات مفصلة بدلاً من الإحصائيات الظاهرة الدائمة لتوفير مساحة
-            self.detailed_stats_button = QPushButton("احصائيات مفصلة")
-            self.detailed_stats_button.setObjectName("secondaryButton")
-            header_layout.addWidget(self.detailed_stats_button)
             
             layout.addWidget(header_frame)
             
@@ -398,8 +391,7 @@ class AdditionalFeesPage(QWidget):
             
             summary_layout.addLayout(stats_layout)
             
-            # لا نضيف الإطار إلى التخطيط الرئيسي لتوفير المساحة على الصفحة
-            # layout.addWidget(summary_frame)
+            layout.addWidget(summary_frame)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الرسوم: {e}")
@@ -411,8 +403,6 @@ class AdditionalFeesPage(QWidget):
             self.export_fees_button.clicked.connect(self.export_fees)
             self.refresh_button.clicked.connect(self.refresh)
             self.clear_filters_button.clicked.connect(self.clear_filters)
-            if hasattr(self, 'detailed_stats_button'):
-                self.detailed_stats_button.clicked.connect(self.show_detailed_stats)
             
             # ربط الفلاتر
             self.school_combo.currentTextChanged.connect(self.on_school_changed)
