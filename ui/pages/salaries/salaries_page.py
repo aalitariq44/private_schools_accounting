@@ -288,8 +288,8 @@ class SalariesPage(QWidget):
             self.clear_button.clicked.connect(self.clear_filters)
             
             self.search_input.textChanged.connect(self.apply_filters)
-            self.school_combo.currentTextChanged.connect(self.load_persons_list)
-            self.school_combo.currentTextChanged.connect(self.apply_filters)
+            self.school_combo.currentIndexChanged.connect(self.load_persons_list)
+            self.school_combo.currentIndexChanged.connect(self.apply_filters)
             self.type_combo.currentTextChanged.connect(self.load_persons_list)
             self.type_combo.currentTextChanged.connect(self.apply_filters)
             self.person_combo.currentTextChanged.connect(self.apply_filters)
@@ -363,6 +363,7 @@ class SalariesPage(QWidget):
         try:
             self.school_combo.clear()
             self.school_combo.addItem("جميع المدارس", None)
+            self.school_combo.addItem("عام", "general")  # خيار للموظفين العامين بدون مدرسة
             
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
             schools = db_manager.execute_query(query)
@@ -387,13 +388,19 @@ class SalariesPage(QWidget):
             persons = []
             if not staff_type or staff_type == "معلم":
                 query = "SELECT id, name FROM teachers"
-                if school_id: query += f" WHERE school_id = {school_id}"
+                if school_id == "general":
+                    query += " WHERE school_id IS NULL"
+                elif school_id:
+                    query += f" WHERE school_id = {school_id}"
                 teachers = db_manager.execute_query(query)
                 if teachers: persons.extend([{'id': t['id'], 'name': t['name'], 'type': 'teacher'} for t in teachers])
 
             if not staff_type or staff_type == "موظف":
                 query = "SELECT id, name FROM employees"
-                if school_id: query += f" WHERE school_id = {school_id}"
+                if school_id == "general":
+                    query += " WHERE school_id IS NULL"
+                elif school_id:
+                    query += f" WHERE school_id = {school_id}"
                 employees = db_manager.execute_query(query)
                 if employees: persons.extend([{'id': e['id'], 'name': e['name'], 'type': 'employee'} for e in employees])
 
@@ -425,7 +432,9 @@ class SalariesPage(QWidget):
             params = []
 
             school_id = self.school_combo.currentData()
-            if school_id:
+            if school_id == "general":
+                query += " AND s.school_id IS NULL"
+            elif school_id:
                 query += " AND s.school_id = ?"
                 params.append(school_id)
 
