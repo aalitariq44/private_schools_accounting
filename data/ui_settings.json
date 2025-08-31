@@ -24,7 +24,7 @@
     "export_options_visible": true
   },
   "additional_fees_page": {
-    "font_size": "متوسط",
+    "font_size": "كبير",
     "statistics_window_visible": true,
     "table_columns_visible": {
       "student_name": true,

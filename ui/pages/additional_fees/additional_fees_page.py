@@ -209,11 +209,11 @@ class AdditionalFeesPage(QWidget):
             self.font_size_combo.setCurrentText(self.current_font_size)
             filters_layout.addWidget(self.font_size_combo)
             
-            # checkbox لإخفاء الإحصائيات
-            self.hide_stats_checkbox = QCheckBox("إخفاء الإحصائيات")
-            self.hide_stats_checkbox.setObjectName("filterLabel")
-            self.hide_stats_checkbox.setChecked(not self.statistics_visible)
-            filters_layout.addWidget(self.hide_stats_checkbox)
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            filters_layout.addWidget(self.toggle_stats_button)
             
             filters_layout.addStretch()
             
@@ -424,6 +424,13 @@ class AdditionalFeesPage(QWidget):
             # إخفاء الإحصائيات إذا كان الإعداد مخفياً
             summary_frame.setVisible(self.statistics_visible)
             
+            # تحديث نص زر الإحصائيات
+            if hasattr(self, 'toggle_stats_button'):
+                if self.statistics_visible:
+                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                else:
+                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+            
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الرسوم: {e}")
     
@@ -444,7 +451,6 @@ class AdditionalFeesPage(QWidget):
             
             # ربط إعدادات الصفحة
             self.font_size_combo.currentTextChanged.connect(self.on_font_size_changed)
-            self.hide_stats_checkbox.stateChanged.connect(self.on_hide_stats_changed)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -1182,21 +1188,29 @@ class AdditionalFeesPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في تغيير حجم الخط: {e}")
     
-    def on_hide_stats_changed(self):
-        """معالج إخفاء/إظهار الإحصائيات"""
+    def toggle_statistics_visibility(self):
+        """تبديل رؤية نافذة الإحصائيات"""
         try:
-            hide_stats = self.hide_stats_checkbox.isChecked()
-            self.statistics_visible = not hide_stats
+            # تبديل حالة الرؤية
+            self.statistics_visible = not self.statistics_visible
             
-            # إخفاء أو إظهار إطار الإحصائيات
+            # تطبيق التغيير على الواجهة
             if hasattr(self, 'summary_frame'):
                 self.summary_frame.setVisible(self.statistics_visible)
             
-            # حفظ الإعداد
+            # تحديث نص الزر
+            if hasattr(self, 'toggle_stats_button'):
+                if self.statistics_visible:
+                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                else:
+                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+            
+            # حفظ الإعداد الجديد
             ui_settings_manager.set_statistics_visible(self.page_name, self.statistics_visible)
             
-            action = "إخفاء" if hide_stats else "إظهار"
+            action = "إظهار" if self.statistics_visible else "إخفاء"
             log_user_action(f"{action} الإحصائيات في صفحة الرسوم الإضافية")
+            
         except Exception as e:
-            logging.error(f"خطأ في إخفاء/إظهار الإحصائيات: {e}")
+            logging.error(f"خطأ في تبديل رؤية الإحصائيات: {e}")
 
