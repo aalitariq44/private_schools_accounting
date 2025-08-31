@@ -54,6 +54,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             font-size: {font_sizes['summary_title']}px;
             font-weight: bold;
             color: white;
+            background-color: transparent;
             font-family: {cairo_font};
         }}
 
