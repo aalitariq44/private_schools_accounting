@@ -22,6 +22,10 @@ import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 
 
 
@@ -36,6 +40,12 @@ class InstallmentsPage(QWidget):
         self.current_installments = []
         self.selected_school_id = None
         self.selected_student_id = None
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("installments")
+        
+        # قراءة إعدادات رؤية الإحصائيات
+        self.statistics_visible = ui_settings_manager.get_statistics_visible("installments")
         
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
@@ -89,6 +99,9 @@ class InstallmentsPage(QWidget):
             self.create_financial_summary(layout)
             
             self.setLayout(layout)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الأقساط: {e}")
@@ -214,6 +227,24 @@ class InstallmentsPage(QWidget):
             self.clear_filters_button.setObjectName("secondaryButton") # Using secondaryButton style for now
             actions_layout.addWidget(self.clear_filters_button)
             
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
+            
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            actions_layout.addWidget(self.toggle_stats_button)
+            
             toolbar_layout.addLayout(actions_layout)
             
             layout.addWidget(toolbar_frame)
@@ -286,6 +317,7 @@ class InstallmentsPage(QWidget):
         try:
             summary_frame = QFrame()
             summary_frame.setObjectName("summaryFrame")
+            self.summary_frame = summary_frame  # إضافة هذا السطر لتعيين الخاصية
             
             summary_layout = QHBoxLayout(summary_frame)
             summary_layout.setContentsMargins(8, 6, 8, 6)
@@ -320,6 +352,9 @@ class InstallmentsPage(QWidget):
             
             layout.addWidget(summary_frame)
             
+            # تطبيق حالة الرؤية
+            self.summary_frame.setVisible(self.statistics_visible)
+            
         except Exception as e:
             logging.error(f"خطأ في إنشاء الملخص المالي: {e}")
     
@@ -337,6 +372,9 @@ class InstallmentsPage(QWidget):
             self.student_combo.currentIndexChanged.connect(self.apply_filters)
             self.due_date_from.dateChanged.connect(self.apply_filters)
             self.due_date_to.dateChanged.connect(self.apply_filters)
+            
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -595,138 +633,95 @@ class InstallmentsPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            # استخدام خط Cairo المحمل
-            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
-            
-            # تصميم مبسط متوافق مع الشاشات الصغيرة – تقليل الأحجام والألوان الثقيلة
-            style = """
-                QWidget {{
-                    background-color: #F5F6F7;
-                    font-family: {font_family};
-                    font-size: 13px;
-                }}
+            print(f"DEBUG: إعداد التنسيقات لحجم الخط: {self.current_font_size}")
 
-                /* رأس الصفحة مبسط */
-                #headerFrame {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                    margin-bottom: 6px;
-                }}
-                #pageTitle {{
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #37474F;
-                    margin: 0;
-                }}
-                #pageDesc {{
-                    font-size: 11px;
-                    color: #607D8B;
-                    margin-top: 2px;
-                }}
-                #quickStat {{
-                    background: #F0F3F5;
-                    color: #37474F;
-                    border: 1px solid #D0D5D8;
-                    padding: 4px 10px;
-                    border-radius: 14px;
-                    font-size: 11px;
-                    font-weight: 600;
-                }}
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
+            print(f"DEBUG: طول CSS المولد: {len(style)}")
 
-                /* إطارات عامة */
-                #toolbarFrame, #summaryFrame, #tableFrame {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                }}
-
-                #filterLabel {{
-                    font-weight: 600;
-                    color: #37474F;
-                    margin-right: 4px;
-                    font-size: 12px;
-                }}
-                #filterCombo, #dateInput {{
-                    padding: 4px 6px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 3px;
-                    background: #FFFFFF;
-                    min-width: 90px;
-                    font-size: 12px;
-                }}
-                #dateInput:focus, #filterCombo:focus {{
-                    border: 1px solid #5B8DEF;
-                }}
-
-                /* الأزرار المسطحة */
-                #primaryButton, #secondaryButton {{
-                    background: #FFFFFF;
-                    color: #2F3A40;
-                    border: 1px solid #B5BCC0;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                    font-size: 12px;
-                }}
-                #primaryButton:hover, #secondaryButton:hover {{
-                    background: #F0F3F5;
-                }}
-                #primaryButton:pressed, #secondaryButton:pressed {{
-                    background: #E2E6E9;
-                }}
-                #secondaryButton {{ border-color: #229954; color: #1B5E33; }}
-
-                /* الجدول */
-                QTableWidget {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    gridline-color: #E3E6E8;
-                    font-size: 12px;
-                }}
-                QTableWidget::item {{
-                    border-bottom: 1px solid #EEF0F1;
-                }}
-                QTableWidget::item:selected {{
-                    background: #5B8DEF;
-                    color: #FFFFFF;
-                }}
-                QHeaderView::section {{
-                    background: #ECEFF1;
-                    color: #37474F;
-                    padding: 4px 6px;
-                    border: 1px solid #D0D5D8;
-                    font-weight: 600;
-                    font-size: 12px;
-                }}
-
-                /* الملخص */
-                #summaryTitle {{
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #37474F;
-                }}
-                #summaryLabel {{
-                    font-size: 11px;
-                    color: #455A64;
-                }}
-                #summaryValue {{
-                    font-size: 14px;
-                    font-weight: 700;
-                    padding: 2px 4px;
-                    color: #1B5E20;
-                }}
-                #statLabel {{
-                    font-size: 11px;
-                    color: #546E7A;
-                }}
-            """.format(font_family=cairo_font)
-            
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
-            
+
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'installments_table'):
+                self.installments_table.update()
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.update()
+
+            print("DEBUG: تم تطبيق التنسيقات بنجاح")
+
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
+            print(f"DEBUG: خطأ في إعداد الستايل: {e}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            print(f"DEBUG: تغيير حجم الخط من {self.current_font_size} إلى {selected_size}")
+
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("installments", selected_size)
+                print(f"DEBUG: حفظ حجم الخط: {'نجح' if success else 'فشل'}")
+
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+
+                # إجبار إعادة رسم الصفحة
+                self.update()
+
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+            print(f"DEBUG: خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+                print(f"DEBUG: تم تحديث القائمة المنسدلة إلى: {self.current_font_size}")
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+            print(f"DEBUG: خطأ في تحديث القائمة المنسدلة: {e}")
+    
+    def toggle_statistics_visibility(self):
+        """تبديل رؤية نافذة الإحصائيات"""
+        try:
+            # تبديل حالة الرؤية
+            self.statistics_visible = not self.statistics_visible
+            
+            # تطبيق التغيير على الواجهة
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.setVisible(self.statistics_visible)
+            
+            # تحديث نص الزر
+            if hasattr(self, 'toggle_stats_button'):
+                if self.statistics_visible:
+                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                else:
+                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+            
+            # حفظ الإعداد الجديد
+            success = ui_settings_manager.set_statistics_visible("installments", self.statistics_visible)
+            print(f"DEBUG: حفظ حالة رؤية الإحصائيات: {'نجح' if success else 'فشل'}")
+            
+            log_user_action(f"تبديل رؤية الإحصائيات إلى: {'مرئي' if self.statistics_visible else 'مخفي'}")
+            
+        except Exception as e:
+            logging.error(f"خطأ في تبديل رؤية الإحصائيات: {e}")
+            print(f"DEBUG: خطأ في تبديل رؤية الإحصائيات: {e}")
+
     def add_installment(self):
         """إضافة قسط جديد"""
         try:

@@ -10,5 +10,17 @@
   "employees_page": {
     "font_size": "كبير",
     "statistics_window_visible": false
+  },
+  "installments_page": {
+    "font_size": "صغير جدا",
+    "statistics_window_visible": false,
+    "table_columns_visible": {
+      "student_name": true,
+      "amount": true,
+      "due_date": true,
+      "status": true
+    },
+    "search_filters_visible": true,
+    "export_options_visible": true
   }
 }
