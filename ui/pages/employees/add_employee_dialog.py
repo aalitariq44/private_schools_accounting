@@ -154,11 +154,11 @@ class AddEmployeeDialog(QDialog):
             with db_manager.get_cursor() as cursor:
                 cursor.execute("SELECT id, name_ar FROM schools ORDER BY name_ar")
                 schools = cursor.fetchall()
-                self.school_combo.clear(); self.school_combo.addItem("اختر المدرسة", None)
+                self.school_combo.clear(); self.school_combo.addItem("عام", None)
                 for s in schools:
                     self.school_combo.addItem(s['name_ar'], s['id'])
                 if schools:
-                    self.school_combo.setCurrentIndex(1)
+                    self.school_combo.setCurrentIndex(0)
         except Exception as e:
             logging.error(f"خطأ في تحميل المدارس: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في تحميل المدارس:\n{e}")
@@ -167,7 +167,7 @@ class AddEmployeeDialog(QDialog):
         try:
             if not self.name_input.text().strip():
                 QMessageBox.warning(self, "خطأ", "يرجى إدخال اسم الموظف"); self.name_input.setFocus(); return False
-            if self.school_combo.currentIndex() <= 0 or self.school_combo.currentData() is None:
+            if self.school_combo.currentIndex() < 0:
                 QMessageBox.warning(self, "خطأ", "يرجى اختيار المدرسة"); self.school_combo.setFocus(); return False
             if self.job_combo.currentText() == "مخصص" and not self.custom_job_input.text().strip():
                 QMessageBox.warning(self, "خطأ", "يرجى إدخال المهنة المخصصة"); self.custom_job_input.setFocus(); return False

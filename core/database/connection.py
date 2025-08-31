@@ -182,14 +182,14 @@ class DatabaseManager:
                     CREATE TABLE IF NOT EXISTS employees (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         name TEXT NOT NULL,
-                        school_id INTEGER NOT NULL,
+                        school_id INTEGER,
                         job_type TEXT NOT NULL,
                         monthly_salary DECIMAL(10,2) NOT NULL,
                         phone TEXT,
                         notes TEXT,
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE
+                        FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE SET NULL
                     )
                 """)
                 

@@ -153,7 +153,7 @@ class EditEmployeeDialog(QDialog):
             with db_manager.get_cursor() as cursor:
                 cursor.execute("SELECT id, name_ar FROM schools ORDER BY name_ar")
                 schools = cursor.fetchall()
-                self.school_combo.clear(); self.school_combo.addItem("اختر المدرسة", None)
+                self.school_combo.clear(); self.school_combo.addItem("عام", None)
                 for s in schools:
                     self.school_combo.addItem(s['name_ar'], s['id'])
         except Exception as e:
@@ -170,9 +170,12 @@ class EditEmployeeDialog(QDialog):
                     self.reject(); return
                 self.name_input.setText(employee['name'] or '')
                 # school
-                for i in range(self.school_combo.count()):
-                    if self.school_combo.itemData(i) == employee['school_id']:
-                        self.school_combo.setCurrentIndex(i); break
+                if employee['school_id'] is None:
+                    self.school_combo.setCurrentIndex(0)  # "عام"
+                else:
+                    for i in range(self.school_combo.count()):
+                        if self.school_combo.itemData(i) == employee['school_id']:
+                            self.school_combo.setCurrentIndex(i); break
                 # job
                 default_jobs = ["محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق", "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر", "مشرف", "مرشد طلابي", "أمينة مكتبة", "أمين مكتبة", "ممرض"]
                 job = employee['job_type']
@@ -198,7 +201,7 @@ class EditEmployeeDialog(QDialog):
         try:
             if not self.name_input.text().strip():
                 QMessageBox.warning(self, "خطأ", "يرجى إدخال اسم الموظف"); self.name_input.setFocus(); return False
-            if self.school_combo.currentIndex() <= 0 or self.school_combo.currentData() is None:
+            if self.school_combo.currentIndex() < 0:
                 QMessageBox.warning(self, "خطأ", "يرجى اختيار المدرسة"); self.school_combo.setFocus(); return False
             if self.salary_input.value() <= 0:
                 QMessageBox.warning(self, "خطأ", "يرجى إدخال راتب شهري صحيح"); self.salary_input.setFocus(); return False

@@ -314,6 +314,7 @@ class EmployeesPage(QWidget):
         try:
             self.school_combo.clear()
             self.school_combo.addItem("جميع المدارس", None)
+            self.school_combo.addItem("عام", "general")
             
             query = "SELECT id, name_ar FROM schools ORDER BY name_ar"
             schools = db_manager.execute_query(query)
@@ -340,7 +341,11 @@ class EmployeesPage(QWidget):
             params = []
             
             selected_school_id = self.school_combo.currentData()
-            if selected_school_id:
+            if selected_school_id == "general":
+                # إظهار الموظفين العامة فقط (school_id IS NULL)
+                query += " AND e.school_id IS NULL"
+            elif selected_school_id:
+                # إظهار موظفي مدرسة محددة
                 query += " AND e.school_id = ?"
                 params.append(selected_school_id)
 
@@ -391,7 +396,7 @@ class EmployeesPage(QWidget):
                 items = [
                     str(employee['id']),
                     employee['name'] or "",
-                    employee['school_name'] or "",
+                    employee['school_name'] or "عام",
                     employee['job_type'] or "",
                     f"{employee['monthly_salary']:,.0f} د.ع" if employee['monthly_salary'] else "0 د.ع",
                     employee['phone'] or "",
