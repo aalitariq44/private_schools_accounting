@@ -92,8 +92,6 @@ class StudentInfoWidget(QWidget):
                 self.section_label.setFont(cairo_font)
             if hasattr(self, 'gender_label') and self.gender_label:
                 self.gender_label.setFont(cairo_font)
-            if hasattr(self, 'birthdate_label') and self.birthdate_label:
-                self.birthdate_label.setFont(cairo_font)
             if hasattr(self, 'phone_label') and self.phone_label:
                 self.phone_label.setFont(cairo_font)
             if hasattr(self, 'status_label') and self.status_label:
@@ -175,10 +173,6 @@ class StudentInfoWidget(QWidget):
             self.gender_label.setObjectName("infoValue")
             self.gender_label.setFont(QFont(self.cairo_family, 10))
             
-            self.birthdate_label = QLabel("--")
-            self.birthdate_label.setObjectName("infoValue")
-            self.birthdate_label.setFont(QFont(self.cairo_family, 10))
-            
             self.phone_label = QLabel("--")
             self.phone_label.setObjectName("infoValue")
             self.phone_label.setFont(QFont(self.cairo_family, 10))
@@ -219,26 +213,21 @@ class StudentInfoWidget(QWidget):
             grid_layout.addWidget(section_label, 1, 2)
             grid_layout.addWidget(self.section_label, 1, 3)
             
-            birthdate_label = QLabel("تاريخ الميلاد:")
-            birthdate_label.setFont(QFont(self.cairo_family, 10))
-            grid_layout.addWidget(birthdate_label, 1, 4)
-            grid_layout.addWidget(self.birthdate_label, 1, 5)
-            
-            # الصف الثالث
             phone_label = QLabel("الهاتف:")
             phone_label.setFont(QFont(self.cairo_family, 10))
-            grid_layout.addWidget(phone_label, 2, 0)
-            grid_layout.addWidget(self.phone_label, 2, 1)
+            grid_layout.addWidget(phone_label, 1, 4)
+            grid_layout.addWidget(self.phone_label, 1, 5)
             
+            # الصف الثالث
             status_label = QLabel("الحالة:")
             status_label.setFont(QFont(self.cairo_family, 10))
-            grid_layout.addWidget(status_label, 2, 2)
-            grid_layout.addWidget(self.status_label, 2, 3)
+            grid_layout.addWidget(status_label, 2, 0)
+            grid_layout.addWidget(self.status_label, 2, 1)
             
             start_date_label = QLabel("تاريخ المباشرة:")
             start_date_label.setFont(QFont(self.cairo_family, 10))
-            grid_layout.addWidget(start_date_label, 2, 4)
-            grid_layout.addWidget(self.start_date_label, 2, 5)
+            grid_layout.addWidget(start_date_label, 2, 2)
+            grid_layout.addWidget(self.start_date_label, 2, 3)
             
             # الصف الرابع - الملاحظات
             notes_label = QLabel("ملاحظات:")
@@ -315,7 +304,6 @@ class StudentInfoWidget(QWidget):
                 self.grade_label.setText("--")
                 self.section_label.setText("--")
                 self.gender_label.setText("--")
-                self.birthdate_label.setText("--")
                 self.phone_label.setText("--")
                 self.status_label.setText("--")
                 self.start_date_label.setText("--")
@@ -330,7 +318,7 @@ class StudentInfoWidget(QWidget):
             
             # تحديث المعلومات بناءً على البنية الصحيحة لجدول students
             # فهارس الأعمدة الصحيحة (من PRAGMA table_info):
-            # 1: name, 4: grade, 5: section, 7: gender, 8: birthdate, 9: phone
+            # 1: name, 4: grade, 5: section, 7: gender, 9: phone
             # 12: total_fee, 13: start_date, 14: status, 15: notes
             # مع JOIN: 18: school_name, 19: school_name_en, 20: school_address, 21: school_phone, 22: school_logo_path
             
@@ -351,9 +339,6 @@ class StudentInfoWidget(QWidget):
             
             # الجنس - الفهرس 7
             self.gender_label.setText(str(student_data[7] or "--"))
-            
-            # تاريخ الميلاد - الفهرس 8
-            self.birthdate_label.setText(str(student_data[8] or "--"))
             
             # الهاتف - الفهرس 9
             self.phone_label.setText(str(student_data[9] or "--"))
@@ -471,7 +456,6 @@ class StudentInfoWidget(QWidget):
             "grade": self.grade_label.text(),
             "section": self.section_label.text(),
             "gender": self.gender_label.text(),
-            "birthdate": self.birthdate_label.text(),
             "phone": self.phone_label.text(),
             "status": self.status_label.text(),
             "start_date": self.start_date_label.text()
