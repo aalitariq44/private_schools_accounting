@@ -88,9 +88,6 @@ class ExternalIncomePage(QWidget):
             layout.setSpacing(8)
             
 
-            # رأس الصفحة
-            self.create_header(layout)
-
             # شريط الأدوات والفلاتر
             self.create_toolbar(layout)
 
@@ -258,6 +255,10 @@ class ExternalIncomePage(QWidget):
             self.clear_filters_button = QPushButton("مسح الفلاتر")
             self.clear_filters_button.setObjectName("secondaryButton")
             actions_layout.addWidget(self.clear_filters_button)
+            
+            self.refresh_button = QPushButton("تحديث")
+            self.refresh_button.setObjectName("refreshButton")
+            actions_layout.addWidget(self.refresh_button)
             
             self.export_button = QPushButton("تصدير التقرير")
             self.export_button.setObjectName("secondaryButton")
@@ -499,7 +500,6 @@ class ExternalIncomePage(QWidget):
             self.income_table.setRowCount(0)
             
             if not self.current_incomes:
-                self.displayed_count_label.setText("عدد الواردات المعروضة: 0")
                 return
             
             # ملء الجدول
@@ -528,9 +528,6 @@ class ExternalIncomePage(QWidget):
                     
                     self.income_table.setItem(row_idx, col_idx, item)
                 
-            
-            # تحديث العداد
-            self.displayed_count_label.setText(f"عدد الواردات المعروضة: {len(self.current_incomes)}")
             
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الواردات: {e}")
@@ -564,8 +561,6 @@ class ExternalIncomePage(QWidget):
             yearly_total = yearly_result[0][0] if yearly_result else 0
             
             # تحديث التسميات
-            self.monthly_total_label.setText(f"إجمالي هذا الشهر: {monthly_total:,.2f} د.ع")
-            self.yearly_total_label.setText(f"إجمالي هذا العام: {yearly_total:,.2f} د.ع")
             self.total_incomes_label.setText(f"إجمالي الواردات المعروضة: {total_displayed:,.2f} د.ع")
             self.average_income_label.setText(f"متوسط الوارد: {avg_displayed:,.2f} د.ع")
             self.max_income_label.setText(f"أكبر وارد: {max_displayed:,.2f} د.ع")
