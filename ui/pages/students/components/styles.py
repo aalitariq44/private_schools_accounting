@@ -80,6 +80,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             margin-right: 4px;
             font-size: {font_sizes['filter_label']}px;
             font-family: {cairo_font};
+            background-color: transparent;
         }}
 
         #filterCombo {{
