@@ -191,7 +191,7 @@ class MainWindow(QMainWindow):
             scroll_area = QScrollArea()
             scroll_area.setWidgetResizable(True)
             scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+            scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             scroll_area.setObjectName("sidebarScrollArea")
             
             # ويدجت الأزرار

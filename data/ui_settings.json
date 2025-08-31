@@ -1,10 +1,10 @@
 {
   "students_page": {
-    "font_size": "كبير",
+    "font_size": "صغير",
     "statistics_window_visible": false
   },
   "schools_page": {
-    "font_size": "كبير جدا",
+    "font_size": "كبير",
     "statistics_window_visible": true
   },
   "teachers_page": {
