@@ -18,5 +18,13 @@
   "additional_fees_page": {
     "font_size": "كبير جدا",
     "statistics_window_visible": false
+  },
+  "external_income_page": {
+    "font_size": "كبير جدا",
+    "statistics_window_visible": false
+  },
+  "expenses_page": {
+    "font_size": "كبير جدا",
+    "statistics_window_visible": false
   }
 }

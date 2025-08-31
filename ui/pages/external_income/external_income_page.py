@@ -25,6 +25,10 @@ from core.utils.logger import log_user_action, log_database_operation
 from .add_income_dialog import AddIncomeDialog
 from .edit_income_dialog import EditIncomeDialog
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 
 class ExternalIncomePage(QWidget):
     """صفحة إدارة الواردات الخارجية"""
@@ -37,6 +41,9 @@ class ExternalIncomePage(QWidget):
         super().__init__()
         self.current_incomes = []
         self.selected_school_id = None
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("external_income")
         
         self.setup_cairo_font()
         self.setup_ui()
@@ -94,6 +101,9 @@ class ExternalIncomePage(QWidget):
             self.create_detailed_stats(layout)
 
             self.setLayout(layout)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الواردات الخارجية: {e}")
@@ -225,6 +235,18 @@ class ExternalIncomePage(QWidget):
             self.search_input.setObjectName("searchInput")
             self.search_input.setPlaceholderText("ابحث في العناوين والأوصاف والملاحظات...")
             actions_layout.addWidget(self.search_input)
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
             
             actions_layout.addStretch() # Add stretch to push buttons to right
             
@@ -382,6 +404,9 @@ class ExternalIncomePage(QWidget):
             self.end_date.dateChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
             
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
     
@@ -442,7 +467,7 @@ class ExternalIncomePage(QWidget):
             min_date = self.start_date.minimumDate().toPyDate()
             max_date = self.end_date.maximumDate().toPyDate()
             if not (start_date == min_date and end_date == max_date):
-                query += " AND e.income_date BETWEEN ? AND ?"
+                query += " AND ei.income_date BETWEEN ? AND ?"
                 params.extend([start_date, end_date])
             
             # فلتر البحث
@@ -569,6 +594,8 @@ class ExternalIncomePage(QWidget):
             self.start_date.setDate(self.start_date.minimumDate())
             self.end_date.setDate(self.end_date.maximumDate())
             self.search_input.clear()
+            # الحفاظ على حجم الخط الحالي (لا نعيد تعيينه)
+            self.font_size_combo.setCurrentText(self.current_font_size)
             # إعادة تحميل البيانات
             self.load_incomes()
         except Exception as e:
@@ -776,120 +803,56 @@ class ExternalIncomePage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في حذف الوارد: {e}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("external_income", selected_size)
+                
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+    
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            # تصميم مبسط: ألوان محايدة، خطوط أصغر، أزرار مسطحة، بدون تدرجات ثقيلة
-            style = """
-                QWidget {
-                    background-color: #F5F6F7;
-                    font-family: 'Cairo', Arial, sans-serif;
-                    font-size: 13px;
-                }
-                /* رأس الصفحة مبسط */
-                #headerFrame {
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                    margin-bottom: 6px;
-                }
-                #pageTitle {
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #37474F;
-                    margin: 0;
-                }
-                #pageDesc {
-                    font-size: 11px;
-                    color: #607D8B;
-                    margin-top: 2px;
-                }
-                /* شريط الأدوات */
-                #toolbarFrame, #tableFrame, #detailedStatsFrame {
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                }
-                #filterLabel {
-                    font-weight: 600;
-                    color: #37474F;
-                    margin-right: 4px;
-                    font-size: 12px;
-                }
-                #filterCombo, #filterDate {
-                    padding: 4px 6px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 3px;
-                    background: #FFFFFF;
-                    min-width: 85px;
-                    font-size: 12px;
-                }
-                #searchInput {
-                    padding: 4px 10px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 14px;
-                    font-size: 12px;
-                    background: #FFFFFF;
-                    min-width: 180px;
-                }
-                #searchInput:focus, #filterCombo:focus, #filterDate:focus {
-                    border: 1px solid #5B8DEF;
-                }
-                /* الأزرار المسطحة */
-                #primaryButton, #secondaryButton, #refreshButton {
-                    background: #FFFFFF;
-                    color: #2F3A40;
-                    border: 1px solid #B5BCC0;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                    font-size: 12px;
-                }
-                #primaryButton:hover, #secondaryButton:hover, #refreshButton:hover {
-                    background: #F0F3F5;
-                }
-                #primaryButton:pressed, #secondaryButton:pressed, #refreshButton:pressed {
-                    background: #E2E6E9;
-                }
-                #primaryButton { border-color: #229954; color: #1B5E33; }
-                #secondaryButton { border-color: #2980B9; color: #1F5375; }
-                #refreshButton { border-color: #B5A000; color: #605500; }
-                /* الجدول */
-                QTableWidget {
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    gridline-color: #E3E6E8;
-                    font-size: 12px;
-                }
-                QTableWidget::item {
-                    border-bottom: 1px solid #EEF0F1;
-                }
-                QTableWidget::item:selected {
-                    background: #5B8DEF;
-                    color: #FFFFFF;
-                }
-                QHeaderView::section {
-                    background: #ECEFF1;
-                    color: #37474F;
-                    padding: 4px 6px;
-                    border: 1px solid #D0D5D8;
-                    font-weight: 600;
-                    font-size: 12px;
-                }
-                /* الإحصائيات */
-                #detailStatLabel, #summaryStatLabel {
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: #546E7A;
-                    margin: 2px 4px;
-                }
-                #detailedStatsFrame {
-                    margin-top: 6px;
-                    padding: 6px;
-                }
-            """
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
             
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
+            
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'income_table'):
+                self.income_table.update()
+            if hasattr(self, 'detailedStatsFrame'):
+                self.detailedStatsFrame.update()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد تنسيقات صفحة الواردات الخارجية: {e}")

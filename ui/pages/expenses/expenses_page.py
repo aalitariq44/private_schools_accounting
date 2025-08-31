@@ -25,6 +25,10 @@ from core.utils.logger import log_user_action, log_database_operation
 from .add_expense_dialog import AddExpenseDialog
 from .edit_expense_dialog import EditExpenseDialog
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 
 class NumericTableWidgetItem(QTableWidgetItem):
     """QTableWidgetItem subclass for numeric sorting based on integer value."""
@@ -46,6 +50,9 @@ class ExpensesPage(QWidget):
         super().__init__()
         self.current_expenses = []
         self.selected_school_id = None
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("expenses")
         
         self.setup_cairo_font()
         self.setup_ui()
@@ -101,6 +108,9 @@ class ExpensesPage(QWidget):
             self.create_detailed_stats(layout)
 
             self.setLayout(layout)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة المصروفات: {e}")
@@ -232,6 +242,18 @@ class ExpensesPage(QWidget):
             self.search_input.setPlaceholderText("ابحث في العناوين والملاحظات...")
             actions_layout.addWidget(self.search_input)
             
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
+            
             actions_layout.addStretch() # Add stretch to push buttons to right
             
             # أزرار العمليات
@@ -352,6 +374,9 @@ class ExpensesPage(QWidget):
             self.start_date.dateChanged.connect(self.apply_filters)
             self.end_date.dateChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
+            
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -568,6 +593,8 @@ class ExpensesPage(QWidget):
             self.start_date.setDate(self.start_date.minimumDate())
             self.end_date.setDate(self.end_date.maximumDate())
             self.search_input.clear()
+            # الحفاظ على حجم الخط الحالي (لا نعيد تعيينه)
+            self.font_size_combo.setCurrentText(self.current_font_size)
             # إعادة تحميل البيانات
             self.load_expenses()
         except Exception as e:
@@ -774,101 +801,59 @@ class ExpensesPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في حذف المصروف: {e}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("expenses", selected_size)
+                
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+    
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            style = """
-                /* قاعدة عامة */
-                QWidget {
-                    background-color: #F5F6F7;
-                    font-family: 'Cairo', Arial, sans-serif;
-                    font-size: 13px;
-                }
-                /* رأس مبسط */
-                #headerFrame {
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                    margin-bottom: 8px;
-                }
-                #pageTitle {
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #222;
-                    margin: 0 0 2px 0;
-                }
-                #pageDesc {
-                    font-size: 12px;
-                    color: #555;
-                    margin: 0;
-                }
-                /* شريط الأدوات */
-                #toolbarFrame, #detailedStatsFrame {
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                }
-                #toolbarFrame { margin-bottom: 8px; }
-                #filterLabel { color: #333; font-size: 12px; font-weight: 600; }
-                #filterCombo, #filterDate, #searchInput {
-                    padding: 4px 8px;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    background: #FFFFFF;
-                    font-size: 12px;
-                    min-width: 90px;
-                }
-                #searchInput { min-width: 180px; }
-                /* الأزرار العامة */
-                QPushButton {
-                    background: #FFFFFF;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    padding: 6px 12px;
-                    font-size: 12px;
-                }
-                QPushButton:hover { background: #E9EEF2; }
-                #primaryButton {
-                    background: #2F6ED1;
-                    color: #FFFFFF;
-                    border: 1px solid #2F6ED1;
-                }
-                #primaryButton:hover { background: #2559A8; }
-                #refreshButton { border-color: #2F6ED1; color: #2F6ED1; font-weight: 600; }
-                #refreshButton:hover { background: #E0ECFF; }
-                /* الجدول */
-                QTableWidget {
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                    gridline-color: #E3E6E8;
-                    font-size: 12px;
-                }
-                QTableWidget::item { padding: 2px 4px; }
-                QTableWidget::item:selected { background: #2F6ED1; color: #FFFFFF; }
-                QHeaderView::section {
-                    background: #F0F2F4;
-                    color: #222;
-                    padding: 4px 6px;
-                    border: 0px;
-                    border-right: 1px solid #D4D8DB;
-                    font-size: 12px;
-                    font-weight: 600;
-                }
-                /* الإحصائيات */
-                #summaryStatLabel, #detailStatLabel {
-                    font-size: 12px;
-                    font-weight: 600;
-                    color: #333;
-                    margin: 2px 8px 2px 0;
-                }
-                #detailStatLabel { color: #444; }
-            """
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
             
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
             
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'expenses_table'):
+                self.expenses_table.update()
+            if hasattr(self, 'detailedStatsFrame'):
+                self.detailedStatsFrame.update()
+            
         except Exception as e:
-            logging.error(f"خطأ في إعداد الستايل: {e}")
+            logging.error(f"خطأ في إعداد تنسيقات صفحة المصروفات: {e}")
 
     def setup_cairo_font(self):
         """إعداد خط Cairo"""
