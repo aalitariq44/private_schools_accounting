@@ -13,26 +13,10 @@
   },
   "installments_page": {
     "font_size": "كبير",
-    "statistics_window_visible": false,
-    "table_columns_visible": {
-      "student_name": true,
-      "amount": true,
-      "due_date": true,
-      "status": true
-    },
-    "search_filters_visible": true,
-    "export_options_visible": true
+    "statistics_window_visible": false
   },
   "additional_fees_page": {
-    "font_size": "كبير",
-    "statistics_window_visible": true,
-    "table_columns_visible": {
-      "student_name": true,
-      "fee_type": true,
-      "amount": true,
-      "date": true
-    },
-    "search_filters_visible": true,
-    "export_options_visible": true
+    "font_size": "كبير جدا",
+    "statistics_window_visible": false
   }
 }
