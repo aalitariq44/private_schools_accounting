@@ -7,13 +7,17 @@
 import logging
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
-    QFrame, QLabel, QPushButton, QScrollArea
+    QFrame, QLabel, QPushButton, QScrollArea, QComboBox
 )
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QFont, QPixmap
+from PyQt5.QtGui import QFont, QPixmap, QIcon
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
+
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
 
 
 class DashboardPage(QWidget):
@@ -21,14 +25,32 @@ class DashboardPage(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("dashboard")
+        
+        # تحميل وتطبيق خط Cairo
+        self.setup_cairo_font()
+        
         self.setup_ui()
         self.setup_styles()
+        self.setup_connections()
         self.load_statistics()
         
         # تحديث الإحصائيات كل 5 دقائق
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.load_statistics)
         self.refresh_timer.start(300000)  # 5 دقائق
+    
+    def setup_cairo_font(self):
+        """تحميل وتطبيق خط Cairo"""
+        try:
+            self.cairo_family = FontSizeManager.load_cairo_font()
+            logging.info(f"تم تحميل خط Cairo بنجاح: {self.cairo_family}")
+            
+        except Exception as e:
+            logging.warning(f"فشل في تحميل خط Cairo، استخدام الخط الافتراضي: {e}")
+            self.cairo_family = "Arial"
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -38,6 +60,9 @@ class DashboardPage(QWidget):
             # تقليل الهوامش والمسافات لتوفير مساحة رأسية
             main_layout.setContentsMargins(8, 8, 8, 8)
             main_layout.setSpacing(8)
+            
+            # شريط الأدوات
+            self.create_toolbar(main_layout)
             
             # إحصائيات سريعة
             self.create_statistics_section(main_layout)
@@ -53,8 +78,63 @@ class DashboardPage(QWidget):
             
             self.setLayout(main_layout)
             
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
+            
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة لوحة التحكم: {e}")
+            raise
+    
+    def setup_connections(self):
+        """ربط الإشارات والأحداث"""
+        try:
+            # ربط تغيير حجم الخط
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            
+        except Exception as e:
+            logging.error(f"خطأ في ربط الإشارات: {e}")
+    
+    
+    def create_toolbar(self, layout):
+        """إنشاء شريط الأدوات"""
+        try:
+            toolbar_frame = QFrame()
+            toolbar_frame.setObjectName("toolbarFrame")
+            
+            toolbar_layout = QHBoxLayout(toolbar_frame)
+            toolbar_layout.setContentsMargins(8, 6, 8, 6)
+            toolbar_layout.setSpacing(6)
+            
+            # عنوان الصفحة
+            title_label = QLabel("لوحة التحكم")
+            title_label.setObjectName("pageTitle")
+            toolbar_layout.addWidget(title_label)
+            
+            toolbar_layout.addStretch()
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            toolbar_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            toolbar_layout.addWidget(self.font_size_combo)
+            
+            # زر تحديث البيانات
+            refresh_btn = QPushButton("تحديث")
+            refresh_btn.setObjectName("secondaryButton")
+            refresh_btn.clicked.connect(self.load_statistics)
+            toolbar_layout.addWidget(refresh_btn)
+            
+            layout.addWidget(toolbar_frame)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء شريط الأدوات: {e}")
             raise
     
     
@@ -116,7 +196,8 @@ class DashboardPage(QWidget):
         try:
             card = QFrame()
             card.setObjectName("statCard")
-            # Removed card.setFixedHeight(40)
+            # حفظ اللون كخاصية للبطاقة
+            card.setProperty("card_color", color)
             
             layout = QHBoxLayout(card)
             layout.setAlignment(Qt.AlignCenter)
@@ -136,7 +217,8 @@ class DashboardPage(QWidget):
             title_label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             layout.addWidget(title_label)
             
-            # تطبيق اللون
+            # تطبيق اللون باستخدام أحجام الخط الديناميكية
+            font_sizes = FontSizeManager.get_font_sizes(self.current_font_size)
             card.setStyleSheet(f"""
                 #statCard {{
                     background: {color};
@@ -144,16 +226,16 @@ class DashboardPage(QWidget):
                     border-radius:6px;
                 }}
                 #statValue {{
-                    background: transparent; /* Remove white background */
-                    color: #000000; /* Black text */
-                    font-size:14px;
+                    background: transparent;
+                    color: #000000;
+                    font-size:{font_sizes['summary_value']}px;
                     font-weight:600;
                 }}
                 #statTitle {{
-                    background: transparent; /* Remove white background */
-                    color:#333333; /* Darker grey for title */
-                    font-size:12px;
-                    font-weight:600; /* Changed to bold */
+                    background: transparent;
+                    color:#333333;
+                    font-size:{font_sizes['summary_label']}px;
+                    font-weight:600;
                 }}
             """)
             
@@ -484,46 +566,202 @@ class DashboardPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            style = """
-                QWidget { background:#F5F6F7; }
-                #statsFrame, #actionsFrame, #infoFrame {
+            print(f"DEBUG: إعداد التنسيقات لحجم الخط: {self.current_font_size}")
+
+            # الحصول على أحجام الخط الديناميكية
+            font_sizes = FontSizeManager.get_font_sizes(self.current_font_size)
+
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size, self.cairo_family)
+            
+            # إضافة تنسيقات إضافية للداش بورد مع أحجام ديناميكية
+            dashboard_style = f"""
+                #toolbarFrame {{
                     background:#FFFFFF;
                     border:1px solid #DDE1E4;
                     border-radius:6px;
                     margin-bottom:8px;
                     padding:4px 6px 6px;
-                }
-                #sectionTitle {
-                    font-size:13px;
+                }}
+                #pageTitle {{
+                    font-size:{font_sizes['summary_title']}px;
+                    font-weight:700;
+                    color:#2C3E50;
+                    margin:0;
+                }}
+                #statsFrame, #actionsFrame, #infoFrame {{
+                    background:#FFFFFF;
+                    border:1px solid #DDE1E4;
+                    border-radius:6px;
+                    margin-bottom:8px;
+                    padding:4px 6px 6px;
+                }}
+                #sectionTitle {{
+                    font-size:{font_sizes['summary_title']}px;
                     font-weight:600;
                     color:#2C3E50;
                     margin:0 0 4px 0;
                     padding:0 0 4px 0;
                     border-bottom:1px solid #E2E5E8;
-                }
-                #actionButton {
-                    background:#007BFF; /* Primary blue */
+                }}
+                #actionButton {{
+                    background:#007BFF;
                     color:#FFFFFF;
                     border:1px solid #007BFF;
-                    padding:6px 12px; /* Slightly larger padding */
-                    border-radius:5px; /* Slightly more rounded */
-                    font-size:13px; /* Slightly larger font */
+                    padding:8px 16px;
+                    border-radius:5px;
+                    font-size:{font_sizes['buttons']}px;
                     font-weight:600;
-                    min-width:110px; /* Slightly wider */
-                    transition: all 0.3s ease; /* Smooth transition for hover effects */
-                }
-                #actionButton:hover {
-                    background:#0056B3; /* Darker blue on hover */
+                    min-width:120px;
+                    transition: all 0.3s ease;
+                }}
+                #actionButton:hover {{
+                    background:#0056B3;
                     border:1px solid #0056B3;
-                }
-                #actionButton:pressed {
-                    background:#004085; /* Even darker on pressed */
+                }}
+                #actionButton:pressed {{
+                    background:#004085;
                     border:1px solid #004085;
-                }
-                #infoLabel { color:#5F6B73; font-size:12px; }
+                }}
+                #infoLabel {{ 
+                    color:#5F6B73; 
+                    font-size:{font_sizes['stat_label']}px; 
+                }}
+                #filterLabel {{
+                    font-weight: 600;
+                    color:#37474F;
+                    margin-right:4px;
+                    font-size:{font_sizes['filter_label']}px;
+                }}
+                #filterCombo {{
+                    padding:4px 8px;
+                    border:1px solid #C3C7CA;
+                    border-radius:3px;
+                    background:#FFFFFF;
+                    min-width:85px;
+                    font-size:{font_sizes['filter_combo']}px;
+                }}
+                #secondaryButton {{
+                    background-color:#FFFFFF;
+                    color:#2F3A40;
+                    border:1px solid #B5BCC0;
+                    padding:6px 12px;
+                    border-radius:4px;
+                    font-weight:600;
+                    font-size:{font_sizes['buttons']}px;
+                }}
+                #secondaryButton:hover {{
+                    background-color:#F0F3F5;
+                }}
+                #secondaryButton:pressed {{
+                    background-color:#E2E6E9;
+                }}
             """
             
-            self.setStyleSheet(style)
-            
+            # دمج التنسيقات
+            full_style = style + dashboard_style
+            self.setStyleSheet(full_style)
+
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'stats_frame'):
+                self.stats_frame.update()
+            if hasattr(self, 'actions_frame'):
+                self.actions_frame.update()
+            if hasattr(self, 'info_frame'):
+                self.info_frame.update()
+
+            # إعادة إنشاء البطاقات الإحصائية مع التنسيقات الجديدة
+            self.update_stat_cards_styles()
+
+            print("DEBUG: تم تطبيق التنسيقات بنجاح")
+
         except Exception as e:
-            logging.error(f"خطأ في إعداد تنسيقات الصفحة: {e}")
+            logging.error(f"خطأ في إعداد الستايل: {e}")
+            print(f"DEBUG: خطأ في إعداد الستايل: {e}")
+    
+    def update_stat_cards_styles(self):
+        """تحديث تنسيقات البطاقات الإحصائية"""
+        try:
+            # قائمة البطاقات الإحصائية
+            stat_cards = [
+                self.schools_card, self.students_card, self.teachers_card,
+                self.total_fees_card, self.paid_fees_card, self.remaining_fees_card,
+                self.additional_fees_card, self.additional_fees_paid_card, self.additional_fees_unpaid_card
+            ]
+            
+            # الحصول على أحجام الخط الحالية
+            font_sizes = FontSizeManager.get_font_sizes(self.current_font_size)
+            
+            # تحديث تنسيق كل بطاقة
+            for card in stat_cards:
+                if hasattr(card, 'setStyleSheet'):
+                    # الحصول على لون البطاقة من الخاصية المحفوظة
+                    color = card.property("card_color")
+                    if not color:
+                        color = "#4A90E2"  # لون افتراضي
+                    
+                    # تطبيق التنسيق الجديد
+                    card.setStyleSheet(f"""
+                        #statCard {{
+                            background: {color};
+                            border:1px solid {color};
+                            border-radius:6px;
+                        }}
+                        #statValue {{
+                            background: transparent;
+                            color: #000000;
+                            font-size:{font_sizes['summary_value']}px;
+                            font-weight:600;
+                        }}
+                        #statTitle {{
+                            background: transparent;
+                            color:#333333;
+                            font-size:{font_sizes['summary_label']}px;
+                            font-weight:600;
+                        }}
+                    """)
+                    
+        except Exception as e:
+            logging.error(f"خطأ في تحديث تنسيقات البطاقات الإحصائية: {e}")
+            print(f"DEBUG: خطأ في تحديث تنسيقات البطاقات: {e}")
+    
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            print(f"DEBUG: تغيير حجم الخط من {self.current_font_size} إلى {selected_size}")
+
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("dashboard", selected_size)
+                print(f"DEBUG: حفظ حجم الخط: {'نجح' if success else 'فشل'}")
+
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+
+                # إجبار إعادة رسم الصفحة
+                self.update()
+
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+            print(f"DEBUG: خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+                print(f"DEBUG: تم تحديث القائمة المنسدلة إلى: {self.current_font_size}")
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+            print(f"DEBUG: خطأ في تحديث القائمة المنسدلة: {e}")
