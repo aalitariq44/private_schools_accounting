@@ -1,19 +1,12 @@
 {
   "students_page": {
-    "font_size": "كبير",
+    "font_size": "متوسط",
     "statistics_window_visible": false,
     "table_columns_visible": {
-      "المعرف": true,
-      "الاسم": true,
-      "المدرسة": true,
-      "الصف": true,
-      "الشعبة": true,
+      "المعرف": false,
       "الجنس": false,
       "الهاتف": false,
-      "الحالة": false,
-      "الرسوم الدراسية": true,
-      "المدفوع": true,
-      "المتبقي": true
+      "الحالة": false
     }
   },
   "schools_page": {

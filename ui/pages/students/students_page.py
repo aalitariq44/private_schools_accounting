@@ -1363,55 +1363,98 @@ class StudentsPage(QWidget):
             header = self.students_table.horizontalHeader()
             column_index = header.logicalIndexAt(position)
             
-            if column_index < 0:
-                return
-            
             columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
-            column_name = columns[column_index]
             
-            # الأعمدة التي يمكن إخفاؤها (فقط الجنس، الهاتف، الحالة)
-            hideable_columns = ["الجنس", "الهاتف", "الحالة"]
-            
-            if column_name not in hideable_columns:
-                return  # لا تعرض القائمة للأعمدة الأخرى
-            
+            # إنشاء القائمة
             menu = QMenu(self)
             
-            # خيار إخفاء/إظهار العمود
-            current_visible = self.table_columns_visible.get(column_name, True)
-            action_text = f"إخفاء عمود '{column_name}'" if current_visible else f"إظهار عمود '{column_name}'"
+            # الأعمدة التي يمكن إخفاؤها (المعرف، الجنس، الهاتف، الحالة)
+            hideable_columns = ["المعرف", "الجنس", "الهاتف", "الحالة"]
             
-            toggle_action = QAction(action_text, self)
-            toggle_action.triggered.connect(lambda: self.toggle_column_visibility(column_name))
-            menu.addAction(toggle_action)
+            # البحث عن الأعمدة المخفية والظاهرة القابلة للإخفاء
+            hidden_columns = []
+            visible_hideable_columns = []
             
-            menu.exec_(header.mapToGlobal(position))
+            for i, column_name in enumerate(columns):
+                if column_name in hideable_columns:
+                    is_visible = self.table_columns_visible.get(column_name, True)
+                    if is_visible:
+                        visible_hideable_columns.append((i, column_name))
+                    else:
+                        hidden_columns.append((i, column_name))
+            
+            # إضافة خيارات لإظهار الأعمدة المخفية
+            if hidden_columns:
+                show_menu = menu.addMenu("إظهار الأعمدة المخفية")
+                for column_index, column_name in hidden_columns:
+                    show_action = QAction(f"إظهار عمود '{column_name}'", self)
+                    show_action.triggered.connect(lambda checked, col=column_name: self.show_column(col))
+                    show_menu.addAction(show_action)
+            
+            # إضافة خيارات لإخفاء الأعمدة الظاهرة القابلة للإخفاء
+            if visible_hideable_columns:
+                if hidden_columns:  # إضافة فاصل إذا كانت هناك أعمدة مخفية
+                    menu.addSeparator()
+                
+                hide_menu = menu.addMenu("إخفاء الأعمدة")
+                for column_index, column_name in visible_hideable_columns:
+                    hide_action = QAction(f"إخفاء عمود '{column_name}'", self)
+                    hide_action.triggered.connect(lambda checked, col=column_name: self.hide_column(col))
+                    hide_menu.addAction(hide_action)
+            
+            # إذا لم تكن هناك أعمدة مخفية أو قابلة للإخفاء، عرض رسالة
+            if not hidden_columns and not visible_hideable_columns:
+                no_options_action = QAction("لا توجد خيارات متاحة", self)
+                no_options_action.setEnabled(False)
+                menu.addAction(no_options_action)
+            
+            # عرض القائمة
+            if menu.actions():  # التأكد من وجود عناصر في القائمة
+                menu.exec_(header.mapToGlobal(position))
             
         except Exception as e:
             logging.error(f"خطأ في عرض قائمة سياق رأس الجدول: {e}")
     
-    def toggle_column_visibility(self, column_name):
-        """تبديل رؤية عمود معين"""
+    def show_column(self, column_name):
+        """إظهار عمود معين"""
         try:
-            # الحصول على الحالة الحالية
-            current_visible = self.table_columns_visible.get(column_name, True)
-            new_visible = not current_visible
-            
             # تحديث الإعدادات
-            self.table_columns_visible[column_name] = new_visible
-            success = ui_settings_manager.set_table_column_visible("students", column_name, new_visible)
+            self.table_columns_visible[column_name] = True
+            success = ui_settings_manager.set_table_column_visible("students", column_name, True)
             
             if success:
                 # تطبيق التغيير على الجدول
                 columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
                 if column_name in columns:
                     column_index = columns.index(column_name)
-                    self.students_table.setColumnHidden(column_index, not new_visible)
+                    self.students_table.setColumnHidden(column_index, False)
                 
-                log_user_action(f"{'إخفاء' if not new_visible else 'إظهار'} عمود '{column_name}' في جدول الطلاب")
+                log_user_action(f"إظهار عمود '{column_name}' في جدول الطلاب")
             else:
                 QMessageBox.warning(self, "خطأ", "فشل في حفظ إعدادات رؤية العمود")
                 
         except Exception as e:
-            logging.error(f"خطأ في تبديل رؤية العمود: {e}")
-            QMessageBox.critical(self, "خطأ", f"حدث خطأ في تبديل رؤية العمود: {str(e)}")
+            logging.error(f"خطأ في إظهار العمود: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في إظهار العمود: {str(e)}")
+    
+    def hide_column(self, column_name):
+        """إخفاء عمود معين"""
+        try:
+            # تحديث الإعدادات
+            self.table_columns_visible[column_name] = False
+            success = ui_settings_manager.set_table_column_visible("students", column_name, False)
+            
+            if success:
+                # تطبيق التغيير على الجدول
+                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+                if column_name in columns:
+                    column_index = columns.index(column_name)
+                    self.students_table.setColumnHidden(column_index, True)
+                
+                log_user_action(f"إخفاء عمود '{column_name}' في جدول الطلاب")
+            else:
+                QMessageBox.warning(self, "خطأ", "فشل في حفظ إعدادات رؤية العمود")
+                
+        except Exception as e:
+            logging.error(f"خطأ في إخفاء العمود: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في إخفاء العمود: {str(e)}")
