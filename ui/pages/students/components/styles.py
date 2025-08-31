@@ -128,6 +128,12 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             border-radius: 0px;
             border: 1px solid #E0E0E0;
             font-family: {cairo_font};
+            cursor: pointer;
+        }}
+
+        #infoValue:hover {{
+            background-color: #E9ECEF;
+            border-color: #ADB5BD;
         }}
 
         /* الملخص المالي */

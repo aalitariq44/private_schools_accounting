@@ -25,11 +25,30 @@ class StudentInfoWidget(QWidget):
         self.installments_data = []
         self.student_id = None
         
-        self.setup_cairo_font()
+        # الحصول على الخط من الصفحة الأم
+        self.cairo_family = self.get_cairo_family_from_parent()
+        
         self.setup_ui()
     
+    def get_cairo_family_from_parent(self):
+        """الحصول على عائلة الخط من الصفحة الأم"""
+        try:
+            # البحث عن الصفحة الأم للحصول على الخط
+            parent = self.parent()
+            while parent:
+                if hasattr(parent, 'cairo_family'):
+                    return parent.cairo_family
+                parent = parent.parent()
+            
+            # خط افتراضي في حالة عدم العثور
+            return "Arial"
+            
+        except Exception as e:
+            logging.warning(f"فشل في الحصول على عائلة الخط من الأم: {e}")
+            return "Arial"
+    
     def setup_cairo_font(self):
-        """تحميل وتطبيق خط Cairo"""
+        """تحميل وتطبيق خط Cairo (احتياطي)"""
         try:
             self.cairo_family = "Arial"  # خط افتراضي
         except Exception as e:
@@ -131,25 +150,11 @@ class StudentInfoWidget(QWidget):
             
             # إنشاء حقل الملاحظات المصغر
             self.notes_display = QLabel("--")
-            self.notes_display.setObjectName("notesDisplay")
+            self.notes_display.setObjectName("infoValue")
             self.notes_display.setWordWrap(True)
             self.notes_display.setMaximumWidth(200)
             self.notes_display.setMaximumHeight(40)
-            self.notes_display.setStyleSheet("""
-                QLabel#notesDisplay {
-                    background-color: #F8F9FA;
-                    border: 1px solid #DEE2E6;
-                    border-radius: 4px;
-                    padding: 5px;
-                    font-size: 10px;
-                    color: #6C757D;
-                    cursor: pointer;
-                }
-                QLabel#notesDisplay:hover {
-                    background-color: #E9ECEF;
-                    border-color: #ADB5BD;
-                }
-            """)
+            
             # إضافة إمكانية تعديل الملاحظات بالنقر المزدوج
             self.notes_display.mouseDoubleClickEvent = self.edit_notes_dialog
             grid_layout.addWidget(self.notes_display, 3, 1, 1, 5)  # دمج عبر 5 أعمدة
@@ -475,6 +480,7 @@ class StudentInfoWidget(QWidget):
             else:
                 self.notes_display.setText("لا توجد ملاحظات")
                 self.notes_display.setToolTip("")
+                
         except Exception as e:
             logging.error(f"خطأ في تحديث عرض الملاحظات: {e}")
     
