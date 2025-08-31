@@ -138,6 +138,17 @@ class InstallmentsPage(QWidget):
             self.student_combo.setMinimumWidth(200)
             filters_layout.addWidget(self.student_combo)
             
+            # حقل البحث
+            search_label = QLabel("البحث:")
+            search_label.setObjectName("filterLabel")
+            filters_layout.addWidget(search_label)
+            
+            self.search_input = QLineEdit()
+            self.search_input.setObjectName("searchInput")
+            self.search_input.setPlaceholderText("اسم الطالب أو رقم الوصل")
+            self.search_input.setMinimumWidth(200)
+            filters_layout.addWidget(self.search_input)
+            
             # أزرار العمليات في الشريط الأول
             self.generate_report_button = QPushButton("تقرير مالي")
             self.generate_report_button.setObjectName("secondaryButton")
@@ -329,6 +340,9 @@ class InstallmentsPage(QWidget):
             self.due_date_from.dateChanged.connect(self.apply_filters)
             self.due_date_to.dateChanged.connect(self.apply_filters)
             
+            # ربط حقل البحث
+            self.search_input.textChanged.connect(self.apply_filters)
+            
             # ربط تغيير حجم الخط
             self.font_size_combo.currentTextChanged.connect(self.change_font_size)
             
@@ -434,6 +448,11 @@ class InstallmentsPage(QWidget):
                 query += " AND i.student_id = ?"
                 params.append(selected_student_id)
             
+            # فلتر البحث
+            search_text = self.search_input.text().strip()
+            if search_text:
+                query += " AND (s.name LIKE ? OR CAST(i.id AS TEXT) LIKE ?)"
+                params.extend([f"%{search_text}%", f"%{search_text}%"])
             
             query += " ORDER BY i.payment_date DESC, i.created_at DESC"
             
@@ -523,6 +542,7 @@ class InstallmentsPage(QWidget):
         try:
             self.school_combo.setCurrentIndex(0) # "جميع المدارس"
             self.student_combo.setCurrentIndex(0) # "جميع الطلاب"
+            self.search_input.clear()  # مسح حقل البحث
             self.due_date_from.setDate(QDate.currentDate().addDays(-30))
             self.due_date_to.setDate(QDate.currentDate().addDays(30))
             self.apply_filters()
