@@ -21,6 +21,10 @@ from core.utils.logger import log_user_action
 from core.utils.settings_manager import settings_manager
 from .change_password_dialog import ChangePasswordDialog
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 
 class SettingsPage(QWidget):
     """صفحة الإعدادات"""
@@ -30,6 +34,10 @@ class SettingsPage(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("settings")
+        
         # إعداد خط Cairo
         self.setup_cairo_font()
         self.setup_ui()
@@ -104,6 +112,12 @@ class SettingsPage(QWidget):
             
             self.setLayout(main_layout)
             
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
+            
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الإعدادات: {e}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ في إعداد الصفحة: {str(e)}")
@@ -124,6 +138,19 @@ class SettingsPage(QWidget):
             title_label.setFont(title_font)
             
             header_layout.addWidget(title_label)
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            header_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            header_layout.addWidget(self.font_size_combo)
+            
             header_layout.addStretch()
             
             header_frame.setLayout(header_layout)
@@ -490,31 +517,52 @@ class SettingsPage(QWidget):
             logging.error(f"خطأ في فتح اعدادات المدارس المتقدمة: {e}")
             QMessageBox.critical(self, "خطأ", f"خطأ في فتح اعدادات المدارس المتقدمة: {str(e)}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("settings", selected_size)
+                
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+    
     def setup_styles(self):
         """إعداد أنماط الصفحة"""
         try:
-            self.setStyleSheet("""
-                QWidget { background:#F5F6F7; font-family:'Cairo','Arial'; font-size:13px; }
-                #pageTitle { color:#2C3E50; padding:4px 0; font-size:13px; font-weight:600; }
-                QGroupBox { font-size:12px; font-weight:600; color:#2C3E50; border:1px solid #DDE1E4; border-radius:6px; margin-top:6px; background:#FFFFFF; padding:8px 8px 10px 8px; }
-                QGroupBox::title { subcontrol-origin: margin; left:8px; padding:0 4px; background:#FFFFFF; }
-                QLabel { color:#2C3E50; font-weight:500; font-size:12px; }
-                QComboBox { border:1px solid #C5CBD0; border-radius:4px; padding:2px 6px; background:#FFFFFF; min-height:24px; font-size:12px; }
-                QComboBox:focus { border:1px solid #2F6ED1; }
-                QPushButton { background:#FFFFFF; color:#2F6ED1; border:1px solid #C5CBD0; border-radius:4px; padding:4px 10px; font-size:12px; font-weight:600; }
-                QPushButton:hover { background:#2F6ED1; color:#FFFFFF; }
-                QPushButton:pressed { background:#2559A8; }
-                QPushButton#secondaryButton { color:#C0392B; border:1px solid #D19990; }
-                QPushButton#secondaryButton:hover { background:#C0392B; color:#FFFFFF; }
-                QPushButton#advancedButton { color:#5A2D91; border:1px solid #B9A9D3; }
-                QPushButton#advancedButton:hover { background:#5A2D91; color:#FFFFFF; }
-                QPushButton#mobileButton { color:#117a8b; border:1px solid #82C8D3; }
-                QPushButton#mobileButton:hover { background:#117a8b; color:#FFFFFF; }
-                QScrollArea { border:none; background:transparent; }
-                QScrollBar:vertical { border:none; background:#E2E5E8; width:10px; border-radius:5px; }
-                QScrollBar::handle:vertical { background:#C5CBD0; border-radius:5px; min-height:24px; }
-                QScrollBar::handle:vertical:hover { background:#AEB5BA; }
-            """)
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
+            
+            # تطبيق التنسيقات على الصفحة
+            self.setStyleSheet(style)
+            
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد الأنماط: {e}")
