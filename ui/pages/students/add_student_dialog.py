@@ -303,6 +303,19 @@ class AddStudentDialog(QDialog):
             QMessageBox.warning(self, "خطأ في البيانات", "\\n".join(errors))
             return
         
+        # التحقق من الحالة إذا كانت غير نشط
+        selected_status = self.status_combo.currentText()
+        if selected_status != "نشط":
+            reply = QMessageBox.question(
+                self, 
+                "تأكيد الحالة", 
+                f"الحالة المختارة هي '{selected_status}'. هل أنت متأكد من حفظ الطالب بهذه الحالة؟",
+                QMessageBox.Yes | QMessageBox.No, 
+                QMessageBox.No
+            )
+            if reply == QMessageBox.No:
+                return
+        
         try:
             school_data = self.school_combo.currentData()
             
