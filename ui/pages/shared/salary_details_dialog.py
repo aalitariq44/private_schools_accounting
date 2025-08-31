@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QGridLayout, QSpacerItem, QSizePolicy, QFormLayout,
     QScrollArea, QWidget
 )
-from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtCore import Qt, QDate, QEvent
 from PyQt5.QtGui import QFont, QColor
 
 from core.database.connection import db_manager
@@ -643,6 +643,11 @@ class SalaryDetailsDialog(QDialog):
         # ربط حساب الأيام والراتب تلقائياً (بدون ربط تغيير الراتب الأساسي)
         self.from_date_edit.dateChanged.connect(self.calculate_days)
         self.to_date_edit.dateChanged.connect(self.calculate_days)
+        
+        # تعطيل تغيير التاريخ بعجلة الماوس
+        self.date_edit.installEventFilter(self)
+        self.from_date_edit.installEventFilter(self)
+        self.to_date_edit.installEventFilter(self)
 
     def load_person_data(self):
         """تحميل بيانات الشخص (معلم أو موظف)"""
@@ -1071,6 +1076,12 @@ class SalaryDetailsDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في طباعة التقرير: {e}")
             QMessageBox.warning(self, "خطأ", f"فشل في طباعة التقرير:\n{str(e)}")
+
+    def eventFilter(self, obj, event):
+        """تعطيل تغيير التاريخ بعجلة الماوس"""
+        if isinstance(obj, QDateEdit) and event.type() == QEvent.Wheel:
+            return True  # تجاهل الحدث
+        return super().eventFilter(obj, event)
 
     def showEvent(self, event):
         """ضمان تكبير النافذة دائماً عند عرضها حتى لو حاول النظام استرجاع حجم سابق"""
