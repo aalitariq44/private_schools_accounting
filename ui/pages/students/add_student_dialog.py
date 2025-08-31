@@ -18,6 +18,12 @@ import logging
 # Import the database manager
 from core.database.connection import db_manager
 
+class CustomComboBox(QComboBox):
+    """QComboBox مخصص يتجاهل حركة عجلة الماوس لمنع تغيير الاختيار غير المقصود"""
+    def wheelEvent(self, event):
+        # تجاهل حدث عجلة الماوس لمنع تغيير الاختيار
+        event.ignore()
+
 class AddStudentDialog(QDialog):
     student_added = pyqtSignal()
     
@@ -87,7 +93,7 @@ class AddStudentDialog(QDialog):
         self.full_name_edit.setPlaceholderText("أدخل الاسم الكامل للطالب")
         basic_layout.addRow("الاسم الكامل:", self.full_name_edit)
 
-        self.gender_combo = QComboBox()
+        self.gender_combo = CustomComboBox()
         self.gender_combo.addItems(["ذكر", "أنثى"])
         basic_layout.addRow("الجنس:", self.gender_combo)
         content_layout.addLayout(basic_layout)
@@ -97,13 +103,13 @@ class AddStudentDialog(QDialog):
         academic_layout.setSpacing(8)
         academic_layout.setLabelAlignment(Qt.AlignRight)
 
-        self.school_combo = QComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
+        self.school_combo = CustomComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
         academic_layout.addRow("المدرسة:", self.school_combo)
 
-        self.grade_combo = QComboBox(); self.grade_combo.setPlaceholderText("اختر الصف")
+        self.grade_combo = CustomComboBox(); self.grade_combo.setPlaceholderText("اختر الصف")
         academic_layout.addRow("الصف:", self.grade_combo)
 
-        self.section_combo = QComboBox(); self.section_combo.addItems(["أ", "ب", "ج", "د", "ه", "و", "ز", "ح", "ط", "ي"])
+        self.section_combo = CustomComboBox(); self.section_combo.addItems(["أ", "ب", "ج", "د", "ه", "و", "ز", "ح", "ط", "ي"])
         academic_layout.addRow("الشعبة:", self.section_combo)
 
         self.total_fee_edit = QLineEdit(); self.total_fee_edit.setPlaceholderText("المبلغ الإجمالي بالدينار")
@@ -112,7 +118,7 @@ class AddStudentDialog(QDialog):
         self.start_date_edit = QDateEdit(); self.start_date_edit.setDate(QDate.currentDate()); self.start_date_edit.setCalendarPopup(True); self.start_date_edit.setDisplayFormat("yyyy-MM-dd")
         academic_layout.addRow("تاريخ المباشرة:", self.start_date_edit)
 
-        self.status_combo = QComboBox(); self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
+        self.status_combo = CustomComboBox(); self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
         academic_layout.addRow("الحالة:", self.status_combo)
         content_layout.addLayout(academic_layout)
 
