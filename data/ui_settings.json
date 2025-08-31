@@ -22,5 +22,17 @@
     },
     "search_filters_visible": true,
     "export_options_visible": true
+  },
+  "additional_fees_page": {
+    "font_size": "متوسط",
+    "statistics_window_visible": true,
+    "table_columns_visible": {
+      "student_name": true,
+      "fee_type": true,
+      "amount": true,
+      "date": true
+    },
+    "search_filters_visible": true,
+    "export_options_visible": true
   }
 }

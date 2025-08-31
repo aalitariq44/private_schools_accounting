@@ -25,6 +25,10 @@ from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 from .add_additional_fee_dialog import AddAdditionalFeeDialog
 
+# إضافة استيراد FontSizeManager و ui_settings_manager
+from ui.font_sizes import FontSizeManager
+from ui.ui_settings_manager import ui_settings_manager
+
 # استخدام مسار قاعدة البيانات من الإعدادات
 db_path = str(config.DATABASE_PATH)
 
@@ -42,6 +46,12 @@ class AdditionalFeesPage(QWidget):
         self.current_fees = []
         self.selected_school_id = None
         self.selected_student_id = None
+        
+        # تحميل الإعدادات
+        self.page_name = "additional_fees"
+        self.settings = ui_settings_manager.get_page_settings(self.page_name)
+        self.current_font_size = self.settings.get('font_size', 'متوسط')
+        self.statistics_visible = self.settings.get('statistics_window_visible', True)
         
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
@@ -186,6 +196,24 @@ class AdditionalFeesPage(QWidget):
             self.status_combo.setObjectName("filterCombo")
             self.status_combo.addItems(["الكل", "مدفوع", "غير مدفوع"])
             filters_layout.addWidget(self.status_combo)
+            
+            # إعدادات الصفحة
+            settings_label = QLabel("الإعدادات:")
+            settings_label.setObjectName("filterLabel")
+            filters_layout.addWidget(settings_label)
+            
+            # قائمة اختيار حجم الخط
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.AVAILABLE_SIZES)
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            filters_layout.addWidget(self.font_size_combo)
+            
+            # checkbox لإخفاء الإحصائيات
+            self.hide_stats_checkbox = QCheckBox("إخفاء الإحصائيات")
+            self.hide_stats_checkbox.setObjectName("filterLabel")
+            self.hide_stats_checkbox.setChecked(not self.statistics_visible)
+            filters_layout.addWidget(self.hide_stats_checkbox)
             
             filters_layout.addStretch()
             
@@ -393,6 +421,9 @@ class AdditionalFeesPage(QWidget):
             
             layout.addWidget(summary_frame)
             
+            # إخفاء الإحصائيات إذا كان الإعداد مخفياً
+            summary_frame.setVisible(self.statistics_visible)
+            
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الرسوم: {e}")
     
@@ -410,6 +441,10 @@ class AdditionalFeesPage(QWidget):
             self.fee_type_combo.currentTextChanged.connect(self.apply_filters)
             self.status_combo.currentTextChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
+            
+            # ربط إعدادات الصفحة
+            self.font_size_combo.currentTextChanged.connect(self.on_font_size_changed)
+            self.hide_stats_checkbox.stateChanged.connect(self.on_hide_stats_changed)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -971,139 +1006,13 @@ class AdditionalFeesPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            # استخدام خط Cairo المحمل
-            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            # الحصول على أحجام الخطوط من FontSizeManager
+            font_sizes = FontSizeManager.get_font_sizes(self.current_font_size)
             
-            # تصميم مبسط متوافق مع الشاشات الصغيرة – إزالة التدرجات، تقليل الأحجام
-            style = """
-                QWidget {{
-                    background-color: #F5F6F7;
-                    font-family: {font_family};
-                    font-size: 13px;
-                }}
-
-                /* رأس الصفحة مبسط */
-                #headerFrame {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                    margin-bottom: 6px;
-                }}
-                #pageTitle {{
-                    font-size: 14px;
-                    font-weight: 700;
-                    color: #37474F;
-                    margin: 0;
-                }}
-                #pageDesc {{
-                    font-size: 11px;
-                    color: #607D8B;
-                    margin-top: 2px;
-                }}
-                #quickStat {{
-                    background: #F0F3F5;
-                    color: #37474F;
-                    border: 1px solid #D0D5D8;
-                    padding: 4px 10px;
-                    border-radius: 14px;
-                    font-size: 11px;
-                    font-weight: 600;
-                }}
-
-                /* إطارات عامة */
-                #toolbarFrame, #summaryFrame, #tableFrame {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 4px;
-                }}
-
-                #filterLabel {{
-                    font-weight: 600;
-                    color: #37474F;
-                    margin-right: 4px;
-                    font-size: 12px;
-                }}
-                #filterCombo, #searchInput {{
-                    padding: 4px 6px;
-                    border: 1px solid #C3C7CA;
-                    border-radius: 3px;
-                    background: #FFFFFF;
-                    min-width: 90px;
-                    font-size: 12px;
-                }}
-                #searchInput {{
-                    border-radius: 14px;
-                    padding: 4px 10px;
-                }}
-                #searchInput:focus, #filterCombo:focus {{
-                    border: 1px solid #5B8DEF;
-                }}
-
-                /* الأزرار المسطحة */
-                #primaryButton, #secondaryButton {{
-                    background: #FFFFFF;
-                    color: #2F3A40;
-                    border: 1px solid #B5BCC0;
-                    padding: 6px 12px;
-                    border-radius: 4px;
-                    font-weight: 600;
-                    font-size: 12px;
-                }}
-                #primaryButton:hover, #secondaryButton:hover {{
-                    background: #F0F3F5;
-                }}
-                #primaryButton:pressed, #secondaryButton:pressed {{
-                    background: #E2E6E9;
-                }}
-                #secondaryButton {{ border-color: #2980B9; color: #1F5375; }}
-
-                /* الجدول */
-                QTableWidget {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    gridline-color: #E3E6E8;
-                    font-size: 12px;
-                }}
-                QTableWidget::item {{
-                    border-bottom: 1px solid #EEF0F1;
-                }}
-                QTableWidget::item:selected {{
-                    background: #5B8DEF;
-                    color: #FFFFFF;
-                }}
-                QHeaderView::section {{
-                    background: #ECEFF1;
-                    color: #37474F;
-                    padding: 4px 6px;
-                    border: 1px solid #D0D5D8;
-                    font-weight: 600;
-                    font-size: 12px;
-                }}
-
-                /* الملخص */
-                #summaryTitle {{
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #37474F;
-                }}
-                #summaryLabel {{
-                    font-size: 11px;
-                    color: #455A64;
-                }}
-                #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
-                    font-size: 14px;
-                    font-weight: 700;
-                    padding: 2px 4px;
-                }}
-                #summaryValueSuccess { color: #1B5E20; }
-                #summaryValueWarning { color: #B35C00; }
-                #statLabel {{
-                    font-size: 11px;
-                    color: #546E7A;
-                }}
-            """.format(font_family=cairo_font)
+            # إنشاء CSS باستخدام أحجام الخطوط الديناميكية
+            css = FontSizeManager.generate_css_styles(self.current_font_size, self.cairo_family)
             
-            self.setStyleSheet(style)
+            self.setStyleSheet(css)
             
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
@@ -1258,4 +1167,36 @@ class AdditionalFeesPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في تحديث بيانات الرسوم الإضافية: {e}")
+    
+    def on_font_size_changed(self):
+        """معالج تغيير حجم الخط"""
+        try:
+            new_font_size = self.font_size_combo.currentText()
+            if new_font_size != self.current_font_size:
+                self.current_font_size = new_font_size
+                # حفظ الإعداد
+                ui_settings_manager.set_font_size(self.page_name, new_font_size)
+                # إعادة تطبيق التنسيقات
+                self.setup_styles()
+                log_user_action(f"تغيير حجم الخط في صفحة الرسوم الإضافية إلى {new_font_size}")
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def on_hide_stats_changed(self):
+        """معالج إخفاء/إظهار الإحصائيات"""
+        try:
+            hide_stats = self.hide_stats_checkbox.isChecked()
+            self.statistics_visible = not hide_stats
+            
+            # إخفاء أو إظهار إطار الإحصائيات
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.setVisible(self.statistics_visible)
+            
+            # حفظ الإعداد
+            ui_settings_manager.set_statistics_visible(self.page_name, self.statistics_visible)
+            
+            action = "إخفاء" if hide_stats else "إظهار"
+            log_user_action(f"{action} الإحصائيات في صفحة الرسوم الإضافية")
+        except Exception as e:
+            logging.error(f"خطأ في إخفاء/إظهار الإحصائيات: {e}")
 
