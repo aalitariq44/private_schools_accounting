@@ -179,6 +179,9 @@ class StudentsPage(QWidget):
         # الحصول على حالة رؤية نافذة الإحصائيات
         self.statistics_visible = ui_settings_manager.get_statistics_visible("students")
         
+        # الحصول على حالة رؤية أعمدة الجدول
+        self.table_columns_visible = ui_settings_manager.get_table_columns_visible("students")
+        
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
         
@@ -398,6 +401,9 @@ class StudentsPage(QWidget):
             self.students_table.setColumnCount(len(columns))
             self.students_table.setHorizontalHeaderLabels(columns)
 
+            # تطبيق حالة رؤية الأعمدة
+            self.apply_column_visibility()
+
             # إعداد خصائص الجدول
             self.students_table.setSelectionBehavior(QAbstractItemView.SelectRows)
             self.students_table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -419,8 +425,11 @@ class StudentsPage(QWidget):
             self.students_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.students_table.customContextMenuRequested.connect(self.show_context_menu)
             
+            # ربط context menu للـ header
+            header.setContextMenuPolicy(Qt.CustomContextMenu)
+            header.customContextMenuRequested.connect(self.show_header_context_menu)
+            
             # ربط تغيير الترتيب لتحديث المؤشر
-            header = self.students_table.horizontalHeader()
             header.sortIndicatorChanged.connect(self.update_sort_indicator)
 
             table_layout.addWidget(self.students_table)
@@ -727,6 +736,9 @@ class StudentsPage(QWidget):
             # تحديث العداد
             self.displayed_count_label.setText(f"عدد الطلاب المعروضين: {len(self.current_students)}")
             
+            # تطبيق حالة رؤية الأعمدة بعد ملء الجدول
+            self.apply_column_visibility()
+            
         except Exception as e:
             logging.error(f"خطأ في ملء جدول الطلاب: {e}")
     
@@ -792,6 +804,10 @@ class StudentsPage(QWidget):
         """تحديث البيانات"""
         try:
             log_user_action("تحديث صفحة الطلاب")
+            
+            # إعادة تحميل إعدادات الأعمدة
+            self.table_columns_visible = ui_settings_manager.get_table_columns_visible("students")
+            
             self.load_students()
             
         except Exception as e:
@@ -1327,3 +1343,75 @@ class StudentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في عرض قائمة إضافة الطلاب: {e}")
             print(f"DEBUG: خطأ في عرض قائمة إضافة الطلاب: {e}")
+    
+    def apply_column_visibility(self):
+        """تطبيق حالة رؤية الأعمدة على الجدول"""
+        try:
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            
+            for i, column_name in enumerate(columns):
+                visible = self.table_columns_visible.get(column_name, True)
+                self.students_table.setColumnHidden(i, not visible)
+                
+        except Exception as e:
+            logging.error(f"خطأ في تطبيق رؤية الأعمدة: {e}")
+    
+    def show_header_context_menu(self, position):
+        """عرض قائمة السياق لرأس الجدول"""
+        try:
+            # الحصول على فهرس العمود الذي تم النقر عليه
+            header = self.students_table.horizontalHeader()
+            column_index = header.logicalIndexAt(position)
+            
+            if column_index < 0:
+                return
+            
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            column_name = columns[column_index]
+            
+            # الأعمدة التي يمكن إخفاؤها (فقط الجنس، الهاتف، الحالة)
+            hideable_columns = ["الجنس", "الهاتف", "الحالة"]
+            
+            if column_name not in hideable_columns:
+                return  # لا تعرض القائمة للأعمدة الأخرى
+            
+            menu = QMenu(self)
+            
+            # خيار إخفاء/إظهار العمود
+            current_visible = self.table_columns_visible.get(column_name, True)
+            action_text = f"إخفاء عمود '{column_name}'" if current_visible else f"إظهار عمود '{column_name}'"
+            
+            toggle_action = QAction(action_text, self)
+            toggle_action.triggered.connect(lambda: self.toggle_column_visibility(column_name))
+            menu.addAction(toggle_action)
+            
+            menu.exec_(header.mapToGlobal(position))
+            
+        except Exception as e:
+            logging.error(f"خطأ في عرض قائمة سياق رأس الجدول: {e}")
+    
+    def toggle_column_visibility(self, column_name):
+        """تبديل رؤية عمود معين"""
+        try:
+            # الحصول على الحالة الحالية
+            current_visible = self.table_columns_visible.get(column_name, True)
+            new_visible = not current_visible
+            
+            # تحديث الإعدادات
+            self.table_columns_visible[column_name] = new_visible
+            success = ui_settings_manager.set_table_column_visible("students", column_name, new_visible)
+            
+            if success:
+                # تطبيق التغيير على الجدول
+                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+                if column_name in columns:
+                    column_index = columns.index(column_name)
+                    self.students_table.setColumnHidden(column_index, not new_visible)
+                
+                log_user_action(f"{'إخفاء' if not new_visible else 'إظهار'} عمود '{column_name}' في جدول الطلاب")
+            else:
+                QMessageBox.warning(self, "خطأ", "فشل في حفظ إعدادات رؤية العمود")
+                
+        except Exception as e:
+            logging.error(f"خطأ في تبديل رؤية العمود: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في تبديل رؤية العمود: {str(e)}")

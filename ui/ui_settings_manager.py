@@ -211,10 +211,17 @@ class UISettingsManager:
                 "font_size": "متوسط",
                 "statistics_window_visible": True,
                 "table_columns_visible": {
-                    "name": True,
-                    "class": True,
-                    "fees": True,
-                    "payments": True
+                    "المعرف": True,
+                    "الاسم": True,
+                    "المدرسة": True,
+                    "الصف": True,
+                    "الشعبة": True,
+                    "الجنس": True,
+                    "الهاتف": True,
+                    "الحالة": True,
+                    "الرسوم الدراسية": True,
+                    "المدفوع": True,
+                    "المتبقي": True
                 },
                 "search_filters_visible": True,
                 "export_options_visible": True
