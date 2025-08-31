@@ -61,9 +61,6 @@ class DashboardPage(QWidget):
             main_layout.setContentsMargins(8, 8, 8, 8)
             main_layout.setSpacing(8)
             
-            # شريط الأدوات
-            self.create_toolbar(main_layout)
-            
             # إحصائيات سريعة
             self.create_statistics_section(main_layout)
             
@@ -94,48 +91,6 @@ class DashboardPage(QWidget):
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
-    
-    
-    def create_toolbar(self, layout):
-        """إنشاء شريط الأدوات"""
-        try:
-            toolbar_frame = QFrame()
-            toolbar_frame.setObjectName("toolbarFrame")
-            
-            toolbar_layout = QHBoxLayout(toolbar_frame)
-            toolbar_layout.setContentsMargins(8, 6, 8, 6)
-            toolbar_layout.setSpacing(6)
-            
-            # عنوان الصفحة
-            title_label = QLabel("لوحة التحكم")
-            title_label.setObjectName("pageTitle")
-            toolbar_layout.addWidget(title_label)
-            
-            toolbar_layout.addStretch()
-            
-            # فلتر حجم الخط
-            font_size_label = QLabel("حجم الخط:")
-            font_size_label.setObjectName("filterLabel")
-            toolbar_layout.addWidget(font_size_label)
-            
-            self.font_size_combo = QComboBox()
-            self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
-            self.font_size_combo.setCurrentText(self.current_font_size)
-            self.font_size_combo.setMinimumWidth(100)
-            toolbar_layout.addWidget(self.font_size_combo)
-            
-            # زر تحديث البيانات
-            refresh_btn = QPushButton("تحديث")
-            refresh_btn.setObjectName("secondaryButton")
-            refresh_btn.clicked.connect(self.load_statistics)
-            toolbar_layout.addWidget(refresh_btn)
-            
-            layout.addWidget(toolbar_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء شريط الأدوات: {e}")
-            raise
     
     
     def create_statistics_section(self, layout):
@@ -335,6 +290,27 @@ class DashboardPage(QWidget):
             info_grid.addWidget(self.backup_status_label, 2, 1)
             
             info_layout.addLayout(info_grid)
+            
+            # إضافة قائمة حجم الخط تحت معلومات النظام
+            font_size_layout = QHBoxLayout()
+            font_size_layout.setSpacing(6)
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            font_size_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            font_size_layout.addWidget(self.font_size_combo)
+            
+            font_size_layout.addStretch()
+            
+            info_layout.addLayout(font_size_layout)
+            
             layout.addWidget(info_frame)
             
         except Exception as e:
@@ -576,19 +552,6 @@ class DashboardPage(QWidget):
             
             # إضافة تنسيقات إضافية للداش بورد مع أحجام ديناميكية
             dashboard_style = f"""
-                #toolbarFrame {{
-                    background:#FFFFFF;
-                    border:1px solid #DDE1E4;
-                    border-radius:6px;
-                    margin-bottom:8px;
-                    padding:4px 6px 6px;
-                }}
-                #pageTitle {{
-                    font-size:{font_sizes['summary_title']}px;
-                    font-weight:700;
-                    color:#2C3E50;
-                    margin:0;
-                }}
                 #statsFrame, #actionsFrame, #infoFrame {{
                     background:#FFFFFF;
                     border:1px solid #DDE1E4;

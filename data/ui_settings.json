@@ -1,7 +1,7 @@
 {
   "students_page": {
     "font_size": "كبير",
-    "statistics_window_visible": true
+    "statistics_window_visible": false
   },
   "schools_page": {
     "font_size": "كبير",
@@ -51,7 +51,7 @@
     "advanced_settings_visible": false
   },
   "dashboard_page": {
-    "font_size": "كبير",
+    "font_size": "متوسط",
     "charts_visible": true,
     "quick_stats_visible": true
   }
