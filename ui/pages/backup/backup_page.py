@@ -100,7 +100,11 @@ class BackupPage(QWidget):
         self.setup_ui()
         self.setup_styles()
         self.setup_connections()
-        self.refresh_backups()
+        # إزالة الاستدعاء المباشر لـ refresh_backups لتجنب التأخير عند بدء التطبيق
+        # self.refresh_backups()
+        
+        # بدء تحديث النسخ الاحتياطية في الخلفية بعد 5 ثوانٍ من الإقلاع
+        self.start_background_refresh()
     
     def setup_ui(self):
         """إعداد واجهة المستخدم"""
@@ -323,6 +327,24 @@ class BackupPage(QWidget):
         self.refresh_btn.clicked.connect(self.refresh_backups)
         self.cleanup_btn.clicked.connect(self.cleanup_old_backups)
     
+    def start_background_refresh(self):
+        """بدء تحديث النسخ الاحتياطية في الخلفية بعد فترة قصيرة"""
+        # استخدام QTimer لتأجيل التحديث لمدة 5 ثوانٍ
+        self.refresh_timer = QTimer(self)
+        self.refresh_timer.setSingleShot(True)  # يعمل مرة واحدة فقط
+        self.refresh_timer.timeout.connect(self.refresh_backups)
+        self.refresh_timer.start(5000)  # 5000 مللي ثانية = 5 ثوانٍ
+    
+    def cleanup_resources(self):
+        """تنظيف الموارد عند إغلاق الصفحة"""
+        if hasattr(self, 'refresh_timer') and self.refresh_timer.isActive():
+            self.refresh_timer.stop()
+    
+    def closeEvent(self, event):
+        """معالجة إغلاق الصفحة"""
+        self.cleanup_resources()
+        super().closeEvent(event)
+    
     def create_new_backup(self):
         """إنشاء نسخة احتياطية جديدة"""
         try:
@@ -416,8 +438,15 @@ class BackupPage(QWidget):
             logging.info(f"تم تحديث قائمة النسخ الاحتياطية: {len(backups)} نسخة")
             
         except Exception as e:
-            logging.error(f"خطأ في تحديث قائمة النسخ الاحتياطية: {e}")
-            QMessageBox.critical(self, "خطأ", f"خطأ في تحديث القائمة:\n{e}")
+            logging.warning(f"فشل في تحديث قائمة النسخ الاحتياطية (ربما لا يوجد اتصال بالإنترنت): {e}")
+            # لا نعرض رسالة خطأ للمستخدم إذا كان التحديث في الخلفية
+            # فقط نسجل الخطأ ونترك الجدول فارغاً أو كما هو
+            if hasattr(self, 'refresh_timer') and self.refresh_timer.isActive():
+                # إذا كان التحديث في الخلفية، لا نعرض رسالة خطأ
+                pass
+            else:
+                # إذا كان التحديث يدوياً (بالضغط على زر تحديث)، نعرض رسالة خطأ
+                QMessageBox.critical(self, "خطأ", f"خطأ في تحديث القائمة:\n{e}")
     
     def create_operations_widget(self, backup):
         """إنشاء ويجيت العمليات لكل نسخة احتياطية"""
