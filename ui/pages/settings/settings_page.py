@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QFrame, QLabel, QPushButton, QComboBox, QGroupBox,
     QMessageBox, QScrollArea, QSpacerItem, QSizePolicy,
-    QDialog
+    QDialog, QFileDialog
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
@@ -99,6 +99,9 @@ class SettingsPage(QWidget):
             
             # اعدادات المدارس المتقدمة
             self.create_advanced_section(scroll_layout)
+            
+            # إعدادات النسخ الاحتياطي المحلي
+            self.create_local_backup_section(scroll_layout)
             
             # مساحة مرنة
             scroll_layout.addItem(
@@ -426,6 +429,13 @@ class SettingsPage(QWidget):
                 if index >= 0:
                     self.academic_year_combo.setCurrentIndex(index)
             
+            # تحميل مسار النسخ الاحتياطي المحلي
+            backup_path = self.get_backup_path()
+            if backup_path:
+                self.backup_path_display.setText(backup_path)
+            else:
+                self.backup_path_display.setText("لم يتم تحديد مسار")
+            
         except Exception as e:
             logging.error(f"خطأ في تحميل الإعدادات: {e}")
     
@@ -508,6 +518,74 @@ class SettingsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم اعدادات المدارس المتقدمة: {e}")
     
+    def create_local_backup_section(self, layout):
+        """إنشاء قسم إعدادات النسخ الاحتياطي المحلي"""
+        try:
+            # إطار النسخ الاحتياطي المحلي
+            backup_group = QGroupBox("إعدادات النسخ الاحتياطي المحلي")
+            backup_group.setObjectName("settingsGroup")
+            backup_layout = QGridLayout()
+            backup_layout.setSpacing(8)
+            
+            # تسمية مسار النسخ الاحتياطي
+            backup_path_label = QLabel("مسار النسخ الاحتياطي المحلي:")
+            backup_path_label.setFont(QFont("Arial", 11))
+            
+            # حقل عرض المسار
+            self.backup_path_display = QLabel("لم يتم تحديد مسار")
+            self.backup_path_display.setObjectName("backupPathDisplay")
+            self.backup_path_display.setFont(QFont("Arial", 10))
+            self.backup_path_display.setStyleSheet("""
+                QLabel#backupPathDisplay {
+                    background-color: #F8F9FA;
+                    border: 1px solid #DEE2E6;
+                    border-radius: 4px;
+                    padding: 8px;
+                    color: #495057;
+                }
+            """)
+            
+            # زر اختيار المسار
+            select_path_btn = QPushButton("اختيار المجلد")
+            select_path_btn.setObjectName("secondaryButton")
+            select_path_btn.setMinimumHeight(30)
+            select_path_btn.clicked.connect(self.select_backup_path)
+            
+            # زر فتح مجلد النسخ الاحتياطية
+            open_folder_btn = QPushButton("فتح مجلد النسخ الاحتياطية")
+            open_folder_btn.setObjectName("secondaryButton")
+            open_folder_btn.setMinimumHeight(30)
+            open_folder_btn.clicked.connect(self.open_backup_folder)
+            
+            # زر إنشاء نسخة احتياطية محلية
+            create_local_backup_btn = QPushButton("إنشاء نسخة احتياطية محلية")
+            create_local_backup_btn.setObjectName("primaryButton")
+            create_local_backup_btn.setMinimumHeight(30)
+            create_local_backup_btn.clicked.connect(self.create_local_backup)
+            
+            # زر عرض النسخ الاحتياطية المحلية
+            view_local_backups_btn = QPushButton("عرض النسخ الاحتياطية المحلية")
+            view_local_backups_btn.setObjectName("secondaryButton")
+            view_local_backups_btn.setMinimumHeight(30)
+            view_local_backups_btn.clicked.connect(self.view_local_backups)
+            
+            # إضافة العناصر للتخطيط
+            backup_layout.addWidget(backup_path_label, 0, 0)
+            backup_layout.addWidget(self.backup_path_display, 1, 0, 1, 2)
+            backup_layout.addWidget(select_path_btn, 2, 0)
+            backup_layout.addWidget(open_folder_btn, 2, 1)
+            backup_layout.addWidget(create_local_backup_btn, 3, 0)
+            backup_layout.addWidget(view_local_backups_btn, 3, 1)
+            
+            # إضافة مساحة مرنة
+            backup_layout.setColumnStretch(2, 1)
+            
+            backup_group.setLayout(backup_layout)
+            layout.addWidget(backup_group)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء قسم النسخ الاحتياطي المحلي: {e}")
+    
     def open_advanced_settings(self):
         """فتح نافذة اعدادات المدارس المتقدمة"""
         try:
@@ -551,6 +629,232 @@ class SettingsPage(QWidget):
                 self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
         except Exception as e:
             logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+    
+    def select_backup_path(self):
+        """اختيار مسار النسخ الاحتياطي المحلي"""
+        try:
+            # فتح نافذة اختيار المجلد
+            folder_path = QFileDialog.getExistingDirectory(
+                self,
+                "اختيار مجلد النسخ الاحتياطي",
+                "",  # مسار افتراضي فارغ
+                QFileDialog.ShowDirsOnly
+            )
+            
+            if folder_path:
+                # حفظ المسار في قاعدة البيانات
+                if self.save_backup_path(folder_path):
+                    # تحديث العرض
+                    self.backup_path_display.setText(folder_path)
+                    QMessageBox.information(self, "نجح", "تم حفظ مسار النسخ الاحتياطي بنجاح")
+                    log_user_action(f"تم تحديد مسار النسخ الاحتياطي المحلي: {folder_path}")
+                else:
+                    QMessageBox.critical(self, "خطأ", "فشل في حفظ مسار النسخ الاحتياطي")
+            
+        except Exception as e:
+            logging.error(f"خطأ في اختيار مسار النسخ الاحتياطي: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في اختيار المسار: {str(e)}")
+    
+    def open_backup_folder(self):
+        """فتح مجلد النسخ الاحتياطية"""
+        try:
+            # الحصول على المسار المحفوظ
+            backup_path = self.get_backup_path()
+            
+            if backup_path and os.path.exists(backup_path):
+                # فتح المجلد باستخدام مستكشف الملفات
+                import subprocess
+                import platform
+                
+                if platform.system() == "Windows":
+                    # استخدام os.startfile لفتح المجلد بشكل صحيح في Windows
+                    os.startfile(backup_path)
+                elif platform.system() == "Darwin":  # macOS
+                    subprocess.run(["open", backup_path])
+                else:  # Linux
+                    subprocess.run(["xdg-open", backup_path])
+                
+                log_user_action(f"تم فتح مجلد النسخ الاحتياطية: {backup_path}")
+            else:
+                QMessageBox.warning(self, "تحذير", "لم يتم تحديد مسار صحيح للنسخ الاحتياطي أو المجلد غير موجود")
+            
+        except Exception as e:
+            logging.error(f"خطأ في فتح مجلد النسخ الاحتياطية: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في فتح المجلد: {str(e)}")
+    
+    def save_backup_path(self, path: str) -> bool:
+        """حفظ مسار النسخ الاحتياطي في قاعدة البيانات"""
+        try:
+            # استخدام execute_update لحفظ في app_settings
+            query = """
+                INSERT OR REPLACE INTO app_settings (setting_key, setting_value)
+                VALUES (?, ?)
+            """
+            db_manager.execute_update(query, ("local_backup_path", path))
+            return True
+        except Exception as e:
+            logging.error(f"خطأ في حفظ مسار النسخ الاحتياطي: {e}")
+            return False
+    
+    def get_backup_path(self) -> str:
+        """الحصول على مسار النسخ الاحتياطي من قاعدة البيانات"""
+        try:
+            query = "SELECT setting_value FROM app_settings WHERE setting_key = ?"
+            result = db_manager.execute_fetch_one(query, ("local_backup_path",))
+            return result[0] if result else ""
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على مسار النسخ الاحتياطي: {e}")
+            return ""
+    
+    def create_local_backup(self):
+        """إنشاء نسخة احتياطية محلية"""
+        try:
+            # الحصول على المسار المحفوظ
+            backup_path = self.get_backup_path()
+            
+            if not backup_path:
+                QMessageBox.warning(self, "تحذير", "يرجى تحديد مسار النسخ الاحتياطي أولاً")
+                return
+            
+            if not os.path.exists(backup_path):
+                QMessageBox.warning(self, "تحذير", "مسار النسخ الاحتياطي غير موجود")
+                return
+            
+            # إنشاء حوار لإدخال الوصف
+            from PyQt5.QtWidgets import QInputDialog
+            description, ok = QInputDialog.getText(
+                self,
+                "وصف النسخة الاحتياطية",
+                "أدخل وصفاً للنسخة الاحتياطية (اختياري):"
+            )
+            
+            if not ok:
+                return
+            
+            # إنشاء النسخة الاحتياطية
+            from core.backup.local_backup_manager import local_backup_manager
+            success, message = local_backup_manager.create_local_backup(backup_path, description)
+            
+            if success:
+                QMessageBox.information(self, "نجح", message)
+                log_user_action(f"تم إنشاء نسخة احتياطية محلية: {message}")
+            else:
+                QMessageBox.critical(self, "خطأ", message)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إنشاء النسخة الاحتياطية المحلية: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في إنشاء النسخة الاحتياطية: {str(e)}")
+    
+    def view_local_backups(self):
+        """عرض النسخ الاحتياطية المحلية"""
+        try:
+            # الحصول على المسار المحفوظ
+            backup_path = self.get_backup_path()
+            
+            if not backup_path:
+                QMessageBox.warning(self, "تحذير", "يرجى تحديد مسار النسخ الاحتياطي أولاً")
+                return
+            
+            if not os.path.exists(backup_path):
+                QMessageBox.warning(self, "تحذير", "مسار النسخ الاحتياطي غير موجود")
+                return
+            
+            # الحصول على قائمة النسخ الاحتياطية
+            from core.backup.local_backup_manager import local_backup_manager
+            backups = local_backup_manager.list_local_backups(backup_path)
+            
+            if not backups:
+                QMessageBox.information(self, "معلومات", "لا توجد نسخ احتياطية محلية في المسار المحدد")
+                return
+            
+            # إنشاء نافذة لعرض النسخ الاحتياطية
+            from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTableWidget, QTableWidgetItem, QHBoxLayout, QPushButton
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("النسخ الاحتياطية المحلية")
+            dialog.setModal(True)
+            dialog.resize(800, 400)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # جدول النسخ الاحتياطية
+            table = QTableWidget()
+            table.setColumnCount(4)
+            table.setHorizontalHeaderLabels(["التاريخ", "الوصف", "الحجم", "اسم الملف"])
+            table.setAlternatingRowColors(True)
+            
+            # ملء الجدول
+            table.setRowCount(len(backups))
+            for row, backup in enumerate(backups):
+                table.setItem(row, 0, QTableWidgetItem(backup.get('date', 'غير محدد')))
+                table.setItem(row, 1, QTableWidgetItem(backup.get('description', 'بدون وصف')))
+                table.setItem(row, 2, QTableWidgetItem(f"{backup.get('file_size', 0)} بايت"))
+                table.setItem(row, 3, QTableWidgetItem(backup.get('filename', '')))
+            
+            # ضبط عرض الأعمدة
+            table.resizeColumnsToContents()
+            
+            layout.addWidget(table)
+            
+            # أزرار التحكم
+            buttons_layout = QHBoxLayout()
+            
+            restore_btn = QPushButton("استعادة المحدد")
+            restore_btn.clicked.connect(lambda: self.restore_selected_backup(table, backups, dialog))
+            
+            close_btn = QPushButton("إغلاق")
+            close_btn.clicked.connect(dialog.accept)
+            
+            buttons_layout.addWidget(restore_btn)
+            buttons_layout.addStretch()
+            buttons_layout.addWidget(close_btn)
+            
+            layout.addLayout(buttons_layout)
+            
+            dialog.exec_()
+            
+        except Exception as e:
+            logging.error(f"خطأ في عرض النسخ الاحتياطية المحلية: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في عرض النسخ الاحتياطية: {str(e)}")
+    
+    def restore_selected_backup(self, table, backups, dialog):
+        """استعادة النسخة الاحتياطية المحددة"""
+        try:
+            current_row = table.currentRow()
+            if current_row < 0:
+                QMessageBox.warning(dialog, "تحذير", "يرجى تحديد نسخة احتياطية للاستعادة")
+                return
+            
+            backup = backups[current_row]
+            backup_file_path = backup.get('file_path', '')
+            
+            if not backup_file_path:
+                QMessageBox.critical(dialog, "خطأ", "مسار ملف النسخة الاحتياطية غير صحيح")
+                return
+            
+            # تأكيد الاستعادة
+            reply = QMessageBox.question(
+                dialog,
+                "تأكيد الاستعادة",
+                "هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟\nسيتم استبدال قاعدة البيانات الحالية.",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                from core.backup.local_backup_manager import local_backup_manager
+                success, message = local_backup_manager.restore_local_backup(backup_file_path)
+                
+                if success:
+                    QMessageBox.information(dialog, "نجح", message)
+                    log_user_action(f"تم استعادة نسخة احتياطية محلية: {backup.get('filename', '')}")
+                    dialog.accept()
+                else:
+                    QMessageBox.critical(dialog, "خطأ", message)
+            
+        except Exception as e:
+            logging.error(f"خطأ في استعادة النسخة الاحتياطية: {e}")
+            QMessageBox.critical(dialog, "خطأ", f"حدث خطأ في الاستعادة: {str(e)}")
     
     def setup_styles(self):
         """إعداد أنماط الصفحة"""
