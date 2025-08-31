@@ -1,38 +1,58 @@
 {
   "students_page": {
     "font_size": "كبير",
-    "statistics_window_visible": false
+    "statistics_window_visible": true
+  },
+  "schools_page": {
+    "font_size": "كبير",
+    "statistics_window_visible": true
   },
   "teachers_page": {
     "font_size": "كبير",
-    "statistics_window_visible": false
+    "statistics_window_visible": true
   },
   "employees_page": {
-    "font_size": "كبير",
-    "statistics_window_visible": false
+    "font_size": "متوسط",
+    "statistics_window_visible": true
   },
   "installments_page": {
-    "font_size": "كبير",
-    "statistics_window_visible": false
+    "font_size": "متوسط",
+    "statistics_window_visible": true
   },
   "additional_fees_page": {
-    "font_size": "كبير جدا",
-    "statistics_window_visible": false
+    "font_size": "متوسط",
+    "statistics_window_visible": true
+  },
+  "student_ids_page": {
+    "font_size": "متوسط",
+    "statistics_window_visible": false,
+    "preview_visible": true,
+    "print_options_visible": true
   },
   "external_income_page": {
-    "font_size": "كبير",
-    "statistics_window_visible": false
+    "font_size": "متوسط",
+    "statistics_window_visible": true
   },
   "expenses_page": {
-    "font_size": "كبير",
-    "statistics_window_visible": false
-  },
-  "settings_page": {
-    "font_size": "كبير",
-    "advanced_settings_visible": false
+    "font_size": "متوسط",
+    "statistics_window_visible": true
   },
   "salaries_page": {
-    "font_size": "كبير",
+    "font_size": "متوسط",
     "statistics_window_visible": true
+  },
+  "backup_page": {
+    "font_size": "متوسط",
+    "auto_backup_enabled": true,
+    "backup_history_visible": true
+  },
+  "settings_page": {
+    "font_size": "متوسط",
+    "advanced_settings_visible": false
+  },
+  "dashboard_page": {
+    "font_size": "متوسط",
+    "charts_visible": true,
+    "quick_stats_visible": true
   }
 }

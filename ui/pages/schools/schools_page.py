@@ -13,10 +13,14 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 
     QTableWidgetItem, QPushButton, QLabel, QLineEdit,
     QFrame, QMessageBox, QHeaderView, QAbstractItemView,
-    QMenu, QFileDialog
+    QMenu, QFileDialog, QComboBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPixmap, QIcon
+
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager, get_font_sizes
+from ...ui_settings_manager import ui_settings_manager
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
@@ -35,6 +39,8 @@ class SchoolsPage(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        # الحصول على حجم الخط الحالي من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("schools")
         self.setup_ui()
         self.setup_styles()
         self.load_schools()
@@ -98,6 +104,19 @@ class SchoolsPage(QWidget):
             # أزرار الإجراءات
             # تم إزالة زر إضافة مدرسة للمستخدم العادي
             # الآن يتوفر فقط في الإعدادات المتقدمة
+            
+            # حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("fontSizeLabel")
+            toolbar_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("fontSizeCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            toolbar_layout.addWidget(self.font_size_combo)
             
             self.refresh_button = QPushButton("تحديث")
             self.refresh_button.setObjectName("refreshButton")
@@ -617,82 +636,39 @@ class SchoolsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في عرض رسالة المعلومات: {e}")
     
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("schools", selected_size)
+                
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            style = """
-                QWidget { background: #F5F6F7; }
-                #toolbarFrame {
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                    margin-bottom: 8px;
-                }
-                #pageTitle {
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #2C3E50;
-                }
-                #searchLabel {
-                    font-size: 12px;
-                    color: #5F6B73;
-                    margin-right: 4px;
-                }
-                #searchInput {
-                    padding: 6px 10px; /* Slightly more padding */
-                    border: 1px solid #C5CBD0;
-                    border-radius: 5px; /* Slightly more rounded */
-                    font-size: 13px; /* Slightly larger font */
-                    background-color: #FFFFFF;
-                    min-width: 180px;
-                }
-                #searchInput:focus { border:1px solid #007BFF; } /* Primary blue on focus */
-                #refreshButton {
-                    background:#007BFF; /* Primary blue */
-                    color:#FFFFFF;
-                    border:1px solid #007BFF;
-                    padding:6px 12px; /* Slightly larger padding */
-                    border-radius:5px; /* Slightly more rounded */
-                    font-size:13px; /* Slightly larger font */
-                    font-weight:600;
-                    min-width:110px; /* Consistent width with dashboard buttons */
-                    transition: all 0.3s ease; /* Smooth transition for hover effects */
-                }
-                #refreshButton:hover {
-                    background:#0056B3; /* Darker blue on hover */
-                    border:1px solid #0056B3;
-                }
-                #refreshButton:pressed {
-                    background:#004085; /* Even darker on pressed */
-                    border:1px solid #004085;
-                }
-                #tableFrame {
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                }
-                #schoolsTable { border:none; background:#FFFFFF; gridline-color:#E2E5E8; font-size:12px; selection-background-color:#2F6ED1; selection-color:#FFFFFF; }
-                #schoolsTable::item { padding:0px; }
-                #schoolsTable QHeaderView::section {
-                    background:#E0E0E0; /* Lighter grey for a cleaner look */
-                    color:#2C3E50;
-                    padding:6px 8px; /* Slightly more padding */
-                    font-size:13px; /* Slightly larger font */
-                    font-weight:700; /* Bolder font */
-                    border:1px solid #C5CBD0; /* Slightly darker border */
-                    border-bottom:2px solid #007BFF; /* Highlight bottom border with primary blue */
-                }
-                #statusFrame {
-                    background:#FFFFFF;
-                    border:1px solid #DDE1E4;
-                    border-radius:6px;
-                    margin-top:8px;
-                    padding:4px 8px;
-                }
-                #countLabel, #updateLabel { font-size:12px; color:#5F6B73; }
-            """
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
             
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
+            
+            # إجبار إعادة رسم الصفحة
+            self.update()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد تنسيقات الصفحة: {e}")
