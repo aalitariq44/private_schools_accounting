@@ -1,14 +1,14 @@
 {
   "students_page": {
-    "font_size": "كبير",
+    "font_size": "صغير",
     "statistics_window_visible": false
   },
   "schools_page": {
-    "font_size": "كبير",
+    "font_size": "صغير",
     "statistics_window_visible": true
   },
   "teachers_page": {
-    "font_size": "كبير",
+    "font_size": "صغير",
     "statistics_window_visible": true
   },
   "employees_page": {
@@ -17,11 +17,11 @@
   },
   "installments_page": {
     "font_size": "متوسط",
-    "statistics_window_visible": true
+    "statistics_window_visible": false
   },
   "additional_fees_page": {
     "font_size": "متوسط",
-    "statistics_window_visible": true
+    "statistics_window_visible": false
   },
   "student_ids_page": {
     "font_size": "متوسط",
@@ -51,7 +51,7 @@
     "advanced_settings_visible": false
   },
   "dashboard_page": {
-    "font_size": "متوسط",
+    "font_size": "صغير",
     "charts_visible": true,
     "quick_stats_visible": true
   }

@@ -113,29 +113,8 @@ class AdditionalFeesPage(QWidget):
     def create_page_header(self, layout):
         """إنشاء رأس الصفحة"""
         try:
-            header_frame = QFrame()
-            header_frame.setObjectName("headerFrame")
-            
-            header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(10, 8, 10, 8)
-            
-            # العنوان والوصف
-            text_layout = QVBoxLayout()
-            
-            title_label = QLabel("إدارة الرسوم الإضافية")
-            title_label.setObjectName("pageTitle")
-            title_label.setStyleSheet("color: black;")
-            text_layout.addWidget(title_label)
-            
-            desc_label = QLabel("عرض الرسوم الإضافية مثل رسوم التسجيل، الزي المدرسي، الكتب، وغيرها")
-            desc_label.setObjectName("pageDesc")
-            desc_label.setStyleSheet("color: black;")
-            text_layout.addWidget(desc_label)
-            
-            header_layout.addLayout(text_layout)
-            header_layout.addStretch()
-            
-            layout.addWidget(header_frame)
+            # لا يوجد رأس للصفحة
+            pass
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء رأس الصفحة: {e}")
