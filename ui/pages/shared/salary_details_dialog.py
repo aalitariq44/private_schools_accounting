@@ -327,7 +327,7 @@ class SalaryDetailsDialog(QDialog):
         self.base_salary_edit.setSuffix(" د.ع")
         self.base_salary_edit.setMinimumWidth(150)
         self.base_salary_edit.setReadOnly(True)  # غير قابل للتعديل
-        base_salary_label = QLabel("الراتب الأساسي (تلقائي):")
+        base_salary_label = QLabel("الراتب المسجل:")
         base_salary_label.setStyleSheet("color: #666666; font-style: italic;")
         layout.addRow(base_salary_label, self.base_salary_edit)
         
