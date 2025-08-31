@@ -373,19 +373,48 @@ class UISettingsManager:
             logging.error(f"خطأ في إعادة تعيين إعدادات صفحة {page_name}: {e}")
             return False
 
-    def reset_all_settings(self) -> bool:
+    def save_setting(self, page_name: str, setting_key: str, value: Any) -> bool:
         """
-        إعادة تعيين جميع الإعدادات للقيم الافتراضية
+        حفظ إعداد معين لصفحة معينة
+
+        Args:
+            page_name (str): اسم الصفحة
+            setting_key (str): مفتاح الإعداد
+            value (Any): قيمة الإعداد
 
         Returns:
-            bool: نجح الإعادة أم لا
+            bool: نجح الحفظ أم لا
         """
         try:
-            self.settings = self.get_default_settings()
+            page_key = f"{page_name}_page"
+            if page_key not in self.settings:
+                self.settings[page_key] = {}
+
+            self.settings[page_key][setting_key] = value
             return self.save_settings()
+
         except Exception as e:
-            logging.error(f"خطأ في إعادة تعيين جميع الإعدادات: {e}")
+            logging.error(f"خطأ في حفظ إعداد {setting_key} لصفحة {page_name}: {e}")
             return False
+
+    def get_setting(self, page_name: str, setting_key: str, default_value: Any = None) -> Any:
+        """
+        الحصول على إعداد معين لصفحة معينة
+
+        Args:
+            page_name (str): اسم الصفحة
+            setting_key (str): مفتاح الإعداد
+            default_value (Any): القيمة الافتراضية إذا لم يكن الإعداد موجوداً
+
+        Returns:
+            Any: قيمة الإعداد
+        """
+        try:
+            page_settings = self.get_page_settings(page_name)
+            return page_settings.get(setting_key, default_value)
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على إعداد {setting_key} لصفحة {page_name}: {e}")
+            return default_value
 
 # إنشاء instance واحد من المدير
 ui_settings_manager = UISettingsManager()
@@ -428,15 +457,30 @@ def get_page_statistics_visible(page_name: str) -> bool:
     """
     return ui_settings_manager.get_statistics_visible(page_name)
 
-def set_page_statistics_visible(page_name: str, visible: bool) -> bool:
+def save_page_setting(page_name: str, setting_key: str, value: Any) -> bool:
     """
-    دالة مساعدة لتعيين حالة رؤية الإحصائيات
+    دالة مساعدة لحفظ إعداد صفحة معينة
 
     Args:
         page_name (str): اسم الصفحة
-        visible (bool): مرئية أم لا
+        setting_key (str): مفتاح الإعداد
+        value (Any): قيمة الإعداد
 
     Returns:
-        bool: نجح التعيين أم لا
+        bool: نجح الحفظ أم لا
     """
-    return ui_settings_manager.set_statistics_visible(page_name, visible)
+    return ui_settings_manager.save_setting(page_name, setting_key, value)
+
+def get_page_setting(page_name: str, setting_key: str, default_value: Any = None) -> Any:
+    """
+    دالة مساعدة للحصول على إعداد صفحة معينة
+
+    Args:
+        page_name (str): اسم الصفحة
+        setting_key (str): مفتاح الإعداد
+        default_value (Any): القيمة الافتراضية
+
+    Returns:
+        Any: قيمة الإعداد
+    """
+    return ui_settings_manager.get_setting(page_name, setting_key, default_value)

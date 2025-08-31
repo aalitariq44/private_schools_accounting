@@ -20,7 +20,7 @@
     "statistics_window_visible": false
   },
   "external_income_page": {
-    "font_size": "كبير جدا",
+    "font_size": "كبير",
     "statistics_window_visible": false
   },
   "expenses_page": {
@@ -30,5 +30,9 @@
   "settings_page": {
     "font_size": "كبير",
     "advanced_settings_visible": false
+  },
+  "salaries_page": {
+    "font_size": "كبير",
+    "statistics_window_visible": true
   }
 }

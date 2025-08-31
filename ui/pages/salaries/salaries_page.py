@@ -23,6 +23,10 @@ from core.utils.logger import log_user_action
 from .add_salary_dialog import AddSalaryDialog
 from .edit_salary_dialog import EditSalaryDialog
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 
 # Subclass QTableWidgetItem for numeric sorting of ID column
 class NumericTableWidgetItem(QTableWidgetItem):
@@ -40,6 +44,9 @@ class SalariesPage(QWidget):
     def __init__(self):
         super().__init__()
         self.current_salaries = []
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("salaries")
         
         self.setup_cairo_font()
         self.setup_ui()
@@ -183,6 +190,19 @@ class SalariesPage(QWidget):
             self.search_input.setObjectName("searchInput")
             self.search_input.setPlaceholderText("ابحث...")
             actions_layout.addWidget(self.search_input)
+            
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
+            
             actions_layout.addStretch()
 
             self.add_button = QPushButton("إضافة راتب")
@@ -275,101 +295,67 @@ class SalariesPage(QWidget):
             self.from_date_edit.dateChanged.connect(self.apply_filters)
             self.to_date_edit.dateChanged.connect(self.apply_filters)
             
+            # ربط تغيير حجم الخط
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
     
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
             
-            style = """
-                QWidget {{
-                    background-color: #F5F6F7;
-                    font-family: {font_family};
-                    font-size: 13px;
-                }}
-                #toolbarFrame, #summaryFrame {{
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                }}
-                #toolbarFrame {{ margin-bottom: 8px; }}
-                #filterLabel {{
-                    font-weight: 600;
-                    color: #333;
-                    margin-right: 4px;
-                    font-size: 12px;
-                }}
-                #filterCombo, #searchInput, QDateEdit {{
-                    padding: 4px 8px;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    background-color: #FFFFFF;
-                }}
-                QPushButton {{
-                    background: #FFFFFF;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    padding: 6px 12px;
-                    font-size: 12px;
-                }}
-                QPushButton:hover {{ background: #E9EEF2; }}
-                #primaryButton {{
-                    background: #2F6ED1;
-                    color: #FFFFFF;
-                    border: 1px solid #2F6ED1;
-                }}
-                #primaryButton:hover {{ background: #2559A8; }}
-                #secondaryButton {{ color: #2F6ED1; font-weight: 600; }}
-                #secondaryButton:hover {{ background: #E0ECFF; }}
-                QTableWidget {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    gridline-color: #E3E6E8;
-                }}
-                QTableWidget::item {{
-                    padding: 2px 4px;
-                    border-bottom: 1px solid #EDF0F2;
-                }}
-                QTableWidget::item:selected {{
-                    background: #2F6ED1;
-                    color: #FFFFFF;
-                }}
-                QHeaderView::section {{
-                    background: #F0F2F4;
-                    color: #222;
-                    padding: 4px 6px;
-                    border: 0px;
-                    border-right: 1px solid #D4D8DB;
-                    font-size: 12px;
-                    font-weight: 600;
-                }}
-                #summaryLabel {{
-                    font-size: 11px;
-                    color: #555;
-                    font-weight: 600;
-                }}
-                #summaryValue, #summaryValueSuccess, #summaryValueWarning {{
-                    font-size: 14px;
-                    font-weight: 600;
-                }}
-                #summaryValue {{ color: #2F6ED1; }}
-                #summaryValueSuccess {{ color: #2E8B57; }}
-                #summaryValueWarning {{ color: #D17F2F; }}
-                #statLabel {{
-                    font-size: 11px;
-                    color: #666;
-                }}
-            """.format(font_family=cairo_font)
-            
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
             
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'salaries_table'):
+                self.salaries_table.update()
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.update()
+            
         except Exception as e:
-            logging.error(f"خطأ في إعداد الستايل: {e}")
+            logging.error(f"خطأ في إعداد تنسيقات صفحة الرواتب: {e}")
+    
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            if not hasattr(self, 'font_size_combo'):
+                return
+                
+            selected_size = self.font_size_combo.currentText()
+            
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI
+                ui_settings_manager.set_font_size('salaries', selected_size)
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
     
     def load_schools(self):
         """تحميل قائمة المدارس"""
