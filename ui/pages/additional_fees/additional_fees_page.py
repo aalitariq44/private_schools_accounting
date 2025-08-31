@@ -198,9 +198,9 @@ class AdditionalFeesPage(QWidget):
             filters_layout.addWidget(self.status_combo)
             
             # إعدادات الصفحة
-            settings_label = QLabel("الإعدادات:")
-            settings_label.setObjectName("filterLabel")
-            filters_layout.addWidget(settings_label)
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            filters_layout.addWidget(font_size_label)
             
             # قائمة اختيار حجم الخط
             self.font_size_combo = QComboBox()
