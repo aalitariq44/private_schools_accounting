@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QLineEdit, QPushButton, QComboBox, QTextEdit,
     QDateEdit, QSpinBox, QDoubleSpinBox, QMessageBox,
-    QFrame, QGroupBox, QCheckBox, QScrollArea, QWidget
+    QFrame, QCheckBox, QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate, pyqtSignal
 from PyQt5.QtGui import QFont, QDoubleValidator, QIntValidator
@@ -56,8 +56,6 @@ class AddSalaryDialog(QDialog):
             QPushButton#cancel_btn:hover { background:#d35445; }
             QPushButton#delete_btn { background:#dc3545; }
             QPushButton#delete_btn:hover { background:#c82333; }
-            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
-            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
             QScrollArea { border:none; }
             QLabel#salaryLabel { color:#27ae60; font-weight:600; }
             QLabel#daysLabel { color:#c0392b; font-weight:600; }
@@ -91,43 +89,116 @@ class AddSalaryDialog(QDialog):
         main_layout.addWidget(scroll)
         
     def create_staff_group(self):
-        group = QGroupBox("بيانات الموظف/المعلم")
-        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
-        self.school_combo = QComboBox(); self.school_combo.addItem("جميع المدارس", "")
-        layout.addRow("اختر المدرسة:", self.school_combo)
-        self.staff_type_combo = QComboBox(); self.staff_type_combo.addItem("جميع الأنواع", ""); self.staff_type_combo.addItem("معلم", "teacher"); self.staff_type_combo.addItem("موظف", "employee")
-        layout.addRow("نوع الموظف:", self.staff_type_combo)
-        self.staff_combo = QComboBox(); layout.addRow("اختر الموظف/المعلم:", self.staff_combo)
-        self.base_salary_label = QLabel("0.00 دينار"); self.base_salary_label.setObjectName("salaryLabel")
-        layout.addRow("الراتب المسجل:", self.base_salary_label)
-        group.setLayout(layout); return group
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("بيانات الموظف/المعلم")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # نموذج البيانات
+        form_layout = QFormLayout()
+        form_layout.setSpacing(8)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        
+        self.school_combo = QComboBox()
+        self.school_combo.addItem("جميع المدارس", "")
+        form_layout.addRow("اختر المدرسة:", self.school_combo)
+        
+        self.staff_type_combo = QComboBox()
+        self.staff_type_combo.addItem("جميع الأنواع", "")
+        self.staff_type_combo.addItem("معلم", "teacher")
+        self.staff_type_combo.addItem("موظف", "employee")
+        form_layout.addRow("نوع الموظف:", self.staff_type_combo)
+        
+        self.staff_combo = QComboBox()
+        form_layout.addRow("اختر الموظف/المعلم:", self.staff_combo)
+        
+        self.base_salary_label = QLabel("0.00 دينار")
+        self.base_salary_label.setObjectName("salaryLabel")
+        form_layout.addRow("الراتب المسجل:", self.base_salary_label)
+        
+        layout.addLayout(form_layout)
+        return widget
     
     def create_salary_group(self):
-        group = QGroupBox("تفاصيل الراتب")
-        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
-        self.paid_amount_input = QDoubleSpinBox(); self.paid_amount_input.setRange(0, 999999999); self.paid_amount_input.setDecimals(2); self.paid_amount_input.setSuffix(" دينار")
-        layout.addRow("المبلغ المدفوع:", self.paid_amount_input)
-        self.payment_date_input = QDateEdit(); self.payment_date_input.setDate(QDate.currentDate()); self.payment_date_input.setCalendarPopup(True)
-        layout.addRow("تاريخ الدفع:", self.payment_date_input)
-        group.setLayout(layout); return group
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("تفاصيل الراتب")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # نموذج البيانات
+        form_layout = QFormLayout()
+        form_layout.setSpacing(8)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        
+        self.paid_amount_input = QDoubleSpinBox()
+        self.paid_amount_input.setRange(0, 999999999)
+        self.paid_amount_input.setDecimals(2)
+        self.paid_amount_input.setSuffix(" دينار")
+        form_layout.addRow("المبلغ المدفوع:", self.paid_amount_input)
+        
+        self.payment_date_input = QDateEdit()
+        self.payment_date_input.setDate(QDate.currentDate())
+        self.payment_date_input.setCalendarPopup(True)
+        form_layout.addRow("تاريخ الدفع:", self.payment_date_input)
+        
+        layout.addLayout(form_layout)
+        return widget
     
     def create_period_group(self):
-        group = QGroupBox("فترة الراتب")
-        layout = QFormLayout(); layout.setSpacing(8); layout.setLabelAlignment(Qt.AlignRight)
-        self.from_date_input = QDateEdit(); self.from_date_input.setCalendarPopup(True)
-        layout.addRow("من تاريخ:", self.from_date_input)
-        self.to_date_input = QDateEdit(); self.to_date_input.setCalendarPopup(True)
-        layout.addRow("إلى تاريخ:", self.to_date_input)
-        self.days_count_label = QLabel("30 يوم"); self.days_count_label.setObjectName("daysLabel")
-        layout.addRow("عدد الأيام:", self.days_count_label)
-        group.setLayout(layout); return group
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("فترة الراتب")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # نموذج البيانات
+        form_layout = QFormLayout()
+        form_layout.setSpacing(8)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        
+        self.from_date_input = QDateEdit()
+        self.from_date_input.setCalendarPopup(True)
+        form_layout.addRow("من تاريخ:", self.from_date_input)
+        
+        self.to_date_input = QDateEdit()
+        self.to_date_input.setCalendarPopup(True)
+        form_layout.addRow("إلى تاريخ:", self.to_date_input)
+        
+        self.days_count_label = QLabel("30 يوم")
+        self.days_count_label.setObjectName("daysLabel")
+        form_layout.addRow("عدد الأيام:", self.days_count_label)
+        
+        layout.addLayout(form_layout)
+        return widget
     
     def create_notes_group(self):
-        group = QGroupBox("ملاحظات")
-        layout = QVBoxLayout(); layout.setSpacing(6)
-        self.notes_input = QTextEdit(); self.notes_input.setMaximumHeight(90); self.notes_input.setPlaceholderText("ملاحظات إضافية...")
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("ملاحظات")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # حقل الملاحظات
+        self.notes_input = QTextEdit()
+        self.notes_input.setMaximumHeight(90)
+        self.notes_input.setPlaceholderText("ملاحظات إضافية...")
         layout.addWidget(self.notes_input)
-        group.setLayout(layout); return group
+        
+        return widget
     
     def create_buttons(self):
         layout = QHBoxLayout(); layout.addStretch()
@@ -151,7 +222,7 @@ class AddSalaryDialog(QDialog):
     def apply_responsive_design(self):
         """ضبط الحجم والخط حسب دقة الشاشة (متوافق مع باقي الحوارات)."""
         try:
-            from PyQt5.QtWidgets import QApplication, QGroupBox, QPushButton
+            from PyQt5.QtWidgets import QApplication, QPushButton
             screen = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
             if not screen:
                 return
@@ -166,11 +237,6 @@ class AddSalaryDialog(QDialog):
             f = self.font(); f.setPointSize(point_size); self.setFont(f)
 
             if sw <= 1366:
-                for grp in self.findChildren(QGroupBox):
-                    lay = grp.layout()
-                    if lay:
-                        lay.setHorizontalSpacing(6)
-                        lay.setVerticalSpacing(6)
                 for btn in self.findChildren(QPushButton):
                     btn.setMinimumHeight(32)
         except Exception as e:

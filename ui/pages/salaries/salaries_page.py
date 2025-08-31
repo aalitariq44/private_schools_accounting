@@ -121,6 +121,7 @@ class SalariesPage(QWidget):
             self.salaries_table.setStyleSheet("QTableWidget::item { padding: 0px; }")
             self.salaries_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.salaries_table.customContextMenuRequested.connect(self.show_context_menu)
+            self.salaries_table.doubleClicked.connect(self.on_table_double_click)
 
             table_layout.addWidget(self.salaries_table)
             layout.addWidget(table_frame)
@@ -568,6 +569,16 @@ class SalariesPage(QWidget):
         """تحديث البيانات"""
         log_user_action("تحديث صفحة الرواتب")
         self.load_salaries()
+
+    def on_table_double_click(self, index):
+        """التعامل مع النقر المزدوج على صف في الجدول"""
+        try:
+            row = index.row()
+            if row < 0: return
+            salary_id = int(self.salaries_table.item(row, 0).text())
+            self.edit_salary_by_id(salary_id)
+        except Exception as e:
+            logging.error(f"خطأ في النقر المزدوج: {e}")
 
     def show_context_menu(self, position):
         """عرض قائمة السياق للجدول"""

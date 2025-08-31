@@ -8,7 +8,7 @@ from datetime import datetime
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QDoubleSpinBox, QDateEdit, QTextEdit,
-    QPushButton, QMessageBox, QFrame
+    QPushButton, QMessageBox, QFrame, QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate, pyqtSignal
 
@@ -28,44 +28,181 @@ class EditSalaryDialog(QDialog):
         self.resize(500, 400)
         self.setup_ui()
         self.load_salary_data()
+        self.apply_responsive_design()
 
     def setup_ui(self):
-        layout = QVBoxLayout(self)
-        form = QFormLayout()
-        # المبلغ المدفوع
+        self.setWindowTitle(f"تعديل الراتب #{self.salary_id}")
+        self.setModal(True)
+        self.resize(640, 520)
+        self.setMinimumSize(480, 420)
+
+        # ستايل موحد
+        self.setStyleSheet("""
+            QDialog { background:#f5f7fa; font-family:'Segoe UI', Arial, sans-serif; }
+            QLabel { color:#1f2d3d; font-weight:600; margin:4px 0; }
+            QLineEdit, QComboBox, QDoubleSpinBox, QDateEdit, QTextEdit {
+                padding:6px 8px; border:1px solid #c0c6ce; border-radius:6px; background:#ffffff;
+                min-height: 32px; }
+            QLineEdit:focus, QComboBox:focus, QDoubleSpinBox:focus, QDateEdit:focus, QTextEdit:focus {
+                border:1px solid #357abd; background:#f0f7ff; }
+            QPushButton { background:#357abd; color:#fff; border:none; padding:8px 18px; border-radius:6px; font-weight:600;
+                min-height: 36px; }
+            QPushButton:hover { background:#4b8fcc; }
+            QPushButton:pressed { background:#2d6399; }
+            QPushButton#cancel_btn { background:#c0392b; }
+            QPushButton#cancel_btn:hover { background:#d35445; }
+        """)
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(6, 6, 6, 6)
+        main_layout.setSpacing(6)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(12, 12, 12, 12)
+        content_layout.setSpacing(15)
+
+        # عنوان النافذة
+        title_label = QLabel(f"تعديل الراتب #{self.salary_id}")
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet("background:#357abd; color:#fff; padding:10px; border-radius:6px; font-weight:700; font-size:16px;")
+        content_layout.addWidget(title_label)
+
+        # قسم تفاصيل الراتب
+        salary_widget = self.create_salary_section()
+        content_layout.addWidget(salary_widget)
+
+        # قسم فترة الراتب
+        period_widget = self.create_period_section()
+        content_layout.addWidget(period_widget)
+
+        # قسم الملاحظات
+        notes_widget = self.create_notes_section()
+        content_layout.addWidget(notes_widget)
+
+        # الأزرار
+        buttons_layout = self.create_buttons_section()
+        content_layout.addLayout(buttons_layout)
+
+        scroll.setWidget(content)
+        main_layout.addWidget(scroll)
+        
+    def create_salary_section(self):
+        """إنشاء قسم تفاصيل الراتب"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("تفاصيل الراتب")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # نموذج البيانات
+        form_layout = QFormLayout()
+        form_layout.setSpacing(8)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        
         self.paid_amount_input = QDoubleSpinBox()
-        self.paid_amount_input.setRange(0, 1e9)
+        self.paid_amount_input.setRange(0, 999999999)
         self.paid_amount_input.setDecimals(2)
         self.paid_amount_input.setSuffix(" دينار")
-        form.addRow("المبلغ المدفوع:", self.paid_amount_input)
-        # تاريخ الدفع
+        form_layout.addRow("المبلغ المدفوع:", self.paid_amount_input)
+        
         self.payment_date_input = QDateEdit()
         self.payment_date_input.setCalendarPopup(True)
-        form.addRow("تاريخ الدفع:", self.payment_date_input)
-        # فترة الراتب من
+        form_layout.addRow("تاريخ الدفع:", self.payment_date_input)
+        
+        layout.addLayout(form_layout)
+        return widget
+    
+    def create_period_section(self):
+        """إنشاء قسم فترة الراتب"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("فترة الراتب")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # نموذج البيانات
+        form_layout = QFormLayout()
+        form_layout.setSpacing(8)
+        form_layout.setLabelAlignment(Qt.AlignRight)
+        
         self.from_date_input = QDateEdit()
         self.from_date_input.setCalendarPopup(True)
-        form.addRow("من تاريخ:", self.from_date_input)
-        # إلى
+        form_layout.addRow("من تاريخ:", self.from_date_input)
+        
         self.to_date_input = QDateEdit()
         self.to_date_input.setCalendarPopup(True)
-        form.addRow("إلى تاريخ:", self.to_date_input)
-        # الملاحظات
+        form_layout.addRow("إلى تاريخ:", self.to_date_input)
+        
+        layout.addLayout(form_layout)
+        return widget
+    
+    def create_notes_section(self):
+        """إنشاء قسم الملاحظات"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(8)
+        
+        # عنوان القسم
+        title_label = QLabel("ملاحظات")
+        title_label.setStyleSheet("font-weight: bold; color: #357abd; margin-bottom: 8px;")
+        layout.addWidget(title_label)
+        
+        # حقل الملاحظات
         self.notes_input = QTextEdit()
-        self.notes_input.setPlaceholderText("نص الملاحظات...")
-        form.addRow("ملاحظات:", self.notes_input)
-        layout.addLayout(form)
-        # الأزرار
-        btn_frame = QFrame()
-        btn_layout = QHBoxLayout(btn_frame)
-        btn_layout.addStretch()
+        self.notes_input.setMaximumHeight(80)
+        self.notes_input.setPlaceholderText("ملاحظات إضافية...")
+        layout.addWidget(self.notes_input)
+        
+        return widget
+    
+    def create_buttons_section(self):
+        """إنشاء قسم الأزرار"""
+        layout = QHBoxLayout()
+        layout.addStretch()
+        
         self.cancel_btn = QPushButton("إلغاء")
+        self.cancel_btn.setObjectName("cancel_btn")
         self.cancel_btn.clicked.connect(self.reject)
-        btn_layout.addWidget(self.cancel_btn)
+        layout.addWidget(self.cancel_btn)
+        
         self.save_btn = QPushButton("حفظ التعديلات")
         self.save_btn.clicked.connect(self.save_changes)
-        btn_layout.addWidget(self.save_btn)
-        layout.addWidget(btn_frame)
+        layout.addWidget(self.save_btn)
+        
+        return layout
+
+    def apply_responsive_design(self):
+        """ضبط الحجم والخط حسب دقة الشاشة"""
+        try:
+            from PyQt5.QtWidgets import QApplication
+            screen = QApplication.primaryScreen().availableGeometry() if QApplication.primaryScreen() else None
+            if not screen:
+                return
+            sw, sh = screen.width(), screen.height()
+            target_w = min(700, int(sw * 0.75))
+            target_h = min(600, int(sh * 0.8))
+            self.resize(target_w, target_h)
+
+            scale = min(sw / 1920.0, sh / 1080.0)
+            base = 14
+            point_size = max(10, int(base * (0.9 + scale * 0.6)))
+            f = self.font()
+            f.setPointSize(point_size)
+            self.setFont(f)
+        except Exception as e:
+            logging.warning(f"Responsive design adjustment failed (salary edit): {e}")
 
     def load_salary_data(self):
         try:
