@@ -182,6 +182,18 @@ class InstallmentsPage(QWidget):
             self.student_combo.setMinimumWidth(200)
             filters_layout.addWidget(self.student_combo)
             
+            # أزرار العمليات في الشريط الأول
+            self.generate_report_button = QPushButton("تقرير مالي")
+            self.generate_report_button.setObjectName("secondaryButton")
+            filters_layout.addWidget(self.generate_report_button)
+            
+            self.refresh_button = QPushButton("تحديث")
+            self.refresh_button.setObjectName("secondaryButton")
+            filters_layout.addWidget(self.refresh_button)
+            
+            self.clear_filters_button = QPushButton("مسح الفلاتر")
+            self.clear_filters_button.setObjectName("secondaryButton")
+            filters_layout.addWidget(self.clear_filters_button)
             
             filters_layout.addStretch()
             
@@ -213,19 +225,6 @@ class InstallmentsPage(QWidget):
             actions_layout.addWidget(self.due_date_to)
             
             actions_layout.addStretch()
-            
-            # أزرار العمليات
-            self.generate_report_button = QPushButton("تقرير مالي")
-            self.generate_report_button.setObjectName("secondaryButton")
-            actions_layout.addWidget(self.generate_report_button)
-            
-            self.refresh_button = QPushButton("تحديث")
-            self.refresh_button.setObjectName("secondaryButton")
-            actions_layout.addWidget(self.refresh_button)
-            
-            self.clear_filters_button = QPushButton("مسح الفلاتر")
-            self.clear_filters_button.setObjectName("secondaryButton") # Using secondaryButton style for now
-            actions_layout.addWidget(self.clear_filters_button)
             
             # فلتر حجم الخط
             font_size_label = QLabel("حجم الخط:")
