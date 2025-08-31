@@ -19,6 +19,7 @@ from PyQt5.QtGui import QPixmap, QIcon, QColor
 
 # استيراد وحدة أحجام الخطوط
 from ...font_sizes import FontSizeManager, get_font_sizes
+from ...ui_settings_manager import ui_settings_manager
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 # from core.printing.print_manager import print_students_list  # استيراد دالة الطباعة (moved inside method)
@@ -172,8 +173,11 @@ class StudentsPage(QWidget):
         self.current_students = []
         self.selected_school_id = None
         
-        # متغير لحجم الخط الحالي
-        self.current_font_size = FontSizeManager.get_default_size()  # الحصول على الحجم الافتراضي من المدير
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("students")
+        
+        # الحصول على حالة رؤية نافذة الإحصائيات
+        self.statistics_visible = ui_settings_manager.get_statistics_visible("students")
         
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
@@ -215,6 +219,9 @@ class StudentsPage(QWidget):
             self.create_summary(layout)
             
             self.setLayout(layout)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الطلاب: {e}")
@@ -330,6 +337,12 @@ class StudentsPage(QWidget):
             self.font_size_combo.setMinimumWidth(100)
             actions_layout.addWidget(self.font_size_combo)
             
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            actions_layout.addWidget(self.toggle_stats_button)
+            
             actions_layout.addStretch()
             
             # أزرار العمليات
@@ -420,10 +433,10 @@ class StudentsPage(QWidget):
     def create_summary(self, layout):
         """إنشاء ملخص الطلاب"""
         try:
-            summary_frame = QFrame()
-            summary_frame.setObjectName("summaryFrame")
+            self.summary_frame = QFrame()
+            self.summary_frame.setObjectName("summaryFrame")
             
-            summary_layout = QHBoxLayout(summary_frame)
+            summary_layout = QHBoxLayout(self.summary_frame)
             summary_layout.setContentsMargins(8, 6, 8, 6)
             
             # ملخص الأرقام
@@ -507,7 +520,10 @@ class StudentsPage(QWidget):
             self.last_update_label.setObjectName("statLabel")
             summary_layout.addWidget(self.last_update_label)
             
-            layout.addWidget(summary_frame)
+            layout.addWidget(self.summary_frame)
+            
+            # تطبيق حالة الرؤية
+            self.summary_frame.setVisible(self.statistics_visible)
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الطلاب: {e}")
@@ -792,9 +808,8 @@ class StudentsPage(QWidget):
             self.payment_combo.setCurrentIndex(0) # "الجميع"
             self.search_input.clear()
             
-            # إعادة تعيين حجم الخط إلى الافتراضي
-            self.current_font_size = "صغير"
-            self.font_size_combo.setCurrentText("صغير")
+            # الحفاظ على حجم الخط الحالي (لا نعيد تعيينه)
+            self.font_size_combo.setCurrentText(self.current_font_size)
             
             self.apply_filters()
             log_user_action("مسح فلاتر صفحة الطلاب")
@@ -1047,13 +1062,29 @@ class StudentsPage(QWidget):
         """تغيير حجم الخط في الصفحة"""
         try:
             selected_size = self.font_size_combo.currentText()
+            print(f"DEBUG: تغيير حجم الخط من {self.current_font_size} إلى {selected_size}")
+
             if selected_size != self.current_font_size:
                 self.current_font_size = selected_size
+
+                # إعادة إعداد التنسيقات
                 self.setup_styles()
+
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("students", selected_size)
+                print(f"DEBUG: حفظ حجم الخط: {'نجح' if success else 'فشل'}")
+
                 log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
-                
+
+                # إجبار إعادة رسم الصفحة
+                self.update()
+
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+
         except Exception as e:
             logging.error(f"خطأ في تغيير حجم الخط: {e}")
+            print(f"DEBUG: خطأ في تغيير حجم الخط: {e}")
     
     def get_font_sizes(self):
         """الحصول على أحجام الخطوط حسب الخيار المختار"""
@@ -1083,12 +1114,27 @@ class StudentsPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
+            print(f"DEBUG: إعداد التنسيقات لحجم الخط: {self.current_font_size}")
+
             # استخدام FontSizeManager لإنشاء CSS
             style = FontSizeManager.generate_css_styles(self.current_font_size)
+            print(f"DEBUG: طول CSS المولد: {len(style)}")
+
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
+
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'students_table'):
+                self.students_table.update()
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.update()
+
+            print("DEBUG: تم تطبيق التنسيقات بنجاح")
 
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
+            print(f"DEBUG: خطأ في إعداد الستايل: {e}")
     
     def add_student(self):
         """إضافة طالب جديد"""
@@ -1231,9 +1277,53 @@ class StudentsPage(QWidget):
             logging.error(f"خطأ في الحصول على النافذة الرئيسية: {e}")
             return None
     
-    def show_add_students_menu(self):
-        """عرض قائمة خيارات إضافة الطلاب"""
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
         try:
-            self.add_students_menu.exec_(self.add_students_button.mapToGlobal(self.add_students_button.rect().bottomLeft()))
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+                print(f"DEBUG: تم تحديث القائمة المنسدلة إلى: {self.current_font_size}")
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+            print(f"DEBUG: خطأ في تحديث القائمة المنسدلة: {e}")
+    
+    def toggle_statistics_visibility(self):
+        """تبديل رؤية نافذة الإحصائيات"""
+        try:
+            # تبديل حالة الرؤية
+            self.statistics_visible = not self.statistics_visible
+            
+            # تطبيق التغيير على الواجهة
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.setVisible(self.statistics_visible)
+            
+            # تحديث نص الزر
+            if hasattr(self, 'toggle_stats_button'):
+                if self.statistics_visible:
+                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                else:
+                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+            
+            # حفظ الإعداد الجديد
+            success = ui_settings_manager.set_statistics_visible("students", self.statistics_visible)
+            print(f"DEBUG: حفظ حالة رؤية الإحصائيات: {'نجح' if success else 'فشل'}")
+            
+            log_user_action(f"تبديل رؤية الإحصائيات إلى: {'مرئي' if self.statistics_visible else 'مخفي'}")
+            
+        except Exception as e:
+            logging.error(f"خطأ في تبديل رؤية الإحصائيات: {e}")
+            print(f"DEBUG: خطأ في تبديل رؤية الإحصائيات: {e}")
+    
+    def show_add_students_menu(self):
+        """عرض قائمة إضافة الطلاب"""
+        try:
+            # عرض القائمة المنسدلة للزر
+            if hasattr(self, 'add_students_menu'):
+                self.add_students_menu.exec_(self.add_students_button.mapToGlobal(
+                    self.add_students_button.rect().bottomLeft()))
+            
         except Exception as e:
             logging.error(f"خطأ في عرض قائمة إضافة الطلاب: {e}")
+            print(f"DEBUG: خطأ في عرض قائمة إضافة الطلاب: {e}")
