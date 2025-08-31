@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit,
     QPushButton, QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit, QMessageBox,
-    QGroupBox, QScrollArea, QWidget
+    QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -45,8 +45,6 @@ class EditTeacherDialog(QDialog):
             QPushButton:pressed { background:#2d6399; }
             QPushButton#cancel_btn { background:#c0392b; }
             QPushButton#cancel_btn:hover { background:#d35445; }
-            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
-            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
             QScrollArea { border:none; }
         """)
 
@@ -63,32 +61,41 @@ class EditTeacherDialog(QDialog):
         title.setStyleSheet("background:#357abd; color:#fff; padding:10px; border-radius:6px; font-weight:700;")
         content_layout.addWidget(title)
 
-        # Basic info group
-        basic_group = QGroupBox("المعلومات الأساسية")
-        basic_form = QFormLayout(basic_group); basic_form.setSpacing(8); basic_form.setLabelAlignment(Qt.AlignRight)
+        # Basic info
+        basic_label = QLabel("المعلومات الأساسية")
+        basic_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(basic_label)
+
+        basic_form = QFormLayout(); basic_form.setSpacing(8); basic_form.setLabelAlignment(Qt.AlignRight)
         self.name_input = QLineEdit(); self.name_input.setPlaceholderText("أدخل اسم المعلم")
         basic_form.addRow("الاسم *:", self.name_input)
         self.school_combo = QComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
         basic_form.addRow("المدرسة *:", self.school_combo)
-        content_layout.addWidget(basic_group)
+        content_layout.addLayout(basic_form)
 
-        # Teaching info group
-        teach_group = QGroupBox("معلومات التدريس")
-        teach_form = QFormLayout(teach_group); teach_form.setSpacing(8); teach_form.setLabelAlignment(Qt.AlignRight)
+        # Teaching info
+        teach_label = QLabel("معلومات التدريس")
+        teach_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(teach_label)
+
+        teach_form = QFormLayout(); teach_form.setSpacing(8); teach_form.setLabelAlignment(Qt.AlignRight)
         self.class_hours_input = QSpinBox(); self.class_hours_input.setRange(0, 50); self.class_hours_input.setSuffix(" حصة")
         teach_form.addRow("عدد الحصص:", self.class_hours_input)
         self.salary_input = QDoubleSpinBox(); self.salary_input.setRange(0, 999999); self.salary_input.setDecimals(2); self.salary_input.setSuffix(" د.ع")
         teach_form.addRow("الراتب الشهري *:", self.salary_input)
-        content_layout.addWidget(teach_group)
+        content_layout.addLayout(teach_form)
 
         # Contact & notes
-        contact_group = QGroupBox("الاتصال والملاحظات")
-        contact_form = QFormLayout(contact_group); contact_form.setSpacing(8); contact_form.setLabelAlignment(Qt.AlignRight)
+        contact_label = QLabel("الاتصال والملاحظات")
+        contact_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(contact_label)
+
+        contact_form = QFormLayout(); contact_form.setSpacing(8); contact_form.setLabelAlignment(Qt.AlignRight)
         self.phone_input = QLineEdit(); self.phone_input.setPlaceholderText("05xxxxxxxx")
         contact_form.addRow("رقم الهاتف:", self.phone_input)
         self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("ملاحظات إضافية..."); self.notes_input.setMaximumHeight(90)
         contact_form.addRow("ملاحظات:", self.notes_input)
-        content_layout.addWidget(contact_group)
+        content_layout.addLayout(contact_form)
 
         # Buttons
         btns = QHBoxLayout(); btns.addStretch()
@@ -120,11 +127,6 @@ class EditTeacherDialog(QDialog):
             point_size = max(10, int(base * (0.9 + scale * 0.6)))
             f = self.font(); f.setPointSize(point_size); self.setFont(f)
             if sw <= 1366:
-                for grp in self.findChildren(QGroupBox):
-                    lay = grp.layout()
-                    if lay:
-                        lay.setHorizontalSpacing(6)
-                        lay.setVerticalSpacing(6)
                 for btn in self.findChildren(QPushButton):
                     btn.setMinimumHeight(32)
         except Exception as e:
