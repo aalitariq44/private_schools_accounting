@@ -613,7 +613,7 @@ class TestDataGenerator:
                     query = """
                         INSERT INTO salaries (staff_type, staff_id, base_salary, paid_amount,
                                             from_date, to_date, days_count, payment_date, payment_time, notes, school_id)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """
                     
                     salary_id = self.db_manager.execute_insert(
