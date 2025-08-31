@@ -8,8 +8,8 @@
     "statistics_window_visible": true
   },
   "teachers_page": {
-    "font_size": "صغير",
-    "statistics_window_visible": true
+    "font_size": "متوسط",
+    "statistics_window_visible": false
   },
   "employees_page": {
     "font_size": "متوسط",

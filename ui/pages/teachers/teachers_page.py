@@ -159,6 +159,24 @@ class TeachersPage(QWidget):
             self.school_combo.setMinimumWidth(200)
             filters_layout.addWidget(self.school_combo)
             
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            filters_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            filters_layout.addWidget(self.font_size_combo)
+            
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            filters_layout.addWidget(self.toggle_stats_button)
+            
             filters_layout.addStretch()
             
             toolbar_layout.addLayout(filters_layout)
@@ -174,24 +192,6 @@ class TeachersPage(QWidget):
             self.search_input.setPlaceholderText("ابحث في أسماء المعلمين...")
             self.search_input.setMinimumWidth(300)
             actions_layout.addWidget(self.search_input)
-            
-            # فلتر حجم الخط
-            font_size_label = QLabel("حجم الخط:")
-            font_size_label.setObjectName("filterLabel")
-            actions_layout.addWidget(font_size_label)
-            
-            self.font_size_combo = QComboBox()
-            self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
-            self.font_size_combo.setCurrentText(self.current_font_size)
-            self.font_size_combo.setMinimumWidth(100)
-            actions_layout.addWidget(self.font_size_combo)
-            
-            # زر تبديل رؤية الإحصائيات
-            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
-            self.toggle_stats_button.setObjectName("secondaryButton")
-            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
-            actions_layout.addWidget(self.toggle_stats_button)
             
             actions_layout.addStretch()
             
