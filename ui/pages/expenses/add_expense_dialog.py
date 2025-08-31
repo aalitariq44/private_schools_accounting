@@ -9,7 +9,7 @@ from datetime import datetime, date
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QTextEdit, QComboBox, QDateEdit, QDoubleSpinBox,
-    QPushButton, QLabel, QMessageBox, QGroupBox, QFrame,
+    QPushButton, QLabel, QMessageBox, QFrame,
     QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt, QDate
@@ -91,8 +91,11 @@ class AddExpenseDialog(QDialog):
     
     def create_basic_info_section(self, layout):
         try:
-            grp = QGroupBox("المعلومات الأساسية")
-            form = QFormLayout(grp)
+            basic_label = QLabel("المعلومات الأساسية")
+            basic_label.setStyleSheet("font-weight:600; margin:4px 0;")
+            layout.addWidget(basic_label)
+
+            form = QFormLayout()
             form.setSpacing(8)
             form.setLabelAlignment(Qt.AlignRight)
 
@@ -113,22 +116,25 @@ class AddExpenseDialog(QDialog):
             ])
             form.addRow("الفئة *:", self.category_combo)
 
-            layout.addWidget(grp)
+            layout.addLayout(form)
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم المعلومات الأساسية: {e}")
     
     
     def create_additional_details_section(self, layout):
         try:
-            grp = QGroupBox("تفاصيل إضافية")
-            form = QFormLayout(grp)
+            details_label = QLabel("تفاصيل إضافية")
+            details_label.setStyleSheet("font-weight:600; margin:4px 0;")
+            layout.addWidget(details_label)
+
+            form = QFormLayout()
             form.setSpacing(8)
             form.setLabelAlignment(Qt.AlignRight)
 
             self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("ملاحظات إضافية..."); self.notes_input.setMaximumHeight(100)
             form.addRow("الملاحظات:", self.notes_input)
 
-            layout.addWidget(grp)
+            layout.addLayout(form)
         except Exception as e:
             logging.error(f"خطأ في إنشاء قسم التفاصيل الإضافية: {e}")
     
@@ -259,11 +265,6 @@ class AddExpenseDialog(QDialog):
             f = self.font(); f.setPointSize(point_size); self.setFont(f)
 
             if sw <= 1366:
-                for grp in self.findChildren(QGroupBox):
-                    lay = grp.layout()
-                    if lay:
-                        lay.setHorizontalSpacing(6)
-                        lay.setVerticalSpacing(6)
                 for btn in self.findChildren(QPushButton):
                     btn.setMinimumHeight(32)
         except Exception as e:
