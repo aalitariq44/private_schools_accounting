@@ -188,12 +188,6 @@ class AdditionalFeesPage(QWidget):
             self.font_size_combo.setCurrentText(self.current_font_size)
             filters_layout.addWidget(self.font_size_combo)
             
-            # زر تبديل رؤية الإحصائيات
-            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
-            self.toggle_stats_button.setObjectName("secondaryButton")
-            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
-            filters_layout.addWidget(self.toggle_stats_button)
-            
             filters_layout.addStretch()
             
             toolbar_layout.addLayout(filters_layout)
@@ -219,6 +213,12 @@ class AdditionalFeesPage(QWidget):
             self.export_fees_button = QPushButton("تصدير التقرير")
             self.export_fees_button.setObjectName("secondaryButton")
             actions_layout.addWidget(self.export_fees_button)
+            
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            actions_layout.addWidget(self.toggle_stats_button)
             
             self.refresh_button = QPushButton("تحديث")
             self.refresh_button.setObjectName("secondaryButton")
@@ -402,13 +402,6 @@ class AdditionalFeesPage(QWidget):
             
             # إخفاء الإحصائيات إذا كان الإعداد مخفياً
             summary_frame.setVisible(self.statistics_visible)
-            
-            # تحديث نص زر الإحصائيات
-            if hasattr(self, 'toggle_stats_button'):
-                if self.statistics_visible:
-                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
-                else:
-                    self.toggle_stats_button.setText("إظهار الإحصائيات")
             
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص الرسوم: {e}")
