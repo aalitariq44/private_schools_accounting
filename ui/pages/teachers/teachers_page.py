@@ -18,6 +18,10 @@ import config
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action, log_database_operation
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager
+from ...ui_settings_manager import ui_settings_manager
+
 # استيراد نوافذ إدارة المعلمين
 from .add_teacher_dialog import AddTeacherDialog
 from .edit_teacher_dialog import EditTeacherDialog
@@ -34,6 +38,12 @@ class TeachersPage(QWidget):
         super().__init__()
         self.current_teachers = []
         self.selected_school_id = None
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI
+        self.current_font_size = ui_settings_manager.get_font_size("teachers")
+        
+        # الحصول على حالة رؤية نافذة الإحصائيات
+        self.statistics_visible = ui_settings_manager.get_statistics_visible("teachers")
         
         self.setup_cairo_font()
         self.setup_ui()
@@ -79,6 +89,9 @@ class TeachersPage(QWidget):
             self.create_summary(layout)
             
             self.setLayout(layout)
+            
+            # تحديث القائمة المنسدلة لحجم الخط
+            self.update_font_size_combo()
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة المعلمين: {e}")
@@ -162,6 +175,24 @@ class TeachersPage(QWidget):
             self.search_input.setMinimumWidth(300)
             actions_layout.addWidget(self.search_input)
             
+            # فلتر حجم الخط
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            actions_layout.addWidget(font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            actions_layout.addWidget(self.font_size_combo)
+            
+            # زر تبديل رؤية الإحصائيات
+            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
+            self.toggle_stats_button.setObjectName("secondaryButton")
+            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
+            actions_layout.addWidget(self.toggle_stats_button)
+            
             actions_layout.addStretch()
             
             self.add_teacher_button = QPushButton("إضافة معلم")
@@ -192,6 +223,7 @@ class TeachersPage(QWidget):
         try:
             summary_frame = QFrame()
             summary_frame.setObjectName("summaryFrame")
+            self.summary_frame = summary_frame  # إضافة هذا السطر لتعيين الخاصية
             
             summary_layout = QHBoxLayout(summary_frame)
             summary_layout.setContentsMargins(15, 10, 15, 10)
@@ -234,6 +266,9 @@ class TeachersPage(QWidget):
             
             layout.addWidget(summary_frame)
             
+            # تطبيق حالة الرؤية
+            self.summary_frame.setVisible(self.statistics_visible)
+            
         except Exception as e:
             logging.error(f"خطأ في إنشاء ملخص المعلمين: {e}")
             raise
@@ -241,98 +276,27 @@ class TeachersPage(QWidget):
     def setup_styles(self):
         """إعداد تنسيقات الصفحة"""
         try:
-            cairo_font = f"'{self.cairo_family}', 'Cairo', 'Segoe UI', Tahoma, Arial"
-            
-            style = """
-                QWidget {{
-                    background-color: #F5F6F7;
-                    font-family: {font_family};
-                    font-size: 13px;
-                }}
-                #toolbarFrame, #summaryFrame {{
-                    background-color: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                }}
-                #toolbarFrame {{ margin-bottom: 8px; }}
-                #filterLabel {{
-                    font-weight: 600;
-                    color: #333;
-                    margin-right: 4px;
-                    font-size: 12px;
-                }}
-                #filterCombo, #searchInput {{
-                    padding: 4px 8px;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    font-size: 12px;
-                    background-color: #FFFFFF;
-                }}
-                QPushButton {{
-                    background: #FFFFFF;
-                    border: 1px solid #C5CBD0;
-                    border-radius: 4px;
-                    padding: 6px 12px;
-                    font-size: 12px;
-                }}
-                QPushButton:hover {{ background: #E9EEF2; }}
-                #primaryButton {{
-                    background: #2F6ED1;
-                    color: #FFFFFF;
-                    border: 1px solid #2F6ED1;
-                }}
-                #primaryButton:hover {{ background: #2559A8; }}
-                #secondaryButton {{ color: #2F6ED1; font-weight: 600; }}
-                #secondaryButton:hover {{ background: #E0ECFF; }}
-                QTableWidget {{
-                    background: #FFFFFF;
-                    border: 1px solid #DDE1E4;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    gridline-color: #E3E6E8;
-                }}
-                QTableWidget::item {{
-                    padding: 2px 4px;
-                    border-bottom: 1px solid #EDF0F2;
-                }}
-                QTableWidget::item:selected {{
-                    background: #2F6ED1;
-                    color: #FFFFFF;
-                }}
-                QHeaderView::section {{
-                    background: #F0F2F4;
-                    color: #222;
-                    padding: 4px 6px;
-                    border: 0px;
-                    border-right: 1px solid #D4D8DB;
-                    font-size: 12px;
-                    font-weight: 600;
-                }}
-                #summaryTitle {{
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #222;
-                    margin: 0 0 4px 0;
-                }}
-                #summaryLabel {{
-                    font-size: 11px;
-                    color: #555;
-                }}
-                #summaryValue {{
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #2F6ED1;
-                }}
-                #statLabel {{
-                    font-size: 11px;
-                    color: #666;
-                }}
-            """.format(font_family=cairo_font)
-            
+            print(f"DEBUG: إعداد التنسيقات لحجم الخط: {self.current_font_size}")
+
+            # استخدام FontSizeManager لإنشاء CSS
+            style = FontSizeManager.generate_css_styles(self.current_font_size)
+            print(f"DEBUG: طول CSS المولد: {len(style)}")
+
+            # تطبيق التنسيقات على الصفحة
             self.setStyleSheet(style)
-            
+
+            # إجبار إعادة رسم جميع المكونات
+            self.update()
+            if hasattr(self, 'teachers_table'):
+                self.teachers_table.update()
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.update()
+
+            print("DEBUG: تم تطبيق التنسيقات بنجاح")
+
         except Exception as e:
             logging.error(f"خطأ في إعداد الستايل: {e}")
+            print(f"DEBUG: خطأ في إعداد الستايل: {e}")
 
     def setup_connections(self):
         """ربط الإشارات والأحداث"""
@@ -344,6 +308,11 @@ class TeachersPage(QWidget):
             
             self.school_combo.currentTextChanged.connect(self.apply_filters)
             self.search_input.textChanged.connect(self.apply_filters)
+            
+            # ربط تغيير حجم الخط
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            
+            # ربط زر تبديل الإحصائيات (تم الربط مسبقاً في create_toolbar)
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -469,6 +438,73 @@ class TeachersPage(QWidget):
             log_user_action("مسح فلاتر صفحة المعلمين")
         except Exception as e:
             logging.error(f"خطأ في مسح الفلاتر: {e}")
+    
+    def change_font_size(self):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            selected_size = self.font_size_combo.currentText()
+            print(f"DEBUG: تغيير حجم الخط من {self.current_font_size} إلى {selected_size}")
+
+            if selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+
+                # حفظ حجم الخط الجديد في إعدادات UI
+                success = ui_settings_manager.set_font_size("teachers", selected_size)
+                print(f"DEBUG: حفظ حجم الخط: {'نجح' if success else 'فشل'}")
+
+                log_user_action(f"تغيير حجم الخط إلى: {selected_size}")
+
+                # إجبار إعادة رسم الصفحة
+                self.update()
+
+                # تحديث القائمة المنسدلة
+                self.update_font_size_combo()
+
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+            print(f"DEBUG: خطأ في تغيير حجم الخط: {e}")
+    
+    def update_font_size_combo(self):
+        """تحديث القائمة المنسدلة لحجم الخط"""
+        try:
+            if hasattr(self, 'font_size_combo'):
+                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
+                self.font_size_combo.setCurrentText(self.current_font_size)
+                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
+                print(f"DEBUG: تم تحديث القائمة المنسدلة إلى: {self.current_font_size}")
+        except Exception as e:
+            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
+            print(f"DEBUG: خطأ في تحديث القائمة المنسدلة: {e}")
+    
+    def toggle_statistics_visibility(self):
+        """تبديل رؤية نافذة الإحصائيات"""
+        try:
+            # تبديل حالة الرؤية
+            self.statistics_visible = not self.statistics_visible
+            
+            # تطبيق التغيير على الواجهة
+            if hasattr(self, 'summary_frame'):
+                self.summary_frame.setVisible(self.statistics_visible)
+            
+            # تحديث نص الزر
+            if hasattr(self, 'toggle_stats_button'):
+                if self.statistics_visible:
+                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                else:
+                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+            
+            # حفظ الإعداد الجديد
+            success = ui_settings_manager.set_statistics_visible("teachers", self.statistics_visible)
+            print(f"DEBUG: حفظ حالة رؤية الإحصائيات: {'نجح' if success else 'فشل'}")
+            
+            log_user_action(f"تبديل رؤية الإحصائيات إلى: {'مرئي' if self.statistics_visible else 'مخفي'}")
+            
+        except Exception as e:
+            logging.error(f"خطأ في تبديل رؤية الإحصائيات: {e}")
+            print(f"DEBUG: خطأ في تبديل رؤية الإحصائيات: {e}")
 
     def add_teacher(self):
         """إضافة معلم جديد"""
