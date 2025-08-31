@@ -28,7 +28,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #backToolbar {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #3498DB, stop:1 #2980B9);
-            border-radius: 12px;
+            border-radius: 0px;
             color: white;
             margin-bottom: 15px;
             padding: 5px;
@@ -39,7 +39,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             border: 2px solid #2471A3;
             color: white;
             padding: 10px 16px;
-            border-radius: 8px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -63,7 +63,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             border: 2px solid #2471A3;
             color: white;
             padding: 10px 16px;
-            border-radius: 8px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -87,7 +87,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #filterCombo {{
             padding: 4px 6px;
             border: 1px solid #C3C7CA;
-            border-radius: 3px;
+            border-radius: 0px;
             background: #FFFFFF;
             min-width: 85px;
             font-size: {font_sizes['filter_combo']}px;
@@ -98,7 +98,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #studentInfoFrame {{
             background-color: white;
             border: 2px solid #E0E0E0;
-            border-radius: 15px;
+            border-radius: 0px;
             margin: 8px 5px;
             padding: 5px;
         }}
@@ -125,7 +125,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: #34495E;
             background-color: #F8F9FA;
             padding: 6px 10px;
-            border-radius: 6px;
+            border-radius: 0px;
             border: 1px solid #E0E0E0;
             font-family: {cairo_font};
         }}
@@ -135,7 +135,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 #ECF0F1, stop:1 #D5DBDB);
             border: 2px solid #BDC3C7;
-            border-radius: 10px;
+            border-radius: 0px;
             margin-top: 20px;
             padding: 5px;
         }}
@@ -146,7 +146,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: #2C3E50;
             background-color: rgba(52, 152, 219, 0.15);
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 0px;
             border: 2px solid rgba(52, 152, 219, 0.3);
             font-family: {cairo_font};
         }}
@@ -157,7 +157,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: #27AE60;
             background-color: rgba(39, 174, 96, 0.15);
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 0px;
             border: 2px solid rgba(39, 174, 96, 0.3);
             font-family: {cairo_font};
         }}
@@ -167,7 +167,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             font-weight: bold;
             background-color: rgba(231, 76, 60, 0.15);
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 0px;
             border: 2px solid rgba(231, 76, 60, 0.3);
             font-family: {cairo_font};
         }}
@@ -178,7 +178,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: #8E44AD;
             background-color: rgba(142, 68, 173, 0.15);
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 0px;
             border: 2px solid rgba(142, 68, 173, 0.3);
             font-family: {cairo_font};
         }}
@@ -187,7 +187,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #installmentsFrame {{
             background-color: white;
             border: 2px solid #E0E0E0;
-            border-radius: 15px;
+            border-radius: 0px;
             margin: 8px 5px;
             padding: 5px;
         }}
@@ -196,7 +196,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #installmentsTable, #feesTable {{
             background-color: white;
             border: 2px solid #E0E0E0;
-            border-radius: 12px;
+            border-radius: 0px;
             gridline-color: #F0F0F0;
             font-size: {font_sizes['table']}px;
             font-family: {cairo_font};
@@ -232,7 +232,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 10px 16px;
-            border-radius: 8px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -249,7 +249,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -266,7 +266,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 6px 12px;
-            border-radius: 6px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -281,7 +281,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #headerFrame {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                 stop:0 #3498DB, stop:1 #2980B9);
-            border-radius: 12px;
+            border-radius: 0px;
             color: white;
             margin-bottom: 15px;
         }}
@@ -302,14 +302,14 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #feesSummaryFrame {{
             background-color: #F8F9FA;
             border: 2px solid #BDC3C7;
-            border-radius: 10px;
+            border-radius: 0px;
             margin: 15px 0px;
         }}
 
         #feesFrame {{
             background-color: white;
             border: 2px solid #E0E0E0;
-            border-radius: 15px;
+            border-radius: 0px;
             margin: 8px 0px;
         }}
 
@@ -317,7 +317,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             font-size: {font_sizes['base']}px;
             font-weight: bold;
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 0px;
             font-family: {cairo_font};
         }}
 
@@ -351,7 +351,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 4px 8px;
-            border-radius: 4px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -363,7 +363,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 10px 16px;
-            border-radius: 8px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -373,7 +373,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #notesFrame {{
             background-color: white;
             border: 2px solid #E0E0E0;
-            border-radius: 15px;
+            border-radius: 0px;
             margin: 8px 5px;
             padding: 5px;
         }}
@@ -381,7 +381,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
         #notesText {{
             background-color: #F8F9FA;
             border: 2px solid #E0E0E0;
-            border-radius: 8px;
+            border-radius: 0px;
             padding: 10px;
             font-family: {cairo_font};
             font-size: {font_sizes['base']}px;
@@ -400,7 +400,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -417,7 +417,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
@@ -434,7 +434,7 @@ def get_student_details_styles(cairo_family="Arial", font_size_name="متوسط"
             color: white;
             border: none;
             padding: 8px 14px;
-            border-radius: 6px;
+            border-radius: 0px;
             font-weight: bold;
             font-size: {font_sizes['buttons']}px;
             font-family: {cairo_font};
