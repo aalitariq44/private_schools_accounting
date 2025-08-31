@@ -6,6 +6,7 @@
 
 import logging
 import sys
+import os
 from datetime import datetime
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
@@ -20,6 +21,7 @@ import config
 from core.auth.login_manager import auth_manager
 from core.utils.logger import log_user_action
 from core.backup.backup_manager import backup_manager
+from core.backup.local_backup_manager import local_backup_manager
 from core.utils.responsive_design import responsive
 
 
@@ -1224,45 +1226,92 @@ class MainWindow(QMainWindow):
             logging.error(f"خطأ في العودة لصفحة الطلاب: {e}")
     
     def create_quick_backup(self):
-        """إنشاء نسخة احتياطية سريعة"""
+        """إنشاء نسخة احتياطية سريعة (على السيرفر والمحلي)"""
         try:
             # عرض حوار التقدم
             progress = QProgressDialog(
-                "جاري إنشاء النسخة الاحتياطية...",
+                "جاري إنشاء النسخ الاحتياطية...",
                 None, 0, 0, self
             )
             progress.setWindowTitle("نسخ احتياطي سريع")
             progress.setModal(True)
             progress.show()
             
-            # إنشاء وصف للنسخة الاحتياطية
-            description = f"نسخة احتياطية سريعة - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            # إنشاء وصف للنسخ الاحتياطية
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+            description = f"نسخة احتياطية سريعة - {timestamp}"
             
-            # إنشاء النسخة الاحتياطية
-            success, message = backup_manager.create_backup(description)
-
+            # إنشاء النسخة الاحتياطية على السيرفر
+            progress.setLabelText("جاري إنشاء النسخة الاحتياطية على السيرفر...")
+            QApplication.processEvents()
+            
+            server_success, server_message = backup_manager.create_backup(description)
+            
+            # إنشاء النسخة الاحتياطية المحلية
+            progress.setLabelText("جاري إنشاء النسخة الاحتياطية المحلية...")
+            QApplication.processEvents()
+            
+            # الحصول على مسار النسخ الاحتياطي المحلي من قاعدة البيانات
+            from core.database.connection import db_manager
+            query = "SELECT setting_value FROM app_settings WHERE setting_key = ?"
+            result = db_manager.execute_fetch_one(query, ("local_backup_path",))
+            
+            local_success = False
+            local_message = ""
+            
+            if result:
+                backup_path = result[0]
+                if os.path.exists(backup_path):
+                    local_success, local_message = local_backup_manager.create_local_backup(backup_path, description)
+                else:
+                    local_message = "مسار النسخ الاحتياطي المحلي غير موجود"
+            else:
+                local_message = "لم يتم تحديد مسار النسخ الاحتياطي المحلي في الإعدادات"
+            
             # إغلاق حوار التقدم
             progress.close()
-
-            if success:
-                # عرض رسالة النجاح المبسطة دون التكرار
+            
+            # تحديد النتيجة النهائية
+            if server_success and local_success:
                 QMessageBox.information(
                     self, "نجح النسخ الاحتياطي",
-                    message
+                    "✅ تم إنشاء النسخ الاحتياطية بنجاح:\n\n"
+                    f"• السيرفر: {server_message}\n"
+                    f"• المحلي: {local_message}"
                 )
-                # تسجيل الإجراء مع وصف النسخ الاحتياطي السريع
-                log_user_action("backup quick", description)
+                log_user_action("backup quick dual", f"{description} - سيرفر ومحلي")
+            elif server_success:
+                QMessageBox.warning(
+                    self, "نسخ احتياطي جزئي",
+                    "⚠️ تم إنشاء النسخة الاحتياطية على السيرفر بنجاح\n"
+                    f"• السيرفر: {server_message}\n\n"
+                    f"❌ فشل في النسخة المحلية: {local_message}"
+                )
+                log_user_action("backup quick partial", f"{description} - سيرفر فقط")
+            elif local_success:
+                QMessageBox.warning(
+                    self, "نسخ احتياطي جزئي",
+                    "⚠️ تم إنشاء النسخة الاحتياطية المحلية بنجاح\n"
+                    f"• المحلي: {local_message}\n\n"
+                    f"❌ فشل في النسخة على السيرفر: {server_message}"
+                )
+                log_user_action("backup quick partial", f"{description} - محلي فقط")
             else:
-                # تحقق من تعطيل النظام
-                if "disabled" in message.lower():
+                # كلا النسختين فشلتا
+                if "disabled" in server_message.lower():
                     QMessageBox.critical(
                         self, "خطأ في النسخ الاحتياطي",
-                        "نظام النسخ الاحتياطي معطل. يرجى التحقق من صحة API Key واسم البوكت في ملف الإعدادات (config.py)."
+                        "❌ فشل في إنشاء النسخ الاحتياطية:\n\n"
+                        f"• السيرفر: نظام النسخ الاحتياطي معطل\n"
+                        f"• المحلي: {local_message}\n\n"
+                        "يرجى التحقق من إعدادات النسخ الاحتياطي"
                     )
                 else:
                     QMessageBox.critical(
                         self, "خطأ في النسخ الاحتياطي",
-                        f"فشل في إنشاء النسخة الاحتياطية:\n\n{message}"
+                        f"❌ فشل في إنشاء النسخ الاحتياطية:\n\n"
+                        f"• السيرفر: {server_message}\n"
+                        f"• المحلي: {local_message}"
                     )
                 
         except Exception as e:
@@ -1273,11 +1322,11 @@ class MainWindow(QMainWindow):
             )
 
     def create_auto_backup_on_exit(self):
-        """إنشاء نسخة احتياطية تلقائية عند الخروج"""
+        """إنشاء نسخة احتياطية تلقائية عند الخروج (على السيرفر والمحلي)"""
         try:
             # عرض حوار التقدم بتصميم مخصص للخروج
             progress = QProgressDialog(
-                "🔄 جاري إنشاء نسخة احتياطية تلقائية قبل الإغلاق...\nيرجى الانتظار قليلاً...",
+                "🔄 جاري إنشاء النسخ الاحتياطية التلقائية قبل الإغلاق...\nيرجى الانتظار قليلاً...",
                 None, 0, 0, self
             )
             progress.setWindowTitle("نسخ احتياطي تلقائي")
@@ -1288,11 +1337,36 @@ class MainWindow(QMainWindow):
             # معالجة الأحداث لضمان عرض شريط التقدم
             QApplication.processEvents()
             
-            # إنشاء وصف للنسخة الاحتياطية التلقائية
-            description = f"نسخة احتياطية تلقائية عند الخروج - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            # إنشاء وصف للنسخ الاحتياطية التلقائية
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            description = f"نسخة احتياطية تلقائية عند الخروج - {timestamp}"
             
-            # إنشاء النسخة الاحتياطية
-            success, message = backup_manager.create_backup(description)
+            # إنشاء النسخة الاحتياطية على السيرفر
+            progress.setLabelText("جاري إنشاء النسخة الاحتياطية على السيرفر...")
+            QApplication.processEvents()
+            
+            server_success, server_message = backup_manager.create_backup(description)
+            
+            # إنشاء النسخة الاحتياطية المحلية
+            progress.setLabelText("جاري إنشاء النسخة الاحتياطية المحلية...")
+            QApplication.processEvents()
+            
+            # الحصول على مسار النسخ الاحتياطي المحلي من قاعدة البيانات
+            from core.database.connection import db_manager
+            query = "SELECT setting_value FROM app_settings WHERE setting_key = ?"
+            result = db_manager.execute_fetch_one(query, ("local_backup_path",))
+            
+            local_success = False
+            local_message = ""
+            
+            if result:
+                backup_path = result[0]
+                if os.path.exists(backup_path):
+                    local_success, local_message = local_backup_manager.create_local_backup(backup_path, description)
+                else:
+                    local_message = "مسار النسخ الاحتياطي المحلي غير موجود"
+            else:
+                local_message = "لم يتم تحديد مسار النسخ الاحتياطي المحلي في الإعدادات"
             
             # تأخير قصير لضمان إكمال العملية
             QTimer.singleShot(500, lambda: None)
@@ -1301,12 +1375,13 @@ class MainWindow(QMainWindow):
             # إغلاق حوار التقدم
             progress.close()
             
-            if success:
+            # تحديد النتيجة النهائية
+            if server_success and local_success:
                 # عرض إشعار النجاح إذا كان مفعلاً في الإعدادات
                 if config.AUTO_BACKUP_SHOW_SUCCESS_MESSAGE:
                     success_msg = QMessageBox(self)
                     success_msg.setWindowTitle("نجح النسخ الاحتياطي")
-                    success_msg.setText("✅ تم إنشاء النسخة الاحتياطية التلقائية بنجاح")
+                    success_msg.setText("✅ تم إنشاء النسخ الاحتياطية التلقائية بنجاح")
                     success_msg.setIcon(QMessageBox.Information)
                     success_msg.setStandardButtons(QMessageBox.Ok)
                     success_msg.setDefaultButton(QMessageBox.Ok)
@@ -1316,11 +1391,31 @@ class MainWindow(QMainWindow):
                     success_msg.exec_()
                 
                 # تسجيل الإجراء
-                log_user_action("backup auto-exit", description)
+                log_user_action("backup auto-exit dual", description)
+                
+            elif server_success:
+                # النسخة على السيرفر نجحت، المحلية فشلت
+                if config.AUTO_BACKUP_SHOW_SUCCESS_MESSAGE:
+                    QMessageBox.warning(
+                        self, "نسخ احتياطي تلقائي جزئي",
+                        "⚠️ تم إنشاء النسخة الاحتياطية على السيرفر بنجاح\n"
+                        f"❌ فشل في النسخة المحلية: {local_message}"
+                    )
+                log_user_action("backup auto-exit partial", f"{description} - سيرفر فقط")
+                
+            elif local_success:
+                # النسخة المحلية نجحت، على السيرفر فشلت
+                if config.AUTO_BACKUP_SHOW_SUCCESS_MESSAGE:
+                    QMessageBox.warning(
+                        self, "نسخ احتياطي تلقائي جزئي",
+                        "⚠️ تم إنشاء النسخة الاحتياطية المحلية بنجاح\n"
+                        f"❌ فشل في النسخة على السيرفر: {server_message}"
+                    )
+                log_user_action("backup auto-exit partial", f"{description} - محلي فقط")
                 
             else:
-                # في حالة فشل النسخ الاحتياطي، اسأل المستخدم
-                if "disabled" in message.lower():
+                # كلا النسختين فشلتا
+                if "disabled" in server_message.lower():
                     # النظام معطل - لا نوقف الإغلاق
                     logging.warning("نظام النسخ الاحتياطي معطل، سيتم إغلاق التطبيق بدون نسخة احتياطية")
                 else:
@@ -1328,7 +1423,9 @@ class MainWindow(QMainWindow):
                     reply = QMessageBox.question(
                         self,
                         "فشل في النسخ الاحتياطي التلقائي", 
-                        f"❌ فشل في إنشاء النسخة الاحتياطية التلقائية:\n\n{message}\n\n"
+                        f"❌ فشل في إنشاء النسخ الاحتياطية التلقائية:\n\n"
+                        f"• السيرفر: {server_message}\n"
+                        f"• المحلي: {local_message}\n\n"
                         "هل تريد المتابعة والخروج من التطبيق بدون نسخة احتياطية؟",
                         QMessageBox.Yes | QMessageBox.No,
                         QMessageBox.No
