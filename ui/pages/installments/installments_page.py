@@ -86,9 +86,6 @@ class InstallmentsPage(QWidget):
             layout.setContentsMargins(8, 8, 8, 8)
             layout.setSpacing(8)
             
-            # العنوان الرئيسي
-            self.create_page_header(layout)
-            
             # شريط الأدوات والفلاتر
             self.create_toolbar(layout)
             
@@ -106,47 +103,6 @@ class InstallmentsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الأقساط: {e}")
             raise
-    
-    def create_page_header(self, layout):
-        """إنشاء رأس الصفحة"""
-        try:
-            header_frame = QFrame()
-            header_frame.setObjectName("headerFrame")
-            
-            header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(10, 8, 10, 8)
-            
-            # العنوان والوصف
-            text_layout = QVBoxLayout()
-            
-            title_label = QLabel("إدارة الأقساط")
-            title_label.setObjectName("pageTitle")
-            title_label.setStyleSheet("color: black;")
-            text_layout.addWidget(title_label)
-            
-            desc_label = QLabel("إدارة أقساط الطلاب والمدفوعات والمتابعة المالية")
-            desc_label.setObjectName("pageDesc")
-            desc_label.setStyleSheet("color: black;")
-            text_layout.addWidget(desc_label)
-            
-            header_layout.addLayout(text_layout)
-            header_layout.addStretch()
-            
-            # إحصائيات سريعة في الرأس
-            stats_layout = QHBoxLayout()
-            
-            self.total_installments_label = QLabel("إجمالي الأقساط: 0")
-            self.total_installments_label.setObjectName("quickStat")
-            stats_layout.addWidget(self.total_installments_label)
-            
-            # ... سابقاً كان يعرض المدفوع والمستحق وتمت إزالته
-            
-            header_layout.addLayout(stats_layout)
-            
-            layout.addWidget(header_frame)
-            
-        except Exception as e:
-            logging.error(f"خطأ في إنشاء رأس الصفحة: {e}")
     
     def create_toolbar(self, layout):
         """إنشاء شريط الأدوات والفلاتر"""
@@ -529,8 +485,6 @@ class InstallmentsPage(QWidget):
         total_amount = sum((inst[3] or 0) for inst in self.current_installments)
         # تحديث عرض المجموع
         self.total_amount_value.setText(f"{total_amount:,.2f} د.ع")
-        # تحديث عدد الأقساط في رأس الصفحة
-        self.total_installments_label.setText(f"إجمالي الأقساط: {len(self.current_installments)}")
     
     def apply_filters(self):
         """تطبيق الفلاتر وإعادة تحميل البيانات"""
