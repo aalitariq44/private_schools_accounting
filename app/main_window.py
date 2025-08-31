@@ -12,7 +12,8 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QStackedWidget, QFrame, QLabel, QPushButton, 
     QMessageBox, QMenuBar, QStatusBar, QAction,
-    QSplitter, QScrollArea, QProgressDialog, QApplication
+    QSplitter, QScrollArea, QProgressDialog, QApplication,
+    QComboBox
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QSize
 from PyQt5.QtGui import QFont, QIcon, QPixmap, QKeySequence
@@ -366,23 +367,26 @@ class MainWindow(QMainWindow):
             header_frame.setObjectName("contentHeader")
             header_frame.setFixedHeight(60)
             
-            header_layout = QHBoxLayout(header_frame)
-            header_layout.setContentsMargins(20, 5, 20, 5) # Reduced vertical margins
-            header_layout.setAlignment(Qt.AlignVCenter) # Align content vertically in the center
+            self.header_layout = QHBoxLayout(header_frame)
+            self.header_layout.setContentsMargins(20, 5, 20, 5) # Reduced vertical margins
+            self.header_layout.setAlignment(Qt.AlignVCenter) # Align content vertically in the center
             
             # عنوان الصفحة
             self.page_title = QLabel("لوحة التحكم")
             self.page_title.setObjectName("pageTitle")
-            header_layout.addWidget(self.page_title)
+            self.header_layout.addWidget(self.page_title)
             
             # مساحة مرنة
-            header_layout.addStretch()
+            self.header_layout.addStretch()
+            
+            # عناصر خاصة بصفحة الطلاب (ستتم إضافتها ديناميكياً)
+            self.students_header_widgets = []
             
             # ويدجت العام الدراسي
             try:
                 from ui.widgets.academic_year_widget import AcademicYearWidget
                 self.academic_year_widget = AcademicYearWidget(show_label=True, auto_refresh=True)
-                header_layout.addWidget(self.academic_year_widget)
+                self.header_layout.addWidget(self.academic_year_widget)
             except ImportError as e:
                 logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
 
@@ -394,7 +398,7 @@ class MainWindow(QMainWindow):
             self.quick_backup_btn.setStyleSheet("font-size: 14px; padding: 4px;")
             self.quick_backup_btn.setFixedHeight(30)
             self.quick_backup_btn.clicked.connect(self.create_quick_backup)
-            header_layout.addWidget(self.quick_backup_btn)
+            self.header_layout.addWidget(self.quick_backup_btn)
             
             layout.addWidget(header_frame)
             
@@ -737,8 +741,72 @@ class MainWindow(QMainWindow):
             title = titles.get(page_name, "غير معروف")
             self.page_title.setText(title)
             
+            # إدارة عناصر صفحة الطلاب
+            if page_name == "students":
+                self.add_students_header_widgets()
+            else:
+                self.remove_students_header_widgets()
+            
         except Exception as e:
             logging.error(f"خطأ في تحديث عنوان الصفحة: {e}")
+    
+    def add_students_header_widgets(self):
+        """إضافة عناصر صفحة الطلاب إلى شريط العنوان"""
+        try:
+            # إزالة العناصر الموجودة أولاً
+            self.remove_students_header_widgets()
+            
+            # الحصول على صفحة الطلاب
+            if "students" not in self.pages:
+                return
+                
+            students_page = self.pages["students"]
+            
+            # إنشاء قائمة حجم الخط
+            from ui.font_sizes import FontSizeManager
+            font_size_label = QLabel("حجم الخط:")
+            font_size_label.setObjectName("filterLabel")
+            self.header_layout.insertWidget(self.header_layout.count() - 3, font_size_label)
+            self.students_header_widgets.append(font_size_label)
+            
+            self.students_font_size_combo = QComboBox()
+            self.students_font_size_combo.setObjectName("filterCombo")
+            self.students_font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.students_font_size_combo.setCurrentText(students_page.current_font_size)
+            self.students_font_size_combo.setMinimumWidth(100)
+            self.students_font_size_combo.currentTextChanged.connect(
+                lambda text: students_page.change_font_size(text) if text else None
+            )
+            self.header_layout.insertWidget(self.header_layout.count() - 3, self.students_font_size_combo)
+            self.students_header_widgets.append(self.students_font_size_combo)
+            
+            # إنشاء زر تبديل رؤية الإحصائيات
+            self.students_toggle_stats_button = QPushButton("إخفاء الإحصائيات" if students_page.statistics_visible else "إظهار الإحصائيات")
+            self.students_toggle_stats_button.setObjectName("secondaryButton")
+            self.students_toggle_stats_button.clicked.connect(students_page.toggle_statistics_visibility)
+            self.header_layout.insertWidget(self.header_layout.count() - 3, self.students_toggle_stats_button)
+            self.students_header_widgets.append(self.students_toggle_stats_button)
+            
+        except Exception as e:
+            logging.error(f"خطأ في إضافة عناصر صفحة الطلاب: {e}")
+    
+    def remove_students_header_widgets(self):
+        """إزالة عناصر صفحة الطلاب من شريط العنوان"""
+        try:
+            for widget in self.students_header_widgets:
+                self.header_layout.removeWidget(widget)
+                widget.hide()
+                widget.setParent(None)
+            self.students_header_widgets.clear()
+            
+            # تنظيف المتغيرات
+            if hasattr(self, 'students_font_size_combo'):
+                delattr(self, 'students_font_size_combo')
+            if hasattr(self, 'students_toggle_stats_button'):
+                delattr(self, 'students_toggle_stats_button')
+                
+        except Exception as e:
+            logging.error(f"خطأ في إزالة عناصر صفحة الطلاب: {e}")
     
     def show_dashboard(self):
         """عرض صفحة لوحة التحكم"""
@@ -989,6 +1057,39 @@ class MainWindow(QMainWindow):
                     font-size: {style_vars['title_font_size']}px;
                     font-weight: bold;
                     color: #2C3E50;
+                }}
+                
+                /* عناصر صفحة الطلاب في شريط العنوان */
+                #contentHeader QLabel {{
+                    font-size: {style_vars['button_font_size']}px;
+                    color: #2C3E50;
+                }}
+                
+                #contentHeader QComboBox {{
+                    font-size: {style_vars['button_font_size']}px;
+                    color: #2C3E50;
+                    padding: 2px 4px;
+                    border: 1px solid #BDC3C7;
+                    border-radius: {style_vars['border_radius']}px;
+                    min-width: 80px;
+                    max-width: 120px;
+                }}
+                
+                #contentHeader QPushButton {{
+                    font-size: {style_vars['button_font_size']}px;
+                    color: #2C3E50;
+                    padding: 4px 8px;
+                    border: 1px solid #BDC3C7;
+                    border-radius: {style_vars['border_radius']}px;
+                    background-color: #FFFFFF;
+                }}
+                
+                #contentHeader QPushButton:hover {{
+                    background-color: #F8F9FA;
+                }}
+                
+                #contentHeader QPushButton:pressed {{
+                    background-color: #E9ECEF;
                 }}
                 
                 #userInfo {{

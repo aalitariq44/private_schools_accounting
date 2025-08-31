@@ -224,7 +224,7 @@ class StudentsPage(QWidget):
             self.setLayout(layout)
             
             # تحديث القائمة المنسدلة لحجم الخط
-            self.update_font_size_combo()
+            # تم نقل هذا إلى شريط العنوان الرئيسي
             
         except Exception as e:
             logging.error(f"خطأ في إعداد واجهة صفحة الطلاب: {e}")
@@ -327,24 +327,6 @@ class StudentsPage(QWidget):
             self.search_input.setPlaceholderText("ابحث في أسماء الطلاب أو المعرف...")
             self.search_input.setMinimumWidth(300)
             actions_layout.addWidget(self.search_input)
-            
-            # فلتر حجم الخط
-            font_size_label = QLabel("حجم الخط:")
-            font_size_label.setObjectName("filterLabel")
-            actions_layout.addWidget(font_size_label)
-            
-            self.font_size_combo = QComboBox()
-            self.font_size_combo.setObjectName("filterCombo")
-            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
-            self.font_size_combo.setCurrentText(self.current_font_size)
-            self.font_size_combo.setMinimumWidth(100)
-            actions_layout.addWidget(self.font_size_combo)
-            
-            # زر تبديل رؤية الإحصائيات
-            self.toggle_stats_button = QPushButton("إخفاء الإحصائيات" if self.statistics_visible else "إظهار الإحصائيات")
-            self.toggle_stats_button.setObjectName("secondaryButton")
-            self.toggle_stats_button.clicked.connect(self.toggle_statistics_visibility)
-            actions_layout.addWidget(self.toggle_stats_button)
             
             actions_layout.addStretch()
             
@@ -557,7 +539,7 @@ class StudentsPage(QWidget):
             self.search_input.textChanged.connect(self.apply_filters)
             
             # ربط تغيير حجم الخط
-            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            # تم نقل هذا إلى شريط العنوان الرئيسي
             
         except Exception as e:
             logging.error(f"خطأ في ربط الإشارات: {e}")
@@ -825,7 +807,7 @@ class StudentsPage(QWidget):
             self.search_input.clear()
             
             # الحفاظ على حجم الخط الحالي (لا نعيد تعيينه)
-            self.font_size_combo.setCurrentText(self.current_font_size)
+            # تم نقل هذا إلى شريط العنوان الرئيسي
             
             self.apply_filters()
             log_user_action("مسح فلاتر صفحة الطلاب")
@@ -1074,10 +1056,17 @@ class StudentsPage(QWidget):
             logging.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
             QMessageBox.critical(self, "خطأ", f"حدث خطأ أثناء طباعة قائمة الطلاب:\n{str(e)}")
     
-    def change_font_size(self):
+    def change_font_size(self, selected_size=None):
         """تغيير حجم الخط في الصفحة"""
         try:
-            selected_size = self.font_size_combo.currentText()
+            # إذا لم يتم تمرير المعامل، نحصل عليه من القائمة المنسدلة الجديدة في شريط العنوان
+            if selected_size is None:
+                main_window = self.get_main_window()
+                if main_window and hasattr(main_window, 'students_font_size_combo'):
+                    selected_size = main_window.students_font_size_combo.currentText()
+                else:
+                    return
+            
             print(f"DEBUG: تغيير حجم الخط من {self.current_font_size} إلى {selected_size}")
 
             if selected_size != self.current_font_size:
@@ -1094,9 +1083,6 @@ class StudentsPage(QWidget):
 
                 # إجبار إعادة رسم الصفحة
                 self.update()
-
-                # تحديث القائمة المنسدلة
-                self.update_font_size_combo()
 
         except Exception as e:
             logging.error(f"خطأ في تغيير حجم الخط: {e}")
@@ -1295,15 +1281,8 @@ class StudentsPage(QWidget):
     
     def update_font_size_combo(self):
         """تحديث القائمة المنسدلة لحجم الخط"""
-        try:
-            if hasattr(self, 'font_size_combo'):
-                self.font_size_combo.blockSignals(True)  # منع إرسال الإشارات أثناء التحديث
-                self.font_size_combo.setCurrentText(self.current_font_size)
-                self.font_size_combo.blockSignals(False)  # إعادة تفعيل الإشارات
-                print(f"DEBUG: تم تحديث القائمة المنسدلة إلى: {self.current_font_size}")
-        except Exception as e:
-            logging.error(f"خطأ في تحديث القائمة المنسدلة: {e}")
-            print(f"DEBUG: خطأ في تحديث القائمة المنسدلة: {e}")
+        # تم نقل هذا إلى شريط العنوان الرئيسي
+        pass
     
     def toggle_statistics_visibility(self):
         """تبديل رؤية نافذة الإحصائيات"""
@@ -1315,12 +1294,13 @@ class StudentsPage(QWidget):
             if hasattr(self, 'summary_frame'):
                 self.summary_frame.setVisible(self.statistics_visible)
             
-            # تحديث نص الزر
-            if hasattr(self, 'toggle_stats_button'):
+            # تحديث نص الزر في شريط العنوان الرئيسي
+            main_window = self.get_main_window()
+            if main_window and hasattr(main_window, 'students_toggle_stats_button'):
                 if self.statistics_visible:
-                    self.toggle_stats_button.setText("إخفاء الإحصائيات")
+                    main_window.students_toggle_stats_button.setText("إخفاء الإحصائيات")
                 else:
-                    self.toggle_stats_button.setText("إظهار الإحصائيات")
+                    main_window.students_toggle_stats_button.setText("إظهار الإحصائيات")
             
             # حفظ الإعداد الجديد
             success = ui_settings_manager.set_statistics_visible("students", self.statistics_visible)
