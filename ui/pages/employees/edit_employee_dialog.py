@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout, QLabel, QLineEdit,
     QPushButton, QComboBox, QDoubleSpinBox, QTextEdit, QMessageBox,
-    QGroupBox, QScrollArea, QWidget
+    QScrollArea, QWidget
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -43,8 +43,6 @@ class EditEmployeeDialog(QDialog):
             QPushButton:pressed { background:#2d6399; }
             QPushButton#cancel_btn { background:#c0392b; }
             QPushButton#cancel_btn:hover { background:#d35445; }
-            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
-            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
             QScrollArea { border:none; }
         """)
 
@@ -63,42 +61,50 @@ class EditEmployeeDialog(QDialog):
         title.setStyleSheet("background:#357abd; color:#fff; padding:10px; border-radius:6px; font-weight:700;")
         content_layout.addWidget(title)
 
-        # Basic group
-        basic_group = QGroupBox("المعلومات الأساسية")
-        basic_form = QFormLayout(basic_group)
+        # Basic info
+        basic_label = QLabel("المعلومات الأساسية")
+        basic_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(basic_label)
+
+        basic_form = QFormLayout()
         basic_form.setSpacing(8); basic_form.setLabelAlignment(Qt.AlignRight)
         self.name_input = QLineEdit(); self.name_input.setPlaceholderText("أدخل اسم الموظف")
         basic_form.addRow("الاسم *:", self.name_input)
         self.school_combo = QComboBox(); self.school_combo.setPlaceholderText("اختر المدرسة")
         basic_form.addRow("المدرسة *:", self.school_combo)
-        content_layout.addWidget(basic_group)
+        content_layout.addLayout(basic_form)
 
-        # Job group
-        job_group = QGroupBox("الوظيفة")
-        job_form = QFormLayout(job_group)
+        # Job info
+        job_label = QLabel("الوظيفة")
+        job_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(job_label)
+
+        job_form = QFormLayout()
         job_form.setSpacing(8); job_form.setLabelAlignment(Qt.AlignRight)
         self.job_combo = QComboBox()
         for job in ["محاسب", "كاتب", "عامل", "عامل نظافة", "حارس ليلي", "حارس أمن", "سائق", "مساعد", "مساعد إداري", "فني صيانة", "عامل مختبر", "مشرف", "مرشد طلابي", "أمينة مكتبة", "أمين مكتبة", "ممرض"]:
             self.job_combo.addItem(job, job)
         self.job_combo.addItem("مخصص", "مخصص")
         job_form.addRow("المهنة *:", self.job_combo)
-        self.custom_job_label = QLabel("المهنة المخصصة *:")
-        self.custom_job_input = QLineEdit(); self.custom_job_input.setPlaceholderText("أدخل نوع المهنة")
+        self.custom_job_label = QLabel("المهنة المخصصة *:"); self.custom_job_label.hide()
+        self.custom_job_input = QLineEdit(); self.custom_job_input.setPlaceholderText("أدخل نوع المهنة"); self.custom_job_input.hide()
         job_form.addRow(self.custom_job_label, self.custom_job_input)
-        self.custom_job_label.hide(); self.custom_job_input.hide()
         self.salary_input = QDoubleSpinBox(); self.salary_input.setRange(0, 999999); self.salary_input.setDecimals(2); self.salary_input.setSuffix(" د.ع")
         job_form.addRow("الراتب الشهري *:", self.salary_input)
-        content_layout.addWidget(job_group)
+        content_layout.addLayout(job_form)
 
-        # Contact group
-        contact_group = QGroupBox("الاتصال والملاحظات")
-        contact_form = QFormLayout(contact_group)
+        # Contact & notes
+        contact_label = QLabel("الاتصال والملاحظات")
+        contact_label.setStyleSheet("font-weight:600; margin:4px 0;")
+        content_layout.addWidget(contact_label)
+
+        contact_form = QFormLayout()
         contact_form.setSpacing(8); contact_form.setLabelAlignment(Qt.AlignRight)
         self.phone_input = QLineEdit(); self.phone_input.setPlaceholderText("05xxxxxxxx")
         contact_form.addRow("رقم الهاتف:", self.phone_input)
         self.notes_input = QTextEdit(); self.notes_input.setPlaceholderText("ملاحظات إضافية..."); self.notes_input.setMaximumHeight(90)
         contact_form.addRow("ملاحظات:", self.notes_input)
-        content_layout.addWidget(contact_group)
+        content_layout.addLayout(contact_form)
 
         # Buttons
         btns = QHBoxLayout(); btns.addStretch()
@@ -131,11 +137,6 @@ class EditEmployeeDialog(QDialog):
             pt = max(10, int(base * (0.9 + scale * 0.6)))
             f = self.font(); f.setPointSize(pt); self.setFont(f)
             if sw <= 1366:
-                for grp in self.findChildren(QGroupBox):
-                    lay = grp.layout()
-                    if lay:
-                        lay.setHorizontalSpacing(6)
-                        lay.setVerticalSpacing(6)
                 for btn in self.findChildren(QPushButton):
                     btn.setMinimumHeight(32)
         except Exception as e:
