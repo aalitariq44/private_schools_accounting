@@ -55,8 +55,6 @@ class AddStudentDialog(QDialog):
             QPushButton:pressed { background:#2d6399; }
             QPushButton#cancel_btn { background:#c0392b; }
             QPushButton#cancel_btn:hover { background:#d35445; }
-            QGroupBox { border:1px solid #d3d8de; border-radius:8px; margin-top:12px; font-weight:600; }
-            QGroupBox::title { subcontrol-origin: margin; left:8px; padding:2px 8px; background:#357abd; color:#fff; border-radius:4px; }
             QScrollArea { border:none; }
         """)
 
@@ -81,8 +79,7 @@ class AddStudentDialog(QDialog):
         content_layout.addWidget(title_label)
 
         # المعلومات الأساسية
-        basic_info_group = QGroupBox("المعلومات الأساسية")
-        basic_layout = QFormLayout(basic_info_group)
+        basic_layout = QFormLayout()
         basic_layout.setSpacing(8)
         basic_layout.setLabelAlignment(Qt.AlignRight)
 
@@ -93,11 +90,10 @@ class AddStudentDialog(QDialog):
         self.gender_combo = QComboBox()
         self.gender_combo.addItems(["ذكر", "أنثى"])
         basic_layout.addRow("الجنس:", self.gender_combo)
-        content_layout.addWidget(basic_info_group)
+        content_layout.addLayout(basic_layout)
 
         # المعلومات الأكاديمية
-        academic_info_group = QGroupBox("المعلومات الأكاديمية")
-        academic_layout = QFormLayout(academic_info_group)
+        academic_layout = QFormLayout()
         academic_layout.setSpacing(8)
         academic_layout.setLabelAlignment(Qt.AlignRight)
 
@@ -118,17 +114,16 @@ class AddStudentDialog(QDialog):
 
         self.status_combo = QComboBox(); self.status_combo.addItems(["نشط", "منقطع", "متخرج", "منتقل"])
         academic_layout.addRow("الحالة:", self.status_combo)
-        content_layout.addWidget(academic_info_group)
+        content_layout.addLayout(academic_layout)
 
-        # معلومات الاتصال
-        contact_info_group = QGroupBox("معلومات الاتصال وولي الأمر")
-        contact_layout = QFormLayout(contact_info_group)
+        # معلومات الاتصال وولي الأمر
+        contact_layout = QFormLayout()
         contact_layout.setSpacing(8)
         contact_layout.setLabelAlignment(Qt.AlignRight)
 
         self.phone_edit = QLineEdit(); self.phone_edit.setPlaceholderText("رقم هاتف الطالب")
         contact_layout.addRow("هاتف الطالب:", self.phone_edit)
-        content_layout.addWidget(contact_info_group)
+        content_layout.addLayout(contact_layout)
 
         # الأزرار
         buttons_layout = QHBoxLayout(); buttons_layout.addStretch()
@@ -165,12 +160,6 @@ class AddStudentDialog(QDialog):
 
             # تصغير الهوامش أكثر إذا الشاشة أقل من 1366 عرض
             if sw <= 1366:
-                for grp in self.findChildren(QGroupBox):
-                    # تقليل المسافات داخل المجموعات
-                    lay = grp.layout()
-                    if lay:
-                        lay.setHorizontalSpacing(6)
-                        lay.setVerticalSpacing(6)
                 # ضبط أزرار
                 for btn in self.findChildren(QPushButton):
                     btn.setMinimumHeight(32)
