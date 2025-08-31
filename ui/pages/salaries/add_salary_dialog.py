@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QDateEdit, QSpinBox, QDoubleSpinBox, QMessageBox,
     QFrame, QCheckBox, QScrollArea, QWidget
 )
-from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtCore import Qt, QDate, pyqtSignal, QEvent
 from PyQt5.QtGui import QFont, QDoubleValidator, QIntValidator
 
 from core.database.connection import db_manager
@@ -216,6 +216,11 @@ class AddSalaryDialog(QDialog):
         self.to_date_input.dateChanged.connect(self.calculate_days)
         self.save_btn.clicked.connect(self.save_salary)
         self.cancel_btn.clicked.connect(self.reject)
+        
+        # تعطيل تغيير التاريخ بعجلة الماوس
+        self.from_date_input.installEventFilter(self)
+        self.to_date_input.installEventFilter(self)
+        self.payment_date_input.installEventFilter(self)
     
     # أزلنا دالة setup_styles لصالح ستايل مبسط داخل setup_ui
 
@@ -495,3 +500,9 @@ class AddSalaryDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في حفظ الراتب: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في حفظ الراتب:\n{e}")
+    
+    def eventFilter(self, obj, event):
+        """تعطيل تغيير التاريخ بعجلة الماوس"""
+        if isinstance(obj, QDateEdit) and event.type() == QEvent.Wheel:
+            return True  # تجاهل الحدث
+        return super().eventFilter(obj, event)

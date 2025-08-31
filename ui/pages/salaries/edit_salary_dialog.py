@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDoubleSpinBox, QDateEdit, QTextEdit,
     QPushButton, QMessageBox, QFrame, QScrollArea, QWidget, QComboBox
 )
-from PyQt5.QtCore import Qt, QDate, pyqtSignal
+from PyQt5.QtCore import Qt, QDate, pyqtSignal, QEvent
 
 from core.database.connection import db_manager
 from core.utils.logger import log_user_action
@@ -104,6 +104,11 @@ class EditSalaryDialog(QDialog):
         """إعداد الاتصالات والأحداث"""
         self.from_date_input.dateChanged.connect(self.calculate_days)
         self.to_date_input.dateChanged.connect(self.calculate_days)
+        
+        # تعطيل تغيير التاريخ بعجلة الماوس
+        self.from_date_input.installEventFilter(self)
+        self.to_date_input.installEventFilter(self)
+        self.payment_date_input.installEventFilter(self)
         
     def calculate_days(self):
         """حساب عدد الأيام بين التاريخين"""
@@ -384,3 +389,9 @@ class EditSalaryDialog(QDialog):
         except Exception as e:
             logging.error(f"خطأ في حفظ التعديلات: {e}")
             QMessageBox.critical(self, "خطأ", f"فشل في حفظ التعديلات:\n{e}")
+    
+    def eventFilter(self, obj, event):
+        """تعطيل تغيير التاريخ بعجلة الماوس"""
+        if isinstance(obj, QDateEdit) and event.type() == QEvent.Wheel:
+            return True  # تجاهل الحدث
+        return super().eventFilter(obj, event)
