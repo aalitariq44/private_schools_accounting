@@ -1,6 +1,6 @@
 {
   "students_page": {
-    "font_size": "متوسط",
+    "font_size": "كبير",
     "statistics_window_visible": false,
     "table_columns_visible": {
       "المعرف": false,
@@ -40,7 +40,7 @@
     "statistics_window_visible": true
   },
   "expenses_page": {
-    "font_size": "كبير جدا",
+    "font_size": "كبير",
     "statistics_window_visible": true
   },
   "salaries_page": {

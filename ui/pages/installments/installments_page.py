@@ -237,6 +237,7 @@ class InstallmentsPage(QWidget):
             self.installments_table.setSelectionMode(QAbstractItemView.SingleSelection)
             self.installments_table.setSortingEnabled(True)
             self.installments_table.setShowGrid(False)
+            self.installments_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
             
             # تخصيص عرض الأعمدة
             header = self.installments_table.horizontalHeader()
@@ -455,23 +456,37 @@ class InstallmentsPage(QWidget):
             
             for row, installment in enumerate(self.current_installments):
                 # رقم الوصل (id)
-                self.installments_table.setItem(row, 0, QTableWidgetItem(str(installment[0])))
+                item = QTableWidgetItem(str(installment[0]))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 0, item)
                 # الطالب
-                self.installments_table.setItem(row, 1, QTableWidgetItem(installment[1] or ""))
+                item = QTableWidgetItem(installment[1] or "")
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 1, item)
                 # المدرسة
-                self.installments_table.setItem(row, 2, QTableWidgetItem(installment[2] or ""))
+                item = QTableWidgetItem(installment[2] or "")
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 2, item)
                 # المبلغ
                 amount = installment[3] or 0
-                self.installments_table.setItem(row, 3, QTableWidgetItem(f"{amount:,.2f}"))
+                item = QTableWidgetItem(f"{amount:,.2f}")
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 3, item)
                 # تاريخ الدفع
                 payment_date = installment[4] or ""
-                self.installments_table.setItem(row, 4, QTableWidgetItem(str(payment_date)))
+                item = QTableWidgetItem(str(payment_date))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 4, item)
                 # وقت الدفع
                 payment_time = installment[5] or ""
-                self.installments_table.setItem(row, 5, QTableWidgetItem(str(payment_time)))
+                item = QTableWidgetItem(str(payment_time))
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 5, item)
                 # الملاحظات
                 notes = installment[6] or ""
-                self.installments_table.setItem(row, 6, QTableWidgetItem(notes))
+                item = QTableWidgetItem(notes)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                self.installments_table.setItem(row, 6, item)
             
             # تحديث إحصائية العدد المعروض
             self.displayed_count_label.setText(f"عدد الأقساط المعروضة: {len(self.current_installments)}")
