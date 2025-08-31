@@ -60,5 +60,9 @@
     "font_size": "كبير",
     "charts_visible": true,
     "quick_stats_visible": true
+  },
+  "student_details_page": {
+    "font_size": "كبير جدا",
+    "statistics_window_visible": true
   }
 }

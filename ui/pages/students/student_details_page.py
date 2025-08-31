@@ -6,7 +6,7 @@
 import logging
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QFrame, QPushButton,
-    QScrollArea, QMessageBox
+    QScrollArea, QMessageBox, QComboBox
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFontDatabase
@@ -24,6 +24,10 @@ from .components import (
     get_student_details_styles
 )
 
+# استيراد وحدة أحجام الخطوط
+from ...font_sizes import FontSizeManager, get_font_sizes
+from ...ui_settings_manager import ui_settings_manager
+
 
 class StudentDetailsPage(QWidget):
     """صفحة تفاصيل الطالب المحسنة"""
@@ -36,6 +40,9 @@ class StudentDetailsPage(QWidget):
         super().__init__()
         self.student_id = student_id
         self.student_data = None
+        
+        # الحصول على حجم الخط المحفوظ من إعدادات UI (نفس صفحة الطلاب)
+        self.current_font_size = ui_settings_manager.get_font_size("students")
         
         # تحميل وتطبيق خط Cairo
         self.setup_cairo_font()
@@ -135,6 +142,22 @@ class StudentDetailsPage(QWidget):
             self.print_button = QPushButton("طباعة")
             self.print_button.setObjectName("primaryButton")
             toolbar_layout.addWidget(self.print_button)
+            
+            # إضافة فاصل
+            toolbar_layout.addStretch()
+            
+            # قائمة تحكم بحجم الخط
+            self.font_size_label = QLabel("حجم الخط:")
+            self.font_size_label.setObjectName("filterLabel")
+            toolbar_layout.addWidget(self.font_size_label)
+            
+            self.font_size_combo = QComboBox()
+            self.font_size_combo.setObjectName("filterCombo")
+            self.font_size_combo.addItems(FontSizeManager.get_available_sizes())
+            self.font_size_combo.setCurrentText(self.current_font_size)
+            self.font_size_combo.setMinimumWidth(100)
+            self.font_size_combo.currentTextChanged.connect(self.change_font_size)
+            toolbar_layout.addWidget(self.font_size_combo)
             
             layout.addWidget(toolbar_frame)
             
@@ -382,11 +405,50 @@ class StudentDetailsPage(QWidget):
         except Exception as e:
             logging.error(f"خطأ في تحديث البيانات: {e}")
     
+    def change_font_size(self, selected_size):
+        """تغيير حجم الخط في الصفحة"""
+        try:
+            if selected_size and selected_size != self.current_font_size:
+                self.current_font_size = selected_size
+                
+                # إعادة إعداد التنسيقات
+                self.setup_styles()
+                
+                # حفظ حجم الخط الجديد في إعدادات UI (لصفحة الطلاب)
+                success = ui_settings_manager.set_font_size("students", selected_size)
+                
+                # تحديث النافذة الرئيسية إذا كانت موجودة
+                main_window = self.get_main_window()
+                if main_window and hasattr(main_window, 'students_font_size_combo'):
+                    main_window.students_font_size_combo.setCurrentText(selected_size)
+                
+                log_user_action(f"تغيير حجم الخط في صفحة تفاصيل الطالب إلى: {selected_size}")
+                
+                # إجبار إعادة رسم الصفحة
+                self.update()
+                
+        except Exception as e:
+            logging.error(f"خطأ في تغيير حجم الخط: {e}")
+    
+    def get_main_window(self):
+        """الحصول على النافذة الرئيسية"""
+        try:
+            parent = self.parent()
+            while parent:
+                if hasattr(parent, 'show_page_widget'):
+                    return parent
+                parent = parent.parent()
+            return None
+            
+        except Exception as e:
+            logging.error(f"خطأ في الحصول على النافذة الرئيسية: {e}")
+            return None
+    
     def setup_styles(self):
         """إعداد التنسيقات"""
         try:
-            # تطبيق الأنماط من الملف المنفصل
-            style = get_student_details_styles(self.cairo_family)
+            # استخدام FontSizeManager لإنشاء CSS ديناميكي
+            style = get_student_details_styles(self.cairo_family, self.current_font_size)
             self.setStyleSheet(style)
             
         except Exception as e:
