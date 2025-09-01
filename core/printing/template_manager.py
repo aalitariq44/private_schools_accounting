@@ -916,7 +916,7 @@ class TemplateManager:
     <table>
         <thead>
             <tr>
-                <th>المعرف</th>
+                <th>التسلسل</th>
                 <th>الاسم</th>
                 <th>المدرسة</th>
                 <th>عدد الحصص</th>
@@ -928,7 +928,7 @@ class TemplateManager:
         <tbody>
             {% for teacher in teachers %}
             <tr>
-                <td>{{ teacher.id }}</td>
+                <td>{{ loop.index }}</td>
                 <td>{{ teacher.name }}</td>
                 <td>{{ teacher.school_name }}</td>
                 <td>{{ teacher.class_hours or '0' }}</td>
