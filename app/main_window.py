@@ -390,6 +390,12 @@ class MainWindow(QMainWindow):
             except ImportError as e:
                 logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
 
+            # ويدجت النسخة التجريبية
+            self.trial_version_btn = QPushButton("هذه نسخة تجريبية، اضغط لشراء النسخة الكاملة")
+            self.trial_version_btn.setObjectName("trialVersionButton")
+            self.trial_version_btn.clicked.connect(self.show_purchase_dialog)
+            self.header_layout.addWidget(self.trial_version_btn)
+            
             # زر النسخ الاحتياطي السريع
             self.quick_backup_btn = QPushButton("نسخ احتياطي سريع")
             self.quick_backup_btn.setObjectName("quickBackupButton")
@@ -941,6 +947,23 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logging.error(f"خطأ في عرض معلومات التطبيق: {e}")
     
+    def show_purchase_dialog(self):
+        """عرض نافذة شراء النسخة الكاملة"""
+        try:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setWindowTitle("شراء النسخة الكاملة")
+            msg.setText("لشراء النسخة الكاملة من التطبيق، تواصل معنا عبر:")
+            msg.setInformativeText(
+                "واتساب: 07859371349\n"
+                "تليجرام: @tech_solu"
+            )
+            msg.setLayoutDirection(Qt.RightToLeft)
+            msg.exec_()
+            
+        except Exception as e:
+            logging.error(f"خطأ في عرض نافذة الشراء: {e}")
+    
     def logout(self):
         """تسجيل خروج"""
         try:
@@ -1192,6 +1215,22 @@ class MainWindow(QMainWindow):
                 
                 QPushButton#quickBackupButton:pressed {{
                     background-color: #1E8449;
+                }}
+                
+                /* زر النسخة التجريبية */
+                QPushButton#trialVersionButton {{
+                    color: #E74C3C;
+                    font-weight: bold;
+                    text-decoration: underline;
+                    border: none;
+                    background: transparent;
+                    padding: 2px 4px;
+                    font-size: {style_vars['button_font_size']}px;
+                }}
+                
+                QPushButton#trialVersionButton:hover {{
+                    color: #C0392B;
+                    background: rgba(231, 76, 60, 0.1);
                 }}
             """
             
