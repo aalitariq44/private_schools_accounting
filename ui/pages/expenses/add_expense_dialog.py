@@ -217,7 +217,7 @@ class AddExpenseDialog(QDialog):
                 msg.setWindowTitle("نسخة تجريبية")
                 msg.setText("هذه نسخة تجريبية ولا يمكن إضافة أكثر من 10 مصروفات")
                 msg.setInformativeText(
-                    "واتساب: 07859371349\n"
+                    "واتساب: 07859371340\n"
                     "تليجرام: @tech_solu"
                 )
                 msg.setLayoutDirection(Qt.RightToLeft)

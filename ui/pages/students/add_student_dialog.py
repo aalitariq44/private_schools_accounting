@@ -322,7 +322,7 @@ class AddStudentDialog(QDialog):
             msg.setInformativeText(
                 "لا يمكن إضافة أكثر من 10 طلاب في النسخة التجريبية\n\n"
                 "لشراء النسخة الكاملة، تواصل معنا عبر:\n\n"
-                "واتساب: 07859371349\n"
+                "واتساب: 07859371340\n"
                 "تليجرام: @tech_solu"
             )
             msg.setLayoutDirection(Qt.RightToLeft)

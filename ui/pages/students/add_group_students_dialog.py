@@ -429,7 +429,7 @@ class AddGroupStudentsDialog(QDialog):
                     f"الطلاب الجدد: {new_students_count}\n"
                     f"المجموع: {current_students_count + new_students_count}\n\n"
                     "لشراء النسخة الكاملة، تواصل معنا عبر:\n\n"
-                    "واتساب: 07859371349\n"
+                    "واتساب: 07859371340\n"
                     "تليجرام: @tech_solu"
                 )
                 msg.setLayoutDirection(Qt.RightToLeft)
