@@ -95,5 +95,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='PrivateSchoolsAccounting_Professional'
+    name='PrivateSchoolsAccounting_beta'
 )
