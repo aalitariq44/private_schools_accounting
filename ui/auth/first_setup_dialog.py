@@ -52,7 +52,7 @@ class FirstSetupDialog(QDialog):
             title_label.setAlignment(Qt.AlignCenter)
             main_layout.addWidget(title_label)
 
-            info_label = QLabel("يرجى إدخال اسم المؤسسة وكلمة المرور (لن تتمكن من تغيير الاسم لاحقاً بسهولة).")
+            info_label = QLabel("يرجى إدخال كلمة المرور (اسم المؤسسة ثابت: Trial Version).")
             info_label.setObjectName("infoLabel")
             info_label.setWordWrap(True)
             info_label.setAlignment(Qt.AlignCenter)
@@ -70,10 +70,19 @@ class FirstSetupDialog(QDialog):
             org_label.setObjectName("fieldLabel")
             form_layout.addWidget(org_label)
 
-            self.organization_input = QLineEdit()
+            self.organization_input = QLabel("Trial Version")
             self.organization_input.setObjectName("organizationInput")
-            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة التعليمية...")
-            self.organization_input.textChanged.connect(self.validate_inputs)
+            self.organization_input.setStyleSheet("""
+                QLabel#organizationInput {
+                    padding: 8px 10px;
+                    border: 1px solid #C5CCD3;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    background: #F8F9FA;
+                    color: #6C757D;
+                    font-weight: bold;
+                }
+            """)
             form_layout.addWidget(self.organization_input)
 
             # كلمة المرور
@@ -176,40 +185,14 @@ class FirstSetupDialog(QDialog):
     def validate_inputs(self):
         """التحقق من صحة المدخلات"""
         try:
-            organization_name = self.organization_input.text().strip()
+            # اسم المؤسسة ثابت
+            organization_name = "Trial Version"
             password1 = self.password1_input.text().strip()
             password2 = self.password2_input.text().strip()
             
             # تنظيف رسالة التحقق
             self.validation_label.clear()
             
-            # التحقق من وجود اسم المؤسسة
-            if not organization_name:
-                self.validation_label.setText("يرجى إدخال اسم المؤسسة")
-                self.validation_label.setStyleSheet("color: #E74C3C;")
-                self.save_button.setEnabled(False)
-                return
-            
-            # التحقق من طول اسم المؤسسة
-            if len(organization_name) < 3:
-                self.validation_label.setText("اسم المؤسسة قصير جداً (الحد الأدنى 3 أحرف)")
-                self.validation_label.setStyleSheet("color: #E74C3C;")
-                self.save_button.setEnabled(False)
-                return
-            
-            # التحقق من توفر قائمة المؤسسات (مرة واحدة فقط - غير حظر واجهة المستخدم بشكل كبير)
-            if self._existing_org_folders is None:
-                QTimer.singleShot(0, self._load_existing_org_folders)
-
-            # التحقق من عدم تكرار اسم المؤسسة في البكت (إذا كانت القائمة جاهزة)
-            if self._existing_org_folders is not None:
-                safe_name = self._sanitize_folder_name(organization_name)
-                if safe_name in self._existing_org_folders:
-                    self.validation_label.setText("اسم المؤسسة مستخدم مسبقاً على الخادم، اختر اسماً مختلفاً")
-                    self.validation_label.setStyleSheet("color: #E74C3C;")
-                    self.save_button.setEnabled(False)
-                    return
-
             # التحقق من وجود كلمتي المرور
             if not password1 or not password2:
                 self.save_button.setEnabled(False)
@@ -241,13 +224,9 @@ class FirstSetupDialog(QDialog):
     def save_password(self):
         """حفظ كلمة المرور واسم المؤسسة"""
         try:
-            organization_name = self.organization_input.text().strip()
+            # اسم المؤسسة ثابت
+            organization_name = "Trial Version"
             password = self.password1_input.text().strip()
-            
-            # التحقق من اسم المؤسسة
-            if not organization_name or len(organization_name) < 3:
-                self.show_error("يرجى إدخال اسم صحيح للمؤسسة")
-                return
             
             # التحقق من كلمة المرور
             if len(password) < config.PASSWORD_MIN_LENGTH:
@@ -283,7 +262,7 @@ class FirstSetupDialog(QDialog):
     
     def get_organization_name(self) -> str:
         """الحصول على اسم المؤسسة"""
-        return getattr(self, 'organization_name', '')
+        return "Trial Version"
     
     def show_error(self, message: str):
         """عرض رسالة خطأ"""
