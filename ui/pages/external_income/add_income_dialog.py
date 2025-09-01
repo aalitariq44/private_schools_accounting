@@ -213,6 +213,23 @@ class AddIncomeDialog(QDialog):
                 QMessageBox.warning(self, "خطأ في البيانات", "\n".join(errors))
                 return
             
+            # التحقق من عدد الواردات الخارجية (نسخة تجريبية)
+            result = db_manager.execute_fetch_one("SELECT COUNT(*) as count FROM external_income")
+            income_count = result['count'] if result else 0
+            
+            if income_count >= 10:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("نسخة تجريبية")
+                msg.setText("هذه نسخة تجريبية ولا يمكن إضافة أكثر من 10 واردات خارجية")
+                msg.setInformativeText(
+                    "واتساب: 07859371349\n"
+                    "تليجرام: @tech_solu"
+                )
+                msg.setLayoutDirection(Qt.RightToLeft)
+                msg.exec_()
+                return
+            
             # تحضير البيانات
             income_data = {
                 'school_id': self.school_combo.currentData(),
