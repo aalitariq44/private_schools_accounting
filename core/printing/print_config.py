@@ -52,6 +52,7 @@ class TemplateType(Enum):
     INSTALLMENT_RECEIPT = "installment_receipt"  # إيصال قسط جديد
     TEACHERS_LIST = "teachers_list"  # قائمة المعلمين
     EMPLOYEES_LIST = "employees_list"  # قائمة الموظفين
+    TEACHER_SALARY_DETAILS = "teacher_salary_details"  # تفاصيل راتب المعلم
     CUSTOM = "custom"
 
 
@@ -67,6 +68,7 @@ TEMPLATE_PRINT_METHODS = {
     TemplateType.SALARY_SLIP: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.TEACHERS_LIST: PrintMethod.HTML_WEB_ENGINE,
     TemplateType.EMPLOYEES_LIST: PrintMethod.HTML_WEB_ENGINE,
+    TemplateType.TEACHER_SALARY_DETAILS: PrintMethod.HTML_WEB_ENGINE,  # تفاصيل راتب المعلم
     
     # الوصولات والفواتير - ReportLab
     TemplateType.PAYMENT_RECEIPT: PrintMethod.REPORTLAB_CANVAS,

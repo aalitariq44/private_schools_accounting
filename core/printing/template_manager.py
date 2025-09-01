@@ -166,7 +166,8 @@ class TemplateManager:
             TemplateType.STAFF_REPORT: self.get_staff_report_template(),
             TemplateType.SCHOOL_REPORT: self.get_school_report_template(),
             TemplateType.TEACHERS_LIST: self.get_teachers_list_template(),
-            TemplateType.EMPLOYEES_LIST: self.get_employees_list_template()
+            TemplateType.EMPLOYEES_LIST: self.get_employees_list_template(),
+            TemplateType.TEACHER_SALARY_DETAILS: self.get_teacher_salary_details_template()
         }
         
         for template_type, content in templates.items():
@@ -1041,6 +1042,117 @@ class TemplateManager:
     
     <div class="footer">
         <p>{{ company_name }} - {{ system_version }}</p>
+    </div>
+</body>
+</html>
+        """
+
+    def get_teacher_salary_details_template(self) -> str:
+        """قالب تفاصيل راتب المعلم أو الموظف"""
+        return """
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تفاصيل راتب الموظف</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .teacher-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .salary-details {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .salary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+        }
+        .total-row {
+            border-top: 2px solid #333;
+            padding-top: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ company_name }}</h1>
+        <h2>تفاصيل راتب الموظف</h2>
+        <p>الشهر: {{ salary.month_year }}</p>
+    </div>
+    
+    <div class="teacher-info">
+        <h3>بيانات الموظف</h3>
+        <div class="info-row">
+            <strong>الاسم:</strong> {{ teacher.name }}
+        </div>
+        <div class="info-row">
+            <strong>المدرسة:</strong> {{ teacher.school_name }}
+        </div>
+        <div class="info-row">
+            <strong>عدد الحصص:</strong> {{ teacher.class_hours or 'غير محدد' }}
+        </div>
+        <div class="info-row">
+            <strong>رقم الهاتف:</strong> {{ teacher.phone or 'غير محدد' }}
+        </div>
+        <div class="info-row">
+            <strong>ملاحظات:</strong> {{ teacher.notes or '-' }}
+        </div>
+    </div>
+    
+    <div class="salary-details">
+        <h3>تفاصيل الراتب</h3>
+        <div class="salary-row">
+            <span>الراتب الأساسي:</span>
+            <span>{{ salary.basic_salary | currency }}</span>
+        </div>
+        <div class="salary-row">
+            <span>البدلات:</span>
+            <span>{{ salary.allowances | currency }}</span>
+        </div>
+        <div class="salary-row">
+            <span>الخصومات:</span>
+            <span>{{ salary.deductions | currency }}</span>
+        </div>
+        <div class="salary-row total-row">
+            <span>صافي الراتب:</span>
+            <span>{{ salary.net_salary | currency }}</span>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>تاريخ الطباعة: {{ print_date | date_ar }}</p>
+        <p>{{ company_name }}</p>
     </div>
 </body>
 </html>

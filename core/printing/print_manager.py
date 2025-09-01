@@ -8,7 +8,7 @@
 import logging
 from typing import Dict, Any, Optional
 from PyQt5.QtPrintSupport import QPrinter, QPrintDialog
-from PyQt5.QtWidgets import QApplication, QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QTextDocument
 
 from .print_config import PrintSettings, TemplateType, PrintMethod, TEMPLATE_PRINT_METHODS
@@ -212,8 +212,6 @@ class PrintManager:
             return True
         return False
 
-from ui.widgets.column_selection_dialog import ColumnSelectionDialog
-
 # Convenience functions for printing different templates
 
 def print_students_list(students, filter_info=None, parent=None, use_web_engine=True):
@@ -302,3 +300,37 @@ def print_employees_list(employees, filter_info=None, parent=None, use_web_engin
     if filter_info:
         data['filter_info'] = filter_info
     pm.preview_document(TemplateType.EMPLOYEES_LIST, data)
+
+
+def print_teacher_salary_details(teacher, salary, parent=None, statistics_data=None, salaries_data=None):
+    """طباعة تفاصيل راتب المعلم أو الموظف دائماً في Word مع الإحصائيات وجدول الرواتب"""
+    
+    logging.debug(f"print_teacher_salary_details: استُدعيت مع {teacher.get('name', '')}")
+    
+    # فحص وتنظيف البيانات
+    if teacher is None:
+        teacher = {}
+    if salary is None:
+        salary = {}
+    if statistics_data is None:
+        statistics_data = {}
+    if salaries_data is None:
+        salaries_data = []
+    
+    # التأكد من أن البيانات من النوع الصحيح
+    if not isinstance(teacher, dict):
+        teacher = {}
+    if not isinstance(salary, dict):
+        salary = {}
+    if not isinstance(statistics_data, dict):
+        statistics_data = {}
+    if not isinstance(salaries_data, list):
+        salaries_data = []
+    
+    # تنظيف قائمة الرواتب من القيم None
+    salaries_data = [s for s in salaries_data if s is not None and isinstance(s, dict)]
+    
+    # إنشاء ملف Word دائماً
+    from core.printing.word_manager import create_teacher_salary_details_word_document
+    create_teacher_salary_details_word_document(teacher, salary, parent, statistics_data, salaries_data)
+    logging.info("تم إنشاء ملف Word لتفاصيل راتب الموظف/المعلم بنجاح")

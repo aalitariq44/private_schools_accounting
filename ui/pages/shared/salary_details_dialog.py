@@ -654,18 +654,32 @@ class SalaryDetailsDialog(QDialog):
         try:
             table_name = "teachers" if self.person_type == "teacher" else "employees"
             
-            query = f"""
-                SELECT name, monthly_salary, school_id,
-                       (SELECT name_ar FROM schools WHERE id = {table_name}.school_id) as school_name
-                FROM {table_name}
-                WHERE id = ?
-            """
+            # جلب الحقول المطلوبة مع التعامل مع الاختلافات بين المعلمين والموظفين
+            if self.person_type == "teacher":
+                query = f"""
+                    SELECT name, monthly_salary, school_id, class_hours, phone, notes,
+                           (SELECT name_ar FROM schools WHERE id = {table_name}.school_id) as school_name
+                    FROM {table_name}
+                    WHERE id = ?
+                """
+            else:  # employee
+                query = f"""
+                    SELECT name, monthly_salary, school_id, phone, notes, job_type,
+                           (SELECT name_ar FROM schools WHERE id = {table_name}.school_id) as school_name
+                    FROM {table_name}
+                    WHERE id = ?
+                """
             
             result = db_manager.execute_query(query, (self.person_id,))
             
             if result:
                 row = result[0]
                 self.person_data = dict(row)  # تحويل sqlite3.Row إلى dictionary
+                
+                # إضافة حقل class_hours للموظفين إذا لم يكن موجوداً
+                if self.person_type == "employee" and 'class_hours' not in self.person_data:
+                    self.person_data['class_hours'] = None
+                
                 # تحديث معلومات الرأس
                 school_name = self.person_data.get('school_name', 'غير محدد')
                 self.school_label.setText(f"المدرسة: {school_name}")
@@ -1051,16 +1065,79 @@ class SalaryDetailsDialog(QDialog):
         try:
             # محاولة استيراد وحدة الطباعة
             try:
-                from ui.components.printing.salary_report_printer import SalaryReportPrinter
-                printer = SalaryReportPrinter()
-                printer.print_person_salary_report(
-                    person_type=self.person_type,
-                    person_id=self.person_id,
-                    person_name=self.person_name,
-                    person_data=self.person_data,
-                    salaries_data=self.salaries_data
-                )
-            except ImportError:
+                from core.printing.print_manager import print_teacher_salary_details
+                
+                # تحضير بيانات الموظف
+                person_data = {
+                    'name': self.person_name,
+                    'school_name': self.person_data.get('school_name', 'غير متوفر'),
+                    'class_hours': self.person_data.get('class_hours', 'غير محدد') if self.person_data.get('class_hours') else 'غير محدد',
+                    'phone': self.person_data.get('phone', 'غير متوفر') if self.person_data.get('phone') else 'غير متوفر',
+                    'notes': self.person_data.get('notes', 'لا توجد ملاحظات') if self.person_data.get('notes') else 'لا توجد ملاحظات'
+                }
+                
+                # حساب الإحصائيات الكاملة
+                total_count = len(self.salaries_data)
+                total_amount = sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data)
+                current_year = datetime.now().year
+                current_month = datetime.now().month
+                
+                current_year_count = sum(1 for s in self.salaries_data 
+                                       if s.get('payment_date') and 
+                                       datetime.strptime(s['payment_date'], '%Y-%m-%d').year == current_year)
+                current_year_amount = sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data 
+                                        if s.get('payment_date') and 
+                                        datetime.strptime(s['payment_date'], '%Y-%m-%d').year == current_year)
+                
+                current_month_count = sum(1 for s in self.salaries_data 
+                                        if s.get('payment_date') and 
+                                        datetime.strptime(s['payment_date'], '%Y-%m-%d').month == current_month and
+                                        datetime.strptime(s['payment_date'], '%Y-%m-%d').year == current_year)
+                current_month_amount = sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data 
+                                         if s.get('payment_date') and 
+                                         datetime.strptime(s['payment_date'], '%Y-%m-%d').month == current_month and
+                                         datetime.strptime(s['payment_date'], '%Y-%m-%d').year == current_year)
+                
+                average_salary = total_amount / total_count if total_count > 0 else 0
+                highest_salary = max((float(s.get('paid_amount', 0) or 0) for s in self.salaries_data), default=0)
+                
+                last_salary_date = None
+                for s in self.salaries_data:
+                    if s.get('payment_date'):
+                        try:
+                            payment_date = datetime.strptime(s['payment_date'], '%Y-%m-%d')
+                            if last_salary_date is None or payment_date > last_salary_date:
+                                last_salary_date = payment_date
+                        except:
+                            continue
+                
+                # بيانات الإحصائيات
+                statistics_data = {
+                    'total_count': total_count,
+                    'current_year_count': current_year_count,
+                    'current_month_count': current_month_count,
+                    'total_amount': total_amount,
+                    'current_year_amount': current_year_amount,
+                    'current_month_amount': current_month_amount,
+                    'average_salary': average_salary,
+                    'highest_salary': highest_salary,
+                    'last_salary_date': last_salary_date.strftime('%Y-%m-%d') if last_salary_date else '--'
+                }
+                
+                # بيانات الراتب الأساسي
+                salary_data = {
+                    'month_year': 'الشهر الحالي',
+                    'basic_salary': float(self.person_data.get('monthly_salary', 0) or 0),
+                    'allowances': 0,  # يمكن حسابها لاحقاً إذا كانت متوفرة
+                    'deductions': 0,  # يمكن حسابها لاحقاً إذا كانت متوفرة
+                    'net_salary': total_amount
+                }
+                
+                # طباعة تفاصيل الراتب مع الإحصائيات وجدول الرواتب
+                print_teacher_salary_details(person_data, salary_data, self, statistics_data, self.salaries_data)
+                
+            except ImportError as e:
+                logging.error(f"خطأ في استيراد وحدة الطباعة: {e}")
                 # في حالة عدم وجود وحدة الطباعة، اعرض تقرير أساسي
                 total_amount = sum(float(s.get('paid_amount', 0) or 0) for s in self.salaries_data)
                 QMessageBox.information(
