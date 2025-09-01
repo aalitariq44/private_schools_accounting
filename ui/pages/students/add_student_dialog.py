@@ -303,10 +303,30 @@ class AddStudentDialog(QDialog):
     
     def save_student(self):
         """حفظ بيانات الطالب"""
-        # التحقق من صحة البيانات
-        errors = self.validate_inputs()
-        if errors:
-            QMessageBox.warning(self, "خطأ في البيانات", "\\n".join(errors))
+        # عد الطلاب الحاليين
+        try:
+            count_query = "SELECT COUNT(*) FROM students"
+            result = db_manager.execute_query(count_query)
+            current_students_count = result[0][0] if result else 0
+        except Exception as e:
+            logging.error(f"خطأ في عد الطلاب: {e}")
+            QMessageBox.critical(self, "خطأ", f"حدث خطأ في عد الطلاب:\\n{str(e)}")
+            return
+        
+        # التحقق من حد النسخة التجريبية
+        if current_students_count >= 10:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Warning)
+            msg.setWindowTitle("نسخة تجريبية")
+            msg.setText("هذه نسخة تجريبية من التطبيق")
+            msg.setInformativeText(
+                "لا يمكن إضافة أكثر من 10 طلاب في النسخة التجريبية\n\n"
+                "لشراء النسخة الكاملة، تواصل معنا عبر:\n\n"
+                "واتساب: 07859371349\n"
+                "تليجرام: @tech_solu"
+            )
+            msg.setLayoutDirection(Qt.RightToLeft)
+            msg.exec_()
             return
         
         # التحقق من الحالة إذا كانت غير نشط
@@ -321,6 +341,12 @@ class AddStudentDialog(QDialog):
             )
             if reply == QMessageBox.No:
                 return
+        
+        # التحقق من صحة البيانات
+        errors = self.validate_inputs()
+        if errors:
+            QMessageBox.warning(self, "خطأ في البيانات", "\\n".join(errors))
+            return
         
         try:
             school_data = self.school_combo.currentData()

@@ -409,6 +409,33 @@ class AddGroupStudentsDialog(QDialog):
     def save_students_group(self):
         """حفظ مجموعة الطلاب"""
         try:
+            # عد الطلاب الحاليين
+            count_query = "SELECT COUNT(*) FROM students"
+            result = db_manager.execute_query(count_query)
+            current_students_count = result[0][0] if result else 0
+            
+            # عد الطلاب الجدد المراد إضافتهم
+            new_students_count = self.students_table.rowCount()
+            
+            # التحقق من حد النسخة التجريبية
+            if current_students_count + new_students_count > 10:
+                msg = QMessageBox(self)
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("نسخة تجريبية")
+                msg.setText("هذه نسخة تجريبية من التطبيق")
+                msg.setInformativeText(
+                    f"لا يمكن إضافة أكثر من 10 طلاب في النسخة التجريبية\n\n"
+                    f"الطلاب الحاليين: {current_students_count}\n"
+                    f"الطلاب الجدد: {new_students_count}\n"
+                    f"المجموع: {current_students_count + new_students_count}\n\n"
+                    "لشراء النسخة الكاملة، تواصل معنا عبر:\n\n"
+                    "واتساب: 07859371349\n"
+                    "تليجرام: @tech_solu"
+                )
+                msg.setLayoutDirection(Qt.RightToLeft)
+                msg.exec_()
+                return
+            
             # التحقق من صحة البيانات
             if not self.validate_shared_data() or not self.validate_students_data():
                 return
