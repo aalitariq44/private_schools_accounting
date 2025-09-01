@@ -185,6 +185,23 @@ class AddEmployeeDialog(QDialog):
         if not self.validate_data():
             return
         try:
+            # التحقق من عدد الموظفين (نسخة تجريبية)
+            result = db_manager.execute_fetch_one("SELECT COUNT(*) as count FROM employees")
+            employees_count = result['count'] if result else 0
+            
+            if employees_count >= 4:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("نسخة تجريبية")
+                msg.setText("هذه نسخة تجريبية ولا يمكن إضافة أكثر من 4 موظفين")
+                msg.setInformativeText(
+                    "واتساب: 07859371349\n"
+                    "تليجرام: @tech_solu"
+                )
+                msg.setLayoutDirection(Qt.RightToLeft)
+                msg.exec_()
+                return
+            
             job_type = self.job_combo.currentData()
             if self.job_combo.currentText() == "مخصص":
                 job_type = self.custom_job_input.text().strip()
