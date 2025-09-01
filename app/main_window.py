@@ -703,6 +703,10 @@ class MainWindow(QMainWindow):
             # إرسال إشارة تغيير الصفحة
             self.page_changed.emit(page_name)
 
+            # تحديث تلقائي لجميع الصفحات التي تدعم التحديث عند الانتقال إليها
+            if hasattr(page_widget, 'refresh'):
+                page_widget.refresh()
+
             # تسجيل الإجراء
             log_user_action("تم الانتقال إلى صفحة", page_name)
 
