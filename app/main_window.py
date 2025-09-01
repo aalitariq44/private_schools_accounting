@@ -955,7 +955,8 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("شراء النسخة الكاملة")
             msg.setText("لشراء النسخة الكاملة من التطبيق، تواصل معنا عبر:")
             msg.setInformativeText(
-                "واتساب: 07859371349\n"
+                "واتساب: 07859371340\n"
+                "واتساب: 07710995922\n"
                 "تليجرام: @tech_solu"
             )
             msg.setLayoutDirection(Qt.RightToLeft)

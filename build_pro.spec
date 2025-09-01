@@ -73,7 +73,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='PrivateSchoolsAccounting',
+    name='PrivateSchoolsAccounting_beta',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
