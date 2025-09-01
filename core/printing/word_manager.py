@@ -527,13 +527,13 @@ class WordManager:
                 doc.add_paragraph()
                 
                 # إنشاء جدول الرواتب
-                num_cols = 8  # المعرف، تاريخ الدفع، المبلغ المدفوع، الراتب الأساسي، من تاريخ، إلى تاريخ، عدد الأيام، الملاحظات
+                num_cols = 8  # التسلسل، تاريخ الدفع، المبلغ المدفوع، الراتب الأساسي، من تاريخ، إلى تاريخ، عدد الأيام، الملاحظات
                 salaries_table = doc.add_table(rows=1, cols=num_cols)
                 salaries_table.style = 'Table Grid'
                 salaries_table.alignment = WD_TABLE_ALIGNMENT.CENTER
                 
                 # عناوين جدول الرواتب
-                salaries_headers = ['المعرف', 'تاريخ الدفع', 'المبلغ المدفوع', 'الراتب الأساسي', 'من تاريخ', 'إلى تاريخ', 'عدد الأيام', 'الملاحظات']
+                salaries_headers = ['ت', 'تاريخ الدفع', 'المبلغ المدفوع', 'الراتب الأساسي', 'من تاريخ', 'إلى تاريخ', 'عدد الأيام', 'الملاحظات']
                 hdr_cells = salaries_table.rows[0].cells
                 for i, header in enumerate(salaries_headers):
                     if i < len(hdr_cells):  # فحص إضافي للتأكد من وجود الخلية
@@ -549,7 +549,7 @@ class WordManager:
                         run.font.name = 'Arial'
                 
                 # إضافة بيانات الرواتب مع فحص كل سجل
-                for salary_record in salaries_data:
+                for index, salary_record in enumerate(salaries_data, 1):
                     if not salary_record or not isinstance(salary_record, dict):
                         continue  # تخطي السجلات غير الصحيحة
                     
@@ -576,7 +576,7 @@ class WordManager:
                             return "0 دينار"
                     
                     row_data = [
-                        str(salary_record.get('id', '')),
+                        str(index),  # التسلسل بدلاً من المعرف
                         format_date(salary_record.get('payment_date', '')),
                         format_amount(salary_record.get('paid_amount', 0)),
                         format_amount(salary_record.get('base_salary', 0)),
