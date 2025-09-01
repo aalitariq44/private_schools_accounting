@@ -27,7 +27,7 @@
   },
   "additional_fees_page": {
     "font_size": "كبير",
-    "statistics_window_visible": false
+    "statistics_window_visible": true
   },
   "student_ids_page": {
     "font_size": "متوسط",
