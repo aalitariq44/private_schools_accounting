@@ -1015,7 +1015,7 @@ class TemplateManager:
     <table>
         <thead>
             <tr>
-                <th>المعرف</th>
+                <th>التسلسل</th>
                 <th>الاسم</th>
                 <th>المدرسة</th>
                 <th>نوع الوظيفة</th>
@@ -1027,7 +1027,7 @@ class TemplateManager:
         <tbody>
             {% for employee in employees %}
             <tr>
-                <td>{{ employee.id }}</td>
+                <td>{{ loop.index }}</td>
                 <td>{{ employee.name }}</td>
                 <td>{{ employee.school_name }}</td>
                 <td>{{ employee.job_type or 'غير محدد' }}</td>
