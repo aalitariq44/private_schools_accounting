@@ -246,7 +246,7 @@ def print_students_list(students, filter_info=None, parent=None, use_web_engine=
     selected_columns = {k: columns[k] for k in selected_keys if k in columns}
     logging.debug(f"print_students_list: الأعمدة المحددة للطباعة في Word: {selected_columns}")
     # إنشاء ملف Word دائماً
-    from core.printing.word_manager import create_students_word_document
+    from core.printing.students_word_manager import create_students_word_document
     create_students_word_document(students, selected_columns, filter_info, parent)
     logging.info("تم إنشاء ملف Word بنجاح")
         
@@ -331,6 +331,6 @@ def print_teacher_salary_details(teacher, salary, parent=None, statistics_data=N
     salaries_data = [s for s in salaries_data if s is not None and isinstance(s, dict)]
     
     # إنشاء ملف Word دائماً
-    from core.printing.word_manager import create_teacher_salary_details_word_document
+    from core.printing.teacher_salary_word_manager import create_teacher_salary_details_word_document
     create_teacher_salary_details_word_document(teacher, salary, parent, statistics_data, salaries_data)
     logging.info("تم إنشاء ملف Word لتفاصيل راتب الموظف/المعلم بنجاح")
