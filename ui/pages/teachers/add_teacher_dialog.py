@@ -196,6 +196,23 @@ class AddTeacherDialog(QDialog):
         if not self.validate_data():
             return
         try:
+            # التحقق من عدد المعلمين (نسخة تجريبية)
+            result = db_manager.execute_fetch_one("SELECT COUNT(*) as count FROM teachers")
+            teachers_count = result['count'] if result else 0
+            
+            if teachers_count >= 4:
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Warning)
+                msg.setWindowTitle("نسخة تجريبية")
+                msg.setText("هذه نسخة تجريبية ولا يمكن إضافة أكثر من 4 معلمين")
+                msg.setInformativeText(
+                    "واتساب: 07859371349\n"
+                    "تليجرام: @tech_solu"
+                )
+                msg.setLayoutDirection(Qt.RightToLeft)
+                msg.exec_()
+                return
+            
             teacher_data = {
                 'name': self.name_input.text().strip(),
                 'school_id': self.school_combo.currentData(),
