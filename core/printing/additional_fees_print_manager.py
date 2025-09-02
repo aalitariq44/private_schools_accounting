@@ -34,6 +34,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 import config
+from core.utils.settings_manager import get_academic_year
 
 
 class AdditionalFeesPrintManager:
@@ -206,7 +207,8 @@ class AdditionalFeesPrintManager:
         receipt_title = self.reshape_arabic_text("إيصال الرسوم الإضافية")
         c.drawString(left_x, header_y, receipt_title)
         c.setFont(self.arabic_font, 11)
-        academic_year = self.reshape_arabic_text("للعام الدراسي 2025 - 2026")
+        current_academic_year = get_academic_year()
+        academic_year = self.reshape_arabic_text(f"للعام الدراسي {current_academic_year}")
         c.drawString(left_x, header_y - 18, academic_year)
 
         # End Header

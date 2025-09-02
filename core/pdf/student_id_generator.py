@@ -35,6 +35,7 @@ from templates.id_template import (
     get_card_position, get_element_absolute_position, get_element_absolute_size,
     verify_layout_fits, get_optimized_layout
 )
+from core.utils.settings_manager import get_academic_year
 
 
 class StudentIDGenerator:
@@ -262,7 +263,8 @@ class StudentIDGenerator:
                 grade_text = f"{element_config.get('label', '')}{grade}"
                 self.draw_text_element(card_x, card_y, element_config, grade_text)
             elif element_name == "academic_year":
-                year_text = element_config.get('text', 'العام الدراسي: 2025 - 2026')
+                current_year = get_academic_year()
+                year_text = element_config.get('text', f'العام الدراسي: {current_year}')
                 self.draw_text_element(card_x, card_y, element_config, year_text)
             elif element_name == "photo_box":
                 self.draw_photo_box(card_x, card_y, element_config)

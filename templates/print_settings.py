@@ -6,6 +6,7 @@
 
 from reportlab.lib.units import mm
 from reportlab.lib.colors import Color, black, white, blue, red, green
+from core.utils.settings_manager import get_academic_year
 
 # إعدادات الجودة والطباعة
 PRINT_SETTINGS = {
@@ -140,7 +141,7 @@ CUSTOMIZABLE_TEXTS = {
     },
     
     "academic_year": {
-        "default": "2025 - 2026",
+        "default": get_academic_year(),
         "format": "YYYY - YYYY",
         "auto_generate": True
     },

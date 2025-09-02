@@ -7,6 +7,7 @@
 
 from reportlab.lib.units import mm
 from reportlab.lib.colors import Color, black, white
+from core.utils.settings_manager import get_academic_year
 
 # أبعاد الهوية (ISO ID-1 - حجم بطاقة ماستر كارد)
 # 85.60 × 53.98 مم = 242.646 × 153.014 نقطة
@@ -109,7 +110,7 @@ TEMPLATE_ELEMENTS = {
         "font_name": "Helvetica",
         "alignment": "right",
         "color": Color(0.4, 0.4, 0.4),
-        "text": "2025-2026"
+        "text": get_academic_year()
     },
     
     # تاريخ الميلاد - تصميم مبسط
