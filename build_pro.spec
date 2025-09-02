@@ -18,8 +18,6 @@ if os.path.exists('ui'):
     datas.append(('ui', 'ui'))
 if os.path.exists('data'):
     datas.append(('data', 'data'))
-if os.path.exists('docs'):
-    datas.append(('docs', 'docs'))
 if os.path.exists('config.py'):
     datas.append(('config.py', '.'))
 if os.path.exists('printing_config.json'):
@@ -44,7 +42,18 @@ hiddenimports = [
     'json',
     'datetime',
     'decimal',
-    'logging'
+    'logging',
+    'docx',
+    'jinja2',
+    'storage3',
+    'python_bidi',
+    'cryptography',
+    'requests',
+    'gotrue',
+    'httpx',
+    'postgrest',
+    'realtime',
+    'supafunc'
 ]
 
 a = Analysis(
@@ -95,5 +104,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='PrivateSchoolsAccounting_Professional'
+    name='PrivateSchoolsAccounting_Professional_2025_9_2'
 )
