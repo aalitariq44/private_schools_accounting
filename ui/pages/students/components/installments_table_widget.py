@@ -142,7 +142,7 @@ class InstallmentsTableWidget(QWidget):
                 SELECT id, amount, payment_date, payment_time, notes
                 FROM installments 
                 WHERE student_id = ?
-                ORDER BY payment_date DESC
+                ORDER BY created_at ASC
             """
             self.installments_data = db_manager.execute_query(query, (self.student_id,))
             self.update_installments_table()
