@@ -99,7 +99,7 @@ class LicenseSystem:
             msg.setIcon(QMessageBox.Information)
             msg.setText("يتطلب تفعيل الترخيص للمتابعة")
             msg.setInformativeText(
-                "لم يتم العثور على ترخيص صالح لهذا الجهاز.\\n"
+                "لم يتم العثور على ترخيص صالح لهذا الجهاز.\n"
                 "سيتم فتح نافذة التفعيل لإدخال رمز الترخيص."
             )
             msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
