@@ -360,7 +360,7 @@ class ReportLabPrintManager:
             )
         # Draw text in left column
         text0 = self.reshape_arabic_text("يرجى الاحتفاظ بالوصل لإبرازه عند الحاجة")
-        text1 = self.reshape_arabic_text("شركة الحلول التقنية الجديدة   واتساب: 07859371340 تليجرام: @new_tech")
+        text1 = self.reshape_arabic_text("شركة الحلول التقنية الجديدة   واتساب: 07859371340 تليجرام: @tech_solu")
         text2 = self.reshape_arabic_text("لانشاء كافة تطبيقات الهاتف وسطح المكتب ومواقع الويب وادارة قواعد البيانات")
         # Calculate horizontal center of the left column
         center_x_left_column = footer_x + (left_width / 2)
