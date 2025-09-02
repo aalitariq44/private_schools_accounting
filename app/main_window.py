@@ -387,6 +387,7 @@ class MainWindow(QMainWindow):
                 from ui.widgets.academic_year_widget import AcademicYearWidget
                 self.academic_year_widget = AcademicYearWidget(show_label=True, auto_refresh=True)
                 self.header_layout.addWidget(self.academic_year_widget)
+                
             except ImportError as e:
                 logging.warning(f"لم يتم تحميل ويدجت العام الدراسي: {e}")
 
@@ -406,20 +407,17 @@ class MainWindow(QMainWindow):
             logging.error(f"خطأ في إنشاء شريط عنوان المحتوى: {e}")
             raise
     
-    def create_user_info(self):
-        """إنشاء معلومات المستخدم"""
+    def on_settings_changed(self):
+        """معالج تغيير الإعدادات"""
         try:
-            user_frame = QFrame()
-            user_frame.setObjectName("userInfo")
-            
-            user_layout = QHBoxLayout(user_frame)
-            user_layout.setContentsMargins(15, 8, 15, 8)
-            
-            return user_frame
-            
+            logging.info("تلقي إشارة تغيير الإعدادات في main_window")
+            # تحديث ويدجت العام الدراسي إذا كان موجوداً
+            if hasattr(self, 'academic_year_widget') and self.academic_year_widget:
+                self.academic_year_widget.refresh_academic_year()
+                logging.info("تم تحديث ويدجت العام الدراسي بعد تغيير الإعدادات")
+                
         except Exception as e:
-            logging.error(f"خطأ في إنشاء معلومات المستخدم: {e}")
-            return QFrame()
+            logging.error(f"خطأ في معالج تغيير الإعدادات: {e}")
     
     def load_pages(self):
         """تحميل صفحات التطبيق"""
@@ -652,6 +650,11 @@ class MainWindow(QMainWindow):
             settings = SettingsPage()
             self.pages["settings"] = settings
             self.pages_stack.addWidget(settings)
+            
+            # ربط إشارة تغيير الإعدادات
+            settings.settings_changed.connect(self.on_settings_changed)
+            logging.info("تم ربط إشارة settings_changed في main_window")
+            
         except Exception as e:
             logging.error(f"خطأ في تحميل صفحة الإعدادات: {e}")
             # إنشاء صفحة بديلة

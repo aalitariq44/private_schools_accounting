@@ -106,8 +106,54 @@ class AcademicYearWidget(QWidget):
             self.refresh_timer.timeout.connect(self.refresh_academic_year)
             self.refresh_timer.start(30000)  # 30 ثانية
             
+            # تحديث أسرع عندما يكون التطبيق نشطاً (كل 5 ثوانٍ)
+            self.fast_refresh_timer = QTimer()
+            self.fast_refresh_timer.timeout.connect(self.fast_refresh)
+            self.fast_refresh_timer.start(5000)  # 5 ثوانٍ
+            
+            # ربط إشارات تغيير الإعدادات
+            self.connect_settings_signals()
+            
         except Exception as e:
             logging.error(f"خطأ في إعداد التحديث التلقائي: {e}")
+    
+    def fast_refresh(self):
+        """تحديث سريع للعام الدراسي"""
+        try:
+            # تحقق من التغييرات كل 5 ثوانٍ
+            year = get_academic_year()
+            if year != self.current_year:
+                logging.info(f"تم اكتشاف تغيير سريع في العام الدراسي إلى: {year}")
+                self.set_academic_year(year)
+                
+        except Exception as e:
+            logging.error(f"خطأ في التحديث السريع: {e}")
+    
+    def connect_settings_signals(self):
+        """ربط إشارات تغيير الإعدادات"""
+        try:
+            from core.utils.settings_manager import settings_manager
+            
+            # ربط الإشارة إذا كانت متاحة
+            if hasattr(settings_manager, 'setting_changed') and settings_manager.setting_changed is not None:
+                settings_manager.setting_changed.connect(self.on_setting_changed)
+                logging.info("تم ربط إشارة تغيير الإعدادات في ويدجت العام الدراسي")
+            else:
+                logging.warning("إشارة تغيير الإعدادات غير متاحة")
+            
+        except Exception as e:
+            logging.error(f"خطأ في ربط إشارات الإعدادات: {e}")
+    
+    def on_setting_changed(self, key: str, value: str):
+        """معالج تغيير الإعدادات"""
+        try:
+            logging.info(f"الويدجت تلقى تغيير إعداد: {key} = {value}")
+            if key == 'academic_year':
+                logging.info(f"تم اكتشاف تغيير العام الدراسي إلى: {value}")
+                self.set_academic_year(value)
+                
+        except Exception as e:
+            logging.error(f"خطأ في معالج تغيير الإعدادات: {e}")
     
     def load_academic_year(self):
         """تحميل العام الدراسي الحالي"""
@@ -134,6 +180,7 @@ class AcademicYearWidget(QWidget):
         """تحديث العام الدراسي"""
         try:
             year = get_academic_year()
+            logging.info(f"تحديث العام الدراسي في الويدجت إلى: {year}")
             if year != self.current_year:
                 self.set_academic_year(year)
                 logging.info(f"تم تحديث العام الدراسي في الويدجت: {year}")

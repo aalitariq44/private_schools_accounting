@@ -376,6 +376,7 @@ class SettingsPage(QWidget):
             if settings_manager.set_academic_year(selected_year):
                 QMessageBox.information(self, "نجح", "تم حفظ العام الدراسي بنجاح")
                 log_user_action(f"تم تحديث العام الدراسي إلى: {selected_year}")
+                logging.info(f"إرسال إشارة settings_changed من صفحة الإعدادات")
                 self.settings_changed.emit()
             else:
                 QMessageBox.critical(self, "خطأ", "فشل في حفظ العام الدراسي")
