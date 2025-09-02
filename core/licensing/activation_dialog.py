@@ -85,8 +85,7 @@ class ActivationDialog(QDialog):
         
         # نص معلومات التواصل
         contact_label = QLabel(
-            "واتساب: 07859371349"
-            "تليجرام: @tech_solu"
+              "   واتساب: 07859371340  "     "تليجرام: @tech_solu"
         )
         contact_label.setAlignment(Qt.AlignCenter)
         contact_label.setWordWrap(True)
