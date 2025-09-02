@@ -273,31 +273,35 @@ class ReportLabPrintManager:
         ])
 
         col_widths = [
-            self.content_width * 0.25,  # بيانات يمين
-            self.content_width * 0.25,  # عنوان يمين
-            self.content_width * 0.25,  # بيانات يسار
-            self.content_width * 0.25   # عنوان يسار
+            self.content_width * 0.35,  # بيانات يمين (أكبر للقيم الطويلة)
+            self.content_width * 0.15,  # عنوان يمين (أصغر للعناوين القصيرة)
+            self.content_width * 0.35,  # بيانات يسار (أكبر للقيم الطويلة)
+            self.content_width * 0.15   # عنوان يسار (أصغر للعناوين القصيرة)
         ]
-        tbl = Table(merged_table_data, colWidths=col_widths, hAlign='CENTER')
+        row_heights = [18, 18, 18, 18, 22]  # ارتفاع الصفوف لتجنب overflow
+        tbl = Table(merged_table_data, colWidths=col_widths, rowHeights=row_heights, hAlign='CENTER')
 
         tbl.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), self.arabic_font),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
             ('ALIGN', (0, 0), (-1, -2), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('FONTNAME', (1, 0), (1, -2), self.arabic_bold_font),
             ('FONTNAME', (3, 0), (3, -2), self.arabic_bold_font),
             ('GRID', (0, 0), (-1, -1), 0.5, black),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-            ('TOPPADDING', (0, 0), (-1, -1), 4),
-            ('LEFTPADDING', (0, 0), (-1, -1), 5),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 3),
             # صف المبلغ المتبقي
             ('SPAN', (0, 4), (1, 4)),  # دمج أول خليتين
             ('BACKGROUND', (0, 4), (-1, 4), Color(0.92, 0.92, 0.92)),
             ('TEXTCOLOR', (0, 4), (-1, 4), red),
             ('FONTNAME', (2, 4), (3, 4), self.arabic_bold_font),
             ('ALIGN', (2, 4), (3, 4), 'RIGHT'),
+            ('TOPPADDING', (0, 4), (-1, 4), 0),
+            ('BOTTOMPADDING', (0, 4), (-1, 4), 0),
+            ('RIGHTPADDING', (0, 4), (-1, 4), 3),
         ]))
         
         table_height = tbl.wrapOn(c, self.content_width, receipt_height)[1]
