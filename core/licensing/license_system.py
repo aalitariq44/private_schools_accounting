@@ -83,7 +83,7 @@ class LicenseSystem:
             self.logger.error(f"خطأ عام في نظام التراخيص: {e}")
             self.show_error_message(
                 "خطأ في نظام التراخيص",
-                f"حدث خطأ غير متوقع في نظام التراخيص:\\n{str(e)}\\n\\n"
+                f"حدث خطأ غير متوقع في نظام التراخيص:\n{str(e)}\n\n"
                 "يرجى التواصل مع الدعم الفني."
             )
             return False

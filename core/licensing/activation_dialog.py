@@ -75,7 +75,7 @@ class ActivationDialog(QDialog):
         
         # نص تفسيري
         info_label = QLabel(
-            "يرجى إدخال رمز التفعيل الخاص بك.\\n"
+            "يرجى إدخال رمز التفعيل الخاص بك.\n"
             "إذا لم يكن لديك رمز تفعيل، يرجى التواصل معنا عبر:"
         )
         info_label.setAlignment(Qt.AlignCenter)
