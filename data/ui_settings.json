@@ -3,7 +3,7 @@
     "font_size": "كبير",
     "statistics_window_visible": false,
     "table_columns_visible": {
-      "المعرف": true,
+      "المعرف": false,
       "الجنس": false,
       "الهاتف": false,
       "الحالة": false

@@ -379,7 +379,7 @@ class StudentsPage(QWidget):
             self.students_table.setObjectName("dataTable")
 
             # إعداد أعمدة الجدول
-            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
             self.students_table.setColumnCount(len(columns))
             self.students_table.setHorizontalHeaderLabels(columns)
 
@@ -665,6 +665,7 @@ class StudentsPage(QWidget):
                 total_fee = student['total_fee'] if student['total_fee'] else 0
                 total_paid = student['total_paid'] if student['total_paid'] else 0
                 remaining = total_fee - total_paid
+                percentage = (total_paid / total_fee * 100) if total_fee > 0 else 0
                 
                 # البيانات الأساسية
                 items = [
@@ -678,7 +679,8 @@ class StudentsPage(QWidget):
                     student['status'] or "",
                     f"{total_fee:,.0f} د.ع" if total_fee else "0 د.ع",
                     f"{total_paid:,.0f} د.ع",
-                    f"{remaining:,.0f} د.ع"
+                    f"{remaining:,.0f} د.ع",
+                    f"{percentage:.1f}%"
                 ]
                 
                 for col_idx, item_text in enumerate(items):
@@ -701,6 +703,8 @@ class StudentsPage(QWidget):
                         elif col_idx == 10:
                             numeric_value = remaining
                         item = NumericTableWidgetItem(item_text, numeric_value)
+                    elif col_idx == 11:  # عمود نسبة الدفع
+                        item = NumericTableWidgetItem(item_text, percentage)
                     else:  # الأعمدة النصية الأخرى (المدرسة، الجنس، الهاتف، الحالة)
                         item = QTableWidgetItem(item_text)
                     
@@ -835,6 +839,7 @@ class StudentsPage(QWidget):
                 total_fee = student_dict.get('total_fee', 0) if student_dict.get('total_fee') else 0
                 total_paid = student_dict.get('total_paid', 0) if student_dict.get('total_paid') else 0
                 remaining = total_fee - total_paid
+                percentage = (total_paid / total_fee * 100) if total_fee > 0 else 0
                 
                 student_data = {
                     'id': student_dict.get('id'),
@@ -847,7 +852,8 @@ class StudentsPage(QWidget):
                     'status': student_dict.get('status') or "",
                     'total_fee': f"{total_fee:,.0f} د.ع",
                     'total_paid': f"{total_paid:,.0f} د.ع",
-                    'remaining': f"{remaining:,.0f} د.ع"
+                    'remaining': f"{remaining:,.0f} د.ع",
+                    'percentage': f"{percentage:.1f}%"
                 }
                 students_for_print.append(student_data)
             
@@ -983,6 +989,7 @@ class StudentsPage(QWidget):
                 total_fee = student.get('total_fee', 0) if student.get('total_fee') else 0
                 total_paid = student.get('total_paid', 0) if student.get('total_paid') else 0
                 remaining = total_fee - total_paid
+                percentage = (total_paid / total_fee * 100) if total_fee > 0 else 0
                 
                 student_data = {
                     'id': student.get('id'),
@@ -995,7 +1002,8 @@ class StudentsPage(QWidget):
                     'status': student.get('status') or "",
                     'total_fee': f"{total_fee:,.0f} د.ع",
                     'total_paid': f"{total_paid:,.0f} د.ع",
-                    'remaining': f"{remaining:,.0f} د.ع"
+                    'remaining': f"{remaining:,.0f} د.ع",
+                    'percentage': f"{percentage:.1f}%"
                 }
                 students_for_print.append(student_data)
                 logging.debug(f"print_students_list_ordered: بيانات الطالب المُحضرة: {student_data}")
@@ -1029,7 +1037,7 @@ class StudentsPage(QWidget):
             header = self.students_table.horizontalHeader()
             sorted_column = header.sortIndicatorSection()
             sort_order = header.sortIndicatorOrder()
-            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
             
             if sorted_column >= 0 and sorted_column < len(column_names):
                 sort_direction = "تصاعدي" if sort_order == Qt.AscendingOrder else "تنازلي"
@@ -1095,7 +1103,7 @@ class StudentsPage(QWidget):
     def update_sort_indicator(self, logical_index, order):
         """تحديث مؤشر الترتيب الحالي"""
         try:
-            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            column_names = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
             
             if logical_index >= 0 and logical_index < len(column_names):
                 column_name = column_names[logical_index]
@@ -1327,7 +1335,7 @@ class StudentsPage(QWidget):
     def apply_column_visibility(self):
         """تطبيق حالة رؤية الأعمدة على الجدول"""
         try:
-            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
             
             for i, column_name in enumerate(columns):
                 visible = self.table_columns_visible.get(column_name, True)
@@ -1343,7 +1351,7 @@ class StudentsPage(QWidget):
             header = self.students_table.horizontalHeader()
             column_index = header.logicalIndexAt(position)
             
-            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+            columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
             
             # إنشاء القائمة
             menu = QMenu(self)
@@ -1404,7 +1412,7 @@ class StudentsPage(QWidget):
             
             if success:
                 # تطبيق التغيير على الجدول
-                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
                 if column_name in columns:
                     column_index = columns.index(column_name)
                     self.students_table.setColumnHidden(column_index, False)
@@ -1426,7 +1434,7 @@ class StudentsPage(QWidget):
             
             if success:
                 # تطبيق التغيير على الجدول
-                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي"]
+                columns = ["المعرف", "الاسم", "المدرسة", "الصف", "الشعبة", "الجنس", "الهاتف", "الحالة", "الرسوم الدراسية", "المدفوع", "المتبقي", "نسبة الدفع"]
                 if column_name in columns:
                     column_index = columns.index(column_name)
                     self.students_table.setColumnHidden(column_index, True)
