@@ -52,7 +52,7 @@ class FirstSetupDialog(QDialog):
             title_label.setAlignment(Qt.AlignCenter)
             main_layout.addWidget(title_label)
 
-            info_label = QLabel("يرجى إدخال اسم المؤسسة وكلمة المرور (لن تتمكن من تغيير الاسم لاحقاً بسهولة).")
+            info_label = QLabel("يرجى إدخال اسم المؤسسة (حروف إنجليزية وأرقام فقط، بدون فراغات) وكلمة المرور (لن تتمكن من تغيير الاسم لاحقاً بسهولة).")
             info_label.setObjectName("infoLabel")
             info_label.setWordWrap(True)
             info_label.setAlignment(Qt.AlignCenter)
@@ -72,7 +72,7 @@ class FirstSetupDialog(QDialog):
 
             self.organization_input = QLineEdit()
             self.organization_input.setObjectName("organizationInput")
-            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة التعليمية...")
+            self.organization_input.setPlaceholderText("أدخل اسم المؤسسة (حروف إنجليزية وأرقام فقط، بدون فراغات)...")
             self.organization_input.textChanged.connect(self.validate_inputs)
             form_layout.addWidget(self.organization_input)
 
@@ -197,6 +197,14 @@ class FirstSetupDialog(QDialog):
                 self.save_button.setEnabled(False)
                 return
             
+            # التحقق من أن اسم المؤسسة يحتوي على حروف إنجليزية فقط وبدون فراغات
+            import re
+            if not re.match(r'^[a-zA-Z0-9]+$', organization_name):
+                self.validation_label.setText("اسم المؤسسة يجب أن يحتوي على حروف إنجليزية وأرقام فقط وبدون فراغات")
+                self.validation_label.setStyleSheet("color: #E74C3C;")
+                self.save_button.setEnabled(False)
+                return
+            
             # التحقق من توفر قائمة المؤسسات (مرة واحدة فقط - غير حظر واجهة المستخدم بشكل كبير)
             if self._existing_org_folders is None:
                 QTimer.singleShot(0, self._load_existing_org_folders)
@@ -247,6 +255,12 @@ class FirstSetupDialog(QDialog):
             # التحقق من اسم المؤسسة
             if not organization_name or len(organization_name) < 3:
                 self.show_error("يرجى إدخال اسم صحيح للمؤسسة")
+                return
+            
+            # التحقق من أن اسم المؤسسة يحتوي على حروف إنجليزية فقط وبدون فراغات
+            import re
+            if not re.match(r'^[a-zA-Z0-9]+$', organization_name):
+                self.show_error("اسم المؤسسة يجب أن يحتوي على حروف إنجليزية وأرقام فقط وبدون فراغات")
                 return
             
             # التحقق من كلمة المرور
